@@ -260,10 +260,10 @@ The interface shows actions according to role and case state, while the backend 
 
 ### Design language
 
-The interface follows the design language in `SKILL.md` while keeping DepositFlow's own palette:
+The interface follows the design language in `SKILL.md`:
 
 - **Shape, depth and type:** generous radii (16px cards, 10px controls, pill badges), layered soft shadows with hairline edges, a translucent heavier sidebar material, large tightly tracked titles, and sentence-case labels. Sizes are in `rem`, so the reader's browser text size is respected.
-- **Colour:** role-based tokens at the top of `src/styles.css`, each with a light and dark value; text meets WCAG AA contrast in both themes. The theme follows the system unless changed under **Account settings → Appearance**; printing always uses the light theme.
+- **Colour:** neutral greys for content and one blue accent (`--accent`) reserved for what can be acted on (buttons, links, selection, focus); status colours only where they carry meaning; the DepositFlow wordmark keeps its navy. Colours are role-based tokens at the top of `src/styles.css`, each with a light and dark value, and text meets WCAG AA contrast in both themes. The theme follows the system unless changed under **Account settings → Appearance**; printing always uses the light theme.
 - **Springs, not fixed animations** (`src/lib/spring.ts`): Apple-style damping and response; every animation starts from the current position and velocity, so it can be interrupted and reversed.
 - **Gestures** (`src/components/motion.tsx`, `src/components/ui/dialog.tsx`): on phones, dialogs are bottom sheets and the navigation is a drawer. Both track the finger 1:1, rubber-band at their edges, project a flick's momentum to decide where to settle, and carry the finger's velocity into the spring. The case tabs' indicator springs toward the chosen tab.
 - **Response and feedback:** controls react on press with no tap delay; centred dialogs materialise (blur and scale together) and leave the way they came; touch devices get light haptics on success, error and snap.

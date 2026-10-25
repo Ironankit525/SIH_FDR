@@ -44,7 +44,7 @@ export function RiskPanel({ depositId }: { depositId: string }) {
               <YAxis domain={[0, 100]} ticks={[0, 20, 50, 80, 100]} tickLine={false} axisLine={false} fontSize={11}/>
               {THRESHOLDS.map(([name, value]) => <ReferenceLine key={name} y={value} stroke="#e1e6ee" label={{ value: name, position: 'right', fontSize: 10, fill: '#7a8ca0' }}/>)}
               <Tooltip formatter={(value, _name, item) => [`${value} · ${label(item.payload.level)}`, 'Score']} labelFormatter={(_l, items) => items?.[0] ? new Date(items[0].payload.created_at).toLocaleString('en-IN') : ''}/>
-              <Line isAnimationActive={false} type="monotone" dataKey="score" stroke="#3972c6" strokeWidth={2} dot={{ r: 4, fill: '#3972c6', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}/>
+              <Line isAnimationActive={false} type="monotone" dataKey="score" stroke="#0071e3" strokeWidth={2} dot={{ r: 4, fill: '#0071e3', stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}/>
             </LineChart>
           </ResponsiveContainer></div>}
         </div>
