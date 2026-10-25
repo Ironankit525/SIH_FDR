@@ -10,7 +10,9 @@ from .models import Document, Extraction, SecurityDeposit, utcnow
 from .storage import store
 from .extraction_engine import extract_document, ExtractionFailure
 from .audit import audit
+from . import forensics
 from .workflows import detect, monitor, flag
+from .risk import assess
 
 _inference_slot = threading.BoundedSemaphore(1)
 
@@ -51,12 +53,17 @@ def _process_document(document_id):
         storage_key, mime, digest, category = doc.storage_key, doc.content_type, doc.sha256, doc.category
 
     # Inference and storage I/O run outside a database transaction.
-    result, failure = None, None
+    result, failure, report = None, None, {}
     try:
         data = store.get(storage_key)
         if hashlib.sha256(data).hexdigest() != digest:
             raise ExtractionFailure('Document integrity verification failed. Contact an administrator.')
         result = extract_document(data, mime, provider='ocr' if category != 'instrument' else None)
+        if category == 'instrument':
+            try:
+                report = forensics.inspect(data, mime, ocr=settings.forensic_ocr_check)
+            except Exception:
+                report = {"version": forensics.VERSION, "signals": [], "error": "Integrity checks could not run on this file."}
     except Exception as exc:
         failure = exc if isinstance(exc, ExtractionFailure) else ExtractionFailure(
             'Document extraction failed. Check readability and the configured extraction service, or request manual review.')
@@ -71,7 +78,7 @@ def _process_document(document_id):
         if failure is None:
             if not db.scalar(select(Extraction.id).where(Extraction.document_id == doc.id)):
                 db.add(Extraction(document_id=doc.id, document_sha256=digest, **result.model_dump()))
-            doc.processing_status, doc.processing_error = 'completed', None
+            doc.processing_status, doc.processing_error, doc.forensics = 'completed', None, report
             audit(db, None, 'ocr_completed', deposit.id, deposit.institution_id,
                   after={'document_id': doc.id, 'method': result.method, 'provider': result.provider,
                          'model_name': result.model_name, 'model_version': result.model_version,
@@ -89,6 +96,7 @@ def _process_document(document_id):
                 flag(db, deposit, 'extraction_failed:' + doc.id,
                      'Instrument extraction failed. Review the original document and record how its details were checked.',
                      'warning', source='document_extraction', instrument_id=doc.instrument_id)
+                assess(db, deposit)
         db.commit()
 
 
@@ -105,6 +113,7 @@ def periodic_tick():
             if doc.category == 'instrument':
                 flag(db, deposit, 'extraction_failed:' + doc.id, doc.processing_error, 'warning',
                      source='document_extraction', instrument_id=doc.instrument_id)
+                assess(db, deposit)
         queued = db.scalars(select(Document.id).where(ready_condition(now), Document.processing_attempts < settings.extraction_max_attempts)
                             .order_by(Document.created_at).limit(10)).all()
         monitor(db)
