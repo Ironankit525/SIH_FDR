@@ -1,0 +1,423 @@
+{
+  "corpus": {
+    "genuine": 12,
+    "per_problem": 2,
+    "seed": 11
+  },
+  "metrics": {
+    "cases": 32,
+    "problem_cases": 20,
+    "genuine_cases": 12,
+    "thresholds": {
+      "medium": 20,
+      "high": 50,
+      "critical": 80
+    },
+    "stages": {
+      "intake": {
+        "auc": 1.0,
+        "recall_at_medium": 0.85,
+        "recall_at_high": 0.7,
+        "false_positive_rate_at_medium": 0.0,
+        "false_positive_rate_at_high": 0.0,
+        "precision_at_10": 1.0,
+        "per_kind": {
+          "genuine": {
+            "cases": 5,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_scanned": {
+            "cases": 3,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_joint_holding": {
+            "cases": 2,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_bank_abbreviation": {
+            "cases": 1,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_coverage_gap": {
+            "cases": 1,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "overlay_amount": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 80.0
+          },
+          "incremental_date_edit": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.0,
+            "median_score": 42.3
+          },
+          "hidden_text_layer": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 83.6
+          },
+          "editor_regenerated": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 70.8
+          },
+          "clean_regenerated": {
+            "cases": 2,
+            "at_least_medium": 0.5,
+            "at_least_high": 0.5,
+            "median_score": 62.2
+          },
+          "fabricated": {
+            "cases": 2,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 19.0
+          },
+          "reused_receipt_rescan": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 93.0
+          },
+          "duplicate_declared": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 100.0
+          },
+          "third_party_depositor": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 54.1
+          },
+          "missing_lien": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.5,
+            "median_score": 77.0
+          }
+        },
+        "detectors": {
+          "unverified": {
+            "problem_cases": 18,
+            "genuine_cases": 12,
+            "precision": 0.6
+          },
+          "history_open_high": {
+            "problem_cases": 12,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_text_layer_mismatch": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "maturity_value_inconsistent": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "history_duplication": {
+            "problem_cases": 3,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_amount": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extraction_missing": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_incremental_update": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_modified_after_creation": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_editing_software": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extracted_number_elsewhere": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_depositor_name": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_number": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "duplicate_blocked": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "depositor_not_institution": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_not_aicte": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "reused_document": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "reused_text": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_document_conflict": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          }
+        }
+      },
+      "after_bank_check": {
+        "auc": 1.0,
+        "recall_at_medium": 1.0,
+        "recall_at_high": 0.75,
+        "false_positive_rate_at_medium": 0.0,
+        "false_positive_rate_at_high": 0.0,
+        "precision_at_10": 1.0,
+        "per_kind": {
+          "genuine": {
+            "cases": 5,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 15.0
+          },
+          "genuine_scanned": {
+            "cases": 3,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 3.3
+          },
+          "genuine_joint_holding": {
+            "cases": 2,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 15.0
+          },
+          "genuine_bank_abbreviation": {
+            "cases": 1,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 3.3
+          },
+          "genuine_coverage_gap": {
+            "cases": 1,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.6
+          },
+          "overlay_amount": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 91.5
+          },
+          "incremental_date_edit": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 73.7
+          },
+          "hidden_text_layer": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 91.8
+          },
+          "editor_regenerated": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 86.2
+          },
+          "clean_regenerated": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 82.8
+          },
+          "fabricated": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.0,
+            "median_score": 32.0
+          },
+          "reused_receipt_rescan": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 94.2
+          },
+          "duplicate_declared": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 100.0
+          },
+          "third_party_depositor": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.0,
+            "median_score": 49.0
+          },
+          "missing_lien": {
+            "cases": 2,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.5,
+            "median_score": 74.5
+          }
+        },
+        "detectors": {
+          "history_open_high": {
+            "problem_cases": 15,
+            "genuine_cases": 10,
+            "precision": 0.6
+          },
+          "history_bank_mismatch": {
+            "problem_cases": 15,
+            "genuine_cases": 5,
+            "precision": 0.75
+          },
+          "history_duplication": {
+            "problem_cases": 11,
+            "genuine_cases": 2,
+            "precision": 0.846
+          },
+          "bank_mismatched": {
+            "problem_cases": 10,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_text_layer_mismatch": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "maturity_value_inconsistent": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "bank_inconclusive": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_amount": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extraction_missing": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_incremental_update": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_modified_after_creation": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_editing_software": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extracted_number_elsewhere": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_depositor_name": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_number": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "duplicate_blocked": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "depositor_not_institution": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_not_aicte": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "reused_document": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "reused_text": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_document_conflict": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          }
+        }
+      }
+    }
+  }
+}
