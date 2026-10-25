@@ -258,6 +258,16 @@ Public routes are `/`, `/information`, `/signin` and `/register`. The authentica
 
 The interface shows actions according to role and case state, while the backend remains authoritative. Receipt screens poll while extraction is queued or processing. Human-corrected values retain the original evidence and do not inherit the parser's confidence score. Matching fields are never presented as proof of authenticity.
 
+### Design language
+
+Styles follow the principles in `SKILL.md`, applied soberly for a regulatory portal:
+
+- **Type** follows the reader's browser text size (sizes and spacing in `rem`, 10px minimum, tracking relative to each size) and uses the system font with Noto Sans for Indian scripts.
+- **Colour** comes from role-based tokens (text, surface, line, shadow) at the top of `src/styles.css`, each with a light and dark value. Text meets WCAG AA contrast (4.5:1) on cards in both themes. The theme follows the system unless changed under **Account settings → Appearance**; printing always uses the light theme.
+- **Response and motion:** controls respond on press, transitions share one decelerating curve, and dialogs and the mobile menu leave by the path they arrived.
+- **Materials:** a translucent top bar over scrolling content, with a soft edge only once content is beneath it; dialogs dim the page.
+- **Preferences honoured:** reduced motion (cross-fades instead of movement), reduced transparency (solid chrome) and more contrast (defined edges, darker secondary text).
+
 In development, Vite proxies `/api` to `127.0.0.1:8000`. The optional container build serves the compiled SPA through Nginx and proxies `/api` to the backend service. The browser does not need database credentials or a secret-bearing frontend environment file.
 
 ## Configuration and secret handling

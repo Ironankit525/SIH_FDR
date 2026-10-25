@@ -6,6 +6,7 @@ import { ArrowRight, ArrowUpRight, Files, IndianRupee, ClipboardCheck, CalendarC
 import { useUser } from '@/App'
 import { api, post, downloadReport, type Row } from '@/lib/api'
 import { money, compactMoney, dateLabel, label } from '@/lib/utils'
+import { applyTheme, storedTheme, type Theme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { ActionDialog, Badge, RiskBadge, Empty, ErrorState, Loading, Notice, PageHeader, Panel, Stat, useAction } from '@/components/common'
 
@@ -101,8 +102,8 @@ export function Notifications() {
 }
 
 export function SettingsPage() {
-  const user = useUser(); const [change, setChange] = useState(false); const qc = useQueryClient()
-  return <><PageHeader title="Account settings" description="Your identity, access and account security."/><Panel title="Your account"><div className="padded"><dl className="detail-list"><div><dt>Name</dt><dd>{user.name}</dd></div><div><dt>Email</dt><dd>{user.email}</dd></div><div><dt>Role</dt><dd>{label(user.role)}</dd></div><div><dt>Clearance cell</dt><dd>{user.clearance_cell || 'Not applicable'}</dd></div></dl><Button onClick={() => setChange(true)} variant="outline">Change password</Button></div></Panel>{change && <ActionDialog open onClose={() => setChange(false)} title="Change password" description="All active sessions will be signed out after the password changes." fields={[{ name: 'current_password', label: 'Current password', type: 'password' }, { name: 'new_password', label: 'New password', type: 'password', minLength: 12 }]} action={data => post('/auth/password', data)} onSuccess={() => { qc.clear(); window.location.assign('/signin') }}/>}</>
+  const user = useUser(); const [change, setChange] = useState(false); const qc = useQueryClient(); const [theme, setTheme] = useState<Theme>(storedTheme())
+  return <><PageHeader title="Account settings" description="Your identity, access and account security."/><Panel title="Your account"><div className="padded"><dl className="detail-list"><div><dt>Name</dt><dd>{user.name}</dd></div><div><dt>Email</dt><dd>{user.email}</dd></div><div><dt>Role</dt><dd>{label(user.role)}</dd></div><div><dt>Clearance cell</dt><dd>{user.clearance_cell || 'Not applicable'}</dd></div></dl><Button onClick={() => setChange(true)} variant="outline">Change password</Button></div></Panel><Panel title="Appearance" subtitle="Applies to this browser"><div className="padded"><div className="segmented" role="radiogroup" aria-label="Colour theme">{(['system', 'light', 'dark'] as Theme[]).map(t => <label key={t} className={theme === t ? 'selected' : ''}><input type="radio" name="theme" value={t} checked={theme === t} onChange={() => { applyTheme(t); setTheme(t) }}/>{t === 'system' ? 'Match system' : label(t)}</label>)}</div></div></Panel>{change && <ActionDialog open onClose={() => setChange(false)} title="Change password" description="All active sessions will be signed out after the password changes." fields={[{ name: 'current_password', label: 'Current password', type: 'password' }, { name: 'new_password', label: 'New password', type: 'password', minLength: 12 }]} action={data => post('/auth/password', data)} onSuccess={() => { qc.clear(); window.location.assign('/signin') }}/>}</>
 }
 
 const MANAGEMENT_REPORTS = [
