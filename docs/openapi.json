@@ -397,6 +397,30 @@
               "default": "",
               "title": "Date To"
             }
+          },
+          {
+            "name": "risk_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Risk Level"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "",
+                "risk"
+              ],
+              "type": "string",
+              "default": "",
+              "title": "Sort"
+            }
           }
         ],
         "responses": {
@@ -438,6 +462,46 @@
         },
         "responses": {
           "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/institutions/{institution_id}/profile": {
+      "get": {
+        "tags": [
+          "Institutions and deposits"
+        ],
+        "summary": "Profile",
+        "operationId": "profile_api_institutions__institution_id__profile_get",
+        "parameters": [
+          {
+            "name": "institution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Institution Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -1107,6 +1171,96 @@
         }
       }
     },
+    "/api/discrepancies/{case_id}/review": {
+      "post": {
+        "tags": [
+          "Verification and release"
+        ],
+        "summary": "Review Resolution",
+        "operationId": "review_resolution_api_discrepancies__case_id__review_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolutionReview"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/deposits/{deposit_id}/risk": {
+      "get": {
+        "tags": [
+          "Verification and release"
+        ],
+        "summary": "Risk",
+        "operationId": "risk_api_deposits__deposit_id__risk_get",
+        "parameters": [
+          {
+            "name": "deposit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Deposit Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/deposits/{deposit_id}/verification/mock": {
       "post": {
         "tags": [
@@ -1535,6 +1689,26 @@
         }
       }
     },
+    "/api/risk/evaluation": {
+      "get": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Risk Evaluation",
+        "description": "Headline results of the latest synthetic-corpus evaluation (python -m evaluation).",
+        "operationId": "risk_evaluation_api_risk_evaluation_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -1719,6 +1893,112 @@
         ],
         "summary": "Approve Rule",
         "operationId": "approve_rule_api_admin_rules__version_id__approve_post",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Note"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/risk-weights": {
+      "get": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Risk Weights",
+        "operationId": "risk_weights_api_admin_risk_weights_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Propose Risk Weights",
+        "operationId": "propose_risk_weights_api_admin_risk_weights_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskWeightsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/risk-weights/{version_id}/approve": {
+      "post": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Approve Risk Weights",
+        "operationId": "approve_risk_weights_api_admin_risk_weights__version_id__approve_post",
         "parameters": [
           {
             "name": "version_id",
@@ -2117,6 +2397,11 @@
               "returned"
             ],
             "title": "Decision"
+          },
+          "risk_acknowledged": {
+            "type": "boolean",
+            "title": "Risk Acknowledged",
+            "default": false
           }
         },
         "additionalProperties": false,
@@ -2751,6 +3036,76 @@
         ],
         "title": "RequirementInput"
       },
+      "ResolutionReview": {
+        "properties": {
+          "notes": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 5,
+            "title": "Notes"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "confirm",
+              "reject"
+            ],
+            "title": "Decision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "notes",
+          "decision"
+        ],
+        "title": "ResolutionReview"
+      },
+      "RiskWeightsInput": {
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "category_caps": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Category Caps"
+          },
+          "thresholds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "medium",
+                "high",
+                "critical"
+              ]
+            },
+            "type": "object",
+            "title": "Thresholds"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "thresholds",
+          "notes"
+        ],
+        "title": "RiskWeightsInput"
+      },
       "RuleConfig": {
         "properties": {
           "amounts": {
@@ -2986,6 +3341,25 @@
           "require_regulatory_end": {
             "type": "boolean",
             "title": "Require Regulatory End",
+            "default": true
+          },
+          "verification_max_age_days": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Verification Max Age Days",
+            "default": 30
+          },
+          "coverage_warning_days": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Coverage Warning Days",
+            "default": 60
+          },
+          "require_aicte_lien": {
+            "type": "boolean",
+            "title": "Require Aicte Lien",
             "default": true
           }
         },
