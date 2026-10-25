@@ -59,7 +59,7 @@ The launcher applies Alembic migrations, seeds fictional demo data idempotently 
 
 Use `http://localhost:5173` consistently. The configured origin protects write requests; opening the frontend through `127.0.0.1` instead can cause origin errors. Backend automatic reload is disabled to reduce local overhead: restart the launcher after Python changes. Frontend changes use Vite hot reload.
 
-No `.env` file is required for this default setup. Development keys are generated locally on first use and are excluded from Git.
+No `.env` file is required for this default setup. This private development snapshot includes `backend/.data/local-secrets.json`; the backend uses those keys when environment overrides are absent. If that file is absent, development keys are generated locally on first use.
 
 Install Tesseract if needed:
 
@@ -258,7 +258,7 @@ In development, Vite proxies `/api` to `127.0.0.1:8000`. The optional container 
 
 ## Configuration and secret handling
 
-**All `.env` files, including `.env.*` examples, are excluded from this repository.** Configuration is documented here instead. Do not put API keys or database passwords in frontend code.
+The root `.env.example` and `backend/.env.example` templates are included in this repository. Real `.env` files remain ignored. This private development snapshot also includes `backend/.data/local-secrets.json`, containing the local signing and document encryption keys, at the repository owner's request. Repository collaborators and clones can access those keys. Use separate environment-provided keys for deployments; do not put API keys or database passwords in frontend code.
 
 For optional native overrides, create your own untracked `backend/.env`. Shell environment variables also work. These are the main settings:
 
@@ -278,7 +278,7 @@ For optional native overrides, create your own untracked `backend/.env`. Shell e
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Optional private S3/MinIO configuration |
 | `REDIS_URL` | Broker connection for optional Celery mode |
 
-Development runtime files live under `backend/.data/`: the SQLite database, encrypted documents and `local-secrets.json`. They are ignored by Git, along with backups, private keys, credentials, dependency folders, builds and test artifacts. Preserve the database, encrypted objects **and their encryption key together** in a private backup; the key is required to read existing documents.
+Development runtime files live under `backend/.data/`: the SQLite database, encrypted documents and `local-secrets.json`. Runtime data remains ignored; `local-secrets.json` is an explicitly committed exception in this private snapshot. Backups, other private keys, credentials, dependency folders, builds and test artifacts remain ignored. Preserve the database, encrypted objects **and their encryption key together** in a private backup; the key is required to read existing documents.
 
 ## Optional Docker deployment
 
