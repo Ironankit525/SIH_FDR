@@ -9,13 +9,14 @@ All financial-record routes require authentication. Institution scope is enforce
 | Area | Endpoints |
 |---|---|
 | Authentication | `POST /api/auth/login`, `/logout`, `/register`, `/password`; `GET /api/auth/me` |
-| Institutions | `GET /api/institutions`, `PUT /api/institutions/{id}` |
+| Institutions | `GET /api/institutions`, `PUT /api/institutions/{id}`, `GET /api/institutions/{id}/profile` (officials only: case history) |
 | Requirement calculation | `POST /api/requirements/calculate`, `GET /api/rules` |
-| Deposits | `GET/POST /api/deposits`, `GET /api/deposits/{id}`, `PATCH /api/deposits/{id}/instrument`, `POST /api/deposits/{id}/submit` |
+| Deposits | `GET/POST /api/deposits` (officials may add `sort=risk` and `risk_level=low|medium|high|critical`), `GET /api/deposits/{id}`, `PATCH /api/deposits/{id}/instrument`, `POST /api/deposits/{id}/submit` |
 | Upload/extraction | `POST /api/deposits/{id}/documents` (multipart), `POST /api/documents/{id}/retry`, `POST /api/extractions/{id}/corrections` |
 | Private viewing | `GET /api/documents/{id}/access`, then the returned authenticated two-minute URL |
 | Officer review | `POST /api/deposits/{id}/assign`, `/observations`, `/clarification` |
-| Discrepancies | `POST /api/discrepancies/{id}/respond`, `/resolve` |
+| Discrepancies | `POST /api/discrepancies/{id}/respond`, `/resolve`, `/review` (a second verification officer confirms or rejects a proposed high-severity resolution) |
+| Risk | `GET /api/deposits/{id}/risk` (officials only): current score, level, explained signals and score history; `GET /api/risk/evaluation`: headline results of the latest synthetic-corpus evaluation |
 | Verification | `POST /api/deposits/{id}/verification/mock`, `/verification/manual`; `POST /api/verifications/{id}/evidence` |
 | Renewal | `POST /api/deposits/{id}/replace` |
 | Release | `POST /api/deposits/{id}/release`, `GET /api/releases`, `POST /api/clearances/{id}/decision`, `POST /api/releases/{id}/decision`, `/resubmit`, `/complete` |
@@ -23,6 +24,7 @@ All financial-record routes require authentication. Institution scope is enforce
 | Read tracking | `POST /api/notifications/{id}/read` |
 | Administration | `GET/POST /api/admin/users`, `POST /api/admin/users/{id}/toggle`, `POST /api/admin/rules`, `POST /api/admin/rules/{id}/approve` |
 | Configuration | `GET /api/admin/config`, `PUT /api/admin/config/workflow`, `/alerts` |
+| Risk policy | `GET /api/admin/risk-weights` (admin, auditor), `POST /api/admin/risk-weights`, `POST /api/admin/risk-weights/{id}/approve` (a different administrator; approval rescores every case) |
 | Monitoring | `GET /api/admin/monitor`, `POST /api/admin/monitor/run`, `GET /api/health` |
 
 Deposit filters include `q`, `status`, `bank`, `programme`, `assigned=me`, `min_amount`, `max_amount`, `date_from` and `date_to` (maturity dates). The list is scoped to the caller and the UI paginates it; production-scale server pagination remains future work. CSV exports explicitly cover all authorised records rather than the current visual filter.

@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     vlm_timeout_seconds: int = Field(default=90, ge=1, le=300)
     extraction_max_attempts: int = Field(default=3, ge=1, le=5)
     extraction_lease_seconds: int = Field(default=900, ge=600, le=3600)
+    forensic_ocr_check: bool = True
 
 
 settings = Settings()

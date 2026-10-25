@@ -14,7 +14,8 @@ This is a Smart India Hackathon prototype, not an official AICTE service or a ce
 | Deposits | Drafts, requirement calculations, instrument details, submission and status tracking |
 | Documents | PDF/PNG/JPEG validation, encrypted storage, authenticated previews and extraction |
 | Evidence review | Separate institution declarations, extracted fields, human corrections and bank findings |
-| Review tasks | Explainable mismatch, shortfall, missing-field, duplicate-fingerprint and maturity flags |
+| Review tasks | Explainable mismatch, shortfall, coverage, lien, depositor, duplicate, reuse, document-integrity, receipt-arithmetic and maturity flags; tasks reopen on new evidence and high-severity resolutions need a second officer |
+| Risk | Explainable 0–100 score with history (officials only), risk-ordered queue, dashboard view, and stricter release safeguards for high and critical cases |
 | Verification | Labelled simulated bank adapter and officer-recorded manual bank evidence |
 | Monitoring | Maturity, validity, regulatory and renewal deadlines; reminders and overdue escalations |
 | Renewals | Linked replacements that preserve the previous instrument and its documents |
@@ -99,6 +100,7 @@ The sign-in page provides shortcuts for fictional demo accounts. The public, loc
 | `institution2@demo.local` | Sahyadri College: demonstrate institution-level isolation |
 | `institution3@demo.local` | Northstar School: demonstrate an unavailable simulated bank response |
 | `officer@demo.local` | Claim cases, scrutinise evidence, verify instruments and resolve review tasks |
+| `officer2@demo.local` | Second verification officer who confirms or rejects high-severity resolutions |
 | `clearance@demo.local` | Record PGRC clearance decisions |
 | `vigilance@demo.local` | Record Vigilance clearance decisions |
 | `authority@demo.local` | Decide release requests and record completion references |
@@ -160,6 +162,9 @@ All application modules are under `backend/app/`.
 | `jobs.py`, `worker.py` | Persistent claims, retries, recovery, local scheduling and optional Celery tasks |
 | `bank.py` | Bank adapter protocol and deterministic fictional verification fixtures |
 | `workflows.py` | Discrepancy detection, release prerequisites, reviewer separation and deadline reminders |
+| `matching.py`, `forensics.py`, `consistency.py` | Normalised names, banks and references; document integrity indicators (metadata, incremental saves, conflicting values, text layer against OCR); receipt arithmetic |
+| `risk.py` | Explainable risk score from review tasks and score-only observations; append-only score history and approved weight versions |
+| `../evaluation/` | Synthetic labelled corpus, end-to-end harness and report for measuring the risk engine (`python -m evaluation`) |
 | `review_routes.py` | Assignment, scrutiny, bank evidence, clearances and release decisions |
 | `admin_routes.py` | Dashboard/report queries, user/rule administration, settings and monitoring |
 | `presenters.py` | API response assembly, evidence details and exclusion of private internal fields |
@@ -322,7 +327,7 @@ npm run test:e2e
 
 An existing compatible Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Browser tests use one worker, create fictional `E2E-*` records and retain ignored screenshots/traces under `frontend/test-results/`.
 
-Latest verified results: **60 backend tests, 6 frontend tests and 4 browser tests passed; the TypeScript/production build and migration alignment check passed.** See [docs/VERIFICATION.md](docs/VERIFICATION.md) for the tested scope and limitations. These are recorded local results, not a claim of a configured GitHub Actions pipeline.
+Latest verified results: **113 backend tests (including the risk-evaluation regression gate and an offline PostgreSQL migration check) and 6 frontend tests passed; the TypeScript/production build and migration alignment check passed.** The 4 Playwright browser tests last passed before the risk-engine work and have not been re-run since. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for the tested scope and limitations. These are recorded local results, not a claim of a configured GitHub Actions pipeline.
 
 ## Troubleshooting and maintenance
 
@@ -376,5 +381,6 @@ SIH_FDR/
 - [Six-journey demo walkthrough](docs/DEMO.md)
 - [Verification results](docs/VERIFICATION.md)
 - [Known limitations and remaining integrations](docs/LIMITATIONS.md)
+- [Risk engine evaluation](docs/RISK_EVALUATION.md)
 
 Live bank/AICTE connectivity, trained VLM integration, real email/SMS delivery, SSO/MFA, production deployment hardening and formal regulatory review remain future work. Existing automated checks assist officers; human decisions and independently obtained evidence remain essential.

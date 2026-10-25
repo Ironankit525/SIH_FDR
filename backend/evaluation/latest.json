@@ -1,0 +1,3505 @@
+{
+  "generated_on": "2026-10-25",
+  "corpus": {
+    "genuine": 60,
+    "per_problem": 6,
+    "seed": 7
+  },
+  "metrics": {
+    "cases": 120,
+    "problem_cases": 60,
+    "genuine_cases": 60,
+    "thresholds": {
+      "medium": 20,
+      "high": 50,
+      "critical": 80
+    },
+    "stages": {
+      "intake": {
+        "auc": 0.989,
+        "recall_at_medium": 0.9,
+        "recall_at_high": 0.667,
+        "false_positive_rate_at_medium": 0.0,
+        "false_positive_rate_at_high": 0.0,
+        "precision_at_10": 1.0,
+        "per_kind": {
+          "genuine": {
+            "cases": 29,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_scanned": {
+            "cases": 10,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_joint_holding": {
+            "cases": 7,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_bank_abbreviation": {
+            "cases": 9,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "genuine_coverage_gap": {
+            "cases": 5,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.0
+          },
+          "overlay_amount": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 80.0
+          },
+          "incremental_date_edit": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.0,
+            "median_score": 38.2
+          },
+          "hidden_text_layer": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 83.6
+          },
+          "editor_regenerated": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.5,
+            "median_score": 67.6
+          },
+          "clean_regenerated": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 63.5
+          },
+          "fabricated": {
+            "cases": 6,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 16.0
+          },
+          "reused_receipt_rescan": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 92.8
+          },
+          "duplicate_declared": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 100.0
+          },
+          "third_party_depositor": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.167,
+            "median_score": 46.0
+          },
+          "missing_lien": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 75.7
+          }
+        },
+        "detectors": {
+          "unverified": {
+            "problem_cases": 54,
+            "genuine_cases": 60,
+            "precision": 0.474
+          },
+          "history_open_high": {
+            "problem_cases": 28,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "maturity_value_inconsistent": {
+            "problem_cases": 13,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_text_layer_mismatch": {
+            "problem_cases": 12,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_amount": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extraction_missing": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_incremental_update": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_modified_after_creation": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_editing_software": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extracted_number_elsewhere": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_depositor_name": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_number": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "duplicate_blocked": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "depositor_not_institution": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_document_conflict": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_not_aicte": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "reused_text": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "coverage_gap": {
+            "problem_cases": 0,
+            "genuine_cases": 2,
+            "precision": 0.0
+          },
+          "reused_document": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "history_duplication": {
+            "problem_cases": 1,
+            "genuine_cases": 0,
+            "precision": 1.0
+          }
+        }
+      },
+      "after_bank_check": {
+        "auc": 1.0,
+        "recall_at_medium": 1.0,
+        "recall_at_high": 0.8,
+        "false_positive_rate_at_medium": 0.017,
+        "false_positive_rate_at_high": 0.0,
+        "precision_at_10": 1.0,
+        "per_kind": {
+          "genuine": {
+            "cases": 29,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 10.6
+          },
+          "genuine_scanned": {
+            "cases": 10,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 3.3
+          },
+          "genuine_joint_holding": {
+            "cases": 7,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 3.3
+          },
+          "genuine_bank_abbreviation": {
+            "cases": 9,
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "median_score": 13.7
+          },
+          "genuine_coverage_gap": {
+            "cases": 5,
+            "at_least_medium": 0.2,
+            "at_least_high": 0.0,
+            "median_score": 13.7
+          },
+          "overlay_amount": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 91.5
+          },
+          "incremental_date_edit": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 73.7
+          },
+          "hidden_text_layer": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 93.0
+          },
+          "editor_regenerated": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 84.9
+          },
+          "clean_regenerated": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 82.8
+          },
+          "fabricated": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.0,
+            "median_score": 32.0
+          },
+          "reused_receipt_rescan": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 94.2
+          },
+          "duplicate_declared": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 100.0
+          },
+          "third_party_depositor": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 0.0,
+            "median_score": 40.0
+          },
+          "missing_lien": {
+            "cases": 6,
+            "at_least_medium": 1.0,
+            "at_least_high": 1.0,
+            "median_score": 74.5
+          }
+        },
+        "detectors": {
+          "history_open_high": {
+            "problem_cases": 44,
+            "genuine_cases": 44,
+            "precision": 0.5
+          },
+          "history_bank_mismatch": {
+            "problem_cases": 39,
+            "genuine_cases": 23,
+            "precision": 0.629
+          },
+          "bank_mismatched": {
+            "problem_cases": 30,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "history_duplication": {
+            "problem_cases": 10,
+            "genuine_cases": 9,
+            "precision": 0.526
+          },
+          "maturity_value_inconsistent": {
+            "problem_cases": 13,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_text_layer_mismatch": {
+            "problem_cases": 12,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "bank_inconclusive": {
+            "problem_cases": 12,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_amount": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extraction_missing": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_incremental_update": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_modified_after_creation": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "forensic_editing_software": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "extracted_number_elsewhere": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_depositor_name": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "mismatch_number": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "duplicate_blocked": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "depositor_not_institution": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_document_conflict": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "lien_not_aicte": {
+            "problem_cases": 6,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "reused_text": {
+            "problem_cases": 4,
+            "genuine_cases": 0,
+            "precision": 1.0
+          },
+          "coverage_gap": {
+            "problem_cases": 0,
+            "genuine_cases": 2,
+            "precision": 0.0
+          },
+          "reused_document": {
+            "problem_cases": 2,
+            "genuine_cases": 0,
+            "precision": 1.0
+          }
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "G-001",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-002",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-003",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 10.6,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-004",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-005",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-006",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-007",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-008",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-009",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-010",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-011",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-012",
+      "kind": "genuine_coverage_gap",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 19.0,
+          "level": "low",
+          "signals": [
+            "coverage_gap",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "coverage_gap"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-013",
+      "kind": "genuine_coverage_gap",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-014",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-015",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-016",
+      "kind": "genuine_coverage_gap",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-017",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-018",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-019",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-020",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-021",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-022",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-023",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-024",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-025",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-026",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-027",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-028",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-029",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-030",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-031",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-032",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-033",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-034",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-035",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-036",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 10.6,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-037",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-038",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-039",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-040",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-041",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-042",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-043",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-044",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-045",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-046",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-047",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-048",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-049",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-050",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-051",
+      "kind": "genuine_coverage_gap",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 19.0,
+          "level": "low",
+          "signals": [
+            "coverage_gap",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 23.5,
+          "level": "medium",
+          "signals": [
+            "coverage_gap",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-052",
+      "kind": "genuine_scanned",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-053",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-054",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-055",
+      "kind": "genuine_joint_holding",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 0.0,
+          "level": "low",
+          "signals": []
+        }
+      }
+    },
+    {
+      "id": "G-056",
+      "kind": "genuine_bank_abbreviation",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-057",
+      "kind": "genuine_coverage_gap",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-058",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 15.0,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-059",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 3.3,
+          "level": "low",
+          "signals": [
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "G-060",
+      "kind": "genuine",
+      "label": 0,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 13.7,
+          "level": "low",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-061",
+      "kind": "overlay_amount",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 80.0,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "mismatch_amount",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 91.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high",
+            "mismatch_amount"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-062",
+      "kind": "overlay_amount",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 80.0,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "mismatch_amount",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 91.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_amount"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-063",
+      "kind": "overlay_amount",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 80.0,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "mismatch_amount",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 90.0,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "mismatch_amount"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-064",
+      "kind": "overlay_amount",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 81.3,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "history_open_high",
+            "mismatch_amount",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 91.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_amount"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-065",
+      "kind": "overlay_amount",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 80.0,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "mismatch_amount",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 91.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_amount"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-066",
+      "kind": "overlay_amount",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 80.0,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "mismatch_amount",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 91.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_amount"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-067",
+      "kind": "incremental_date_edit",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 42.3,
+          "level": "medium",
+          "signals": [
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 73.7,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-068",
+      "kind": "incremental_date_edit",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 38.2,
+          "level": "medium",
+          "signals": [
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 73.7,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-069",
+      "kind": "incremental_date_edit",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 42.3,
+          "level": "medium",
+          "signals": [
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 73.7,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-070",
+      "kind": "incremental_date_edit",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 38.2,
+          "level": "medium",
+          "signals": [
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 69.1,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-071",
+      "kind": "incremental_date_edit",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 38.2,
+          "level": "medium",
+          "signals": [
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 73.7,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-072",
+      "kind": "incremental_date_edit",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 38.2,
+          "level": "medium",
+          "signals": [
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 70.1,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "extraction_missing",
+            "forensic_incremental_update",
+            "forensic_modified_after_creation",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-073",
+      "kind": "hidden_text_layer",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 83.6,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 93.0,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-074",
+      "kind": "hidden_text_layer",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 83.6,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 93.0,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-075",
+      "kind": "hidden_text_layer",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 63.5,
+          "level": "high",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 84.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-076",
+      "kind": "hidden_text_layer",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 67.2,
+          "level": "high",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 84.5,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-077",
+      "kind": "hidden_text_layer",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 84.7,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 93.0,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-078",
+      "kind": "hidden_text_layer",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 84.1,
+          "level": "critical",
+          "signals": [
+            "forensic_text_layer_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 93.0,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_text_layer_mismatch",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-079",
+      "kind": "editor_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 28.0,
+          "level": "medium",
+          "signals": [
+            "forensic_editing_software",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 68.9,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "forensic_editing_software",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-080",
+      "kind": "editor_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 67.6,
+          "level": "high",
+          "signals": [
+            "forensic_editing_software",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 86.2,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_editing_software",
+            "history_duplication",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-081",
+      "kind": "editor_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 32.8,
+          "level": "medium",
+          "signals": [
+            "forensic_editing_software",
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 69.4,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "forensic_editing_software",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-082",
+      "kind": "editor_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 32.8,
+          "level": "medium",
+          "signals": [
+            "forensic_editing_software",
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 69.4,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "forensic_editing_software",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-083",
+      "kind": "editor_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 70.8,
+          "level": "high",
+          "signals": [
+            "forensic_editing_software",
+            "history_open_high",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 86.2,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_editing_software",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-084",
+      "kind": "editor_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 67.6,
+          "level": "high",
+          "signals": [
+            "forensic_editing_software",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 84.9,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "forensic_editing_software",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-085",
+      "kind": "clean_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 59.5,
+          "level": "high",
+          "signals": [
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 81.9,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-086",
+      "kind": "clean_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 59.5,
+          "level": "high",
+          "signals": [
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 79.8,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-087",
+      "kind": "clean_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 63.5,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 82.8,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-088",
+      "kind": "clean_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 63.5,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 82.8,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-089",
+      "kind": "clean_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 63.5,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 82.8,
+          "level": "critical",
+          "signals": [
+            "bank_mismatched",
+            "history_bank_mismatch",
+            "history_open_high",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-090",
+      "kind": "clean_regenerated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 59.5,
+          "level": "high",
+          "signals": [
+            "maturity_value_inconsistent",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 79.8,
+          "level": "high",
+          "signals": [
+            "bank_mismatched",
+            "maturity_value_inconsistent"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-091",
+      "kind": "fabricated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 19.0,
+          "level": "low",
+          "signals": [
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 32.0,
+          "level": "medium",
+          "signals": [
+            "bank_inconclusive",
+            "history_bank_mismatch",
+            "history_duplication",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-092",
+      "kind": "fabricated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 13.0,
+          "level": "low",
+          "signals": [
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 32.0,
+          "level": "medium",
+          "signals": [
+            "bank_inconclusive",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-093",
+      "kind": "fabricated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 16.0,
+          "level": "low",
+          "signals": [
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 32.0,
+          "level": "medium",
+          "signals": [
+            "bank_inconclusive",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-094",
+      "kind": "fabricated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 10.0,
+          "level": "low",
+          "signals": [
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 28.5,
+          "level": "medium",
+          "signals": [
+            "bank_inconclusive",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-095",
+      "kind": "fabricated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 19.0,
+          "level": "low",
+          "signals": [
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 32.0,
+          "level": "medium",
+          "signals": [
+            "bank_inconclusive",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-096",
+      "kind": "fabricated",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 13.0,
+          "level": "low",
+          "signals": [
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 32.0,
+          "level": "medium",
+          "signals": [
+            "bank_inconclusive",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-097",
+      "kind": "reused_receipt_rescan",
+      "label": 1,
+      "notes": "Receipt of G-025",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 93.0,
+          "level": "critical",
+          "signals": [
+            "extracted_number_elsewhere",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 94.2,
+          "level": "critical",
+          "signals": [
+            "bank_inconclusive",
+            "extracted_number_elsewhere",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-098",
+      "kind": "reused_receipt_rescan",
+      "label": 1,
+      "notes": "Receipt of G-022",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 92.8,
+          "level": "critical",
+          "signals": [
+            "extracted_number_elsewhere",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_document",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 94.2,
+          "level": "critical",
+          "signals": [
+            "bank_inconclusive",
+            "extracted_number_elsewhere",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_document"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-099",
+      "kind": "reused_receipt_rescan",
+      "label": 1,
+      "notes": "Receipt of G-011",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 92.3,
+          "level": "critical",
+          "signals": [
+            "extracted_number_elsewhere",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 94.2,
+          "level": "critical",
+          "signals": [
+            "bank_inconclusive",
+            "extracted_number_elsewhere",
+            "history_duplication",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-100",
+      "kind": "reused_receipt_rescan",
+      "label": 1,
+      "notes": "Receipt of G-059",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 92.3,
+          "level": "critical",
+          "signals": [
+            "extracted_number_elsewhere",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 93.1,
+          "level": "critical",
+          "signals": [
+            "bank_inconclusive",
+            "extracted_number_elsewhere",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-101",
+      "kind": "reused_receipt_rescan",
+      "label": 1,
+      "notes": "Receipt of G-026",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 92.5,
+          "level": "critical",
+          "signals": [
+            "extracted_number_elsewhere",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 94.1,
+          "level": "critical",
+          "signals": [
+            "bank_inconclusive",
+            "extracted_number_elsewhere",
+            "history_bank_mismatch",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-102",
+      "kind": "reused_receipt_rescan",
+      "label": 1,
+      "notes": "Receipt of G-002",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 93.4,
+          "level": "critical",
+          "signals": [
+            "extracted_number_elsewhere",
+            "history_duplication",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_document",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 94.2,
+          "level": "critical",
+          "signals": [
+            "bank_inconclusive",
+            "extracted_number_elsewhere",
+            "history_duplication",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_document"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-103",
+      "kind": "duplicate_declared",
+      "label": 1,
+      "notes": "Instrument of G-058",
+      "blocked": true,
+      "stages": {
+        "intake": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        },
+        "after_bank_check": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-104",
+      "kind": "duplicate_declared",
+      "label": 1,
+      "notes": "Instrument of G-006",
+      "blocked": true,
+      "stages": {
+        "intake": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        },
+        "after_bank_check": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-105",
+      "kind": "duplicate_declared",
+      "label": 1,
+      "notes": "Instrument of G-017",
+      "blocked": true,
+      "stages": {
+        "intake": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        },
+        "after_bank_check": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-106",
+      "kind": "duplicate_declared",
+      "label": 1,
+      "notes": "Instrument of G-050",
+      "blocked": true,
+      "stages": {
+        "intake": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        },
+        "after_bank_check": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-107",
+      "kind": "duplicate_declared",
+      "label": 1,
+      "notes": "Instrument of G-001",
+      "blocked": true,
+      "stages": {
+        "intake": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        },
+        "after_bank_check": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-108",
+      "kind": "duplicate_declared",
+      "label": 1,
+      "notes": "Instrument of G-032",
+      "blocked": true,
+      "stages": {
+        "intake": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        },
+        "after_bank_check": {
+          "score": 100.0,
+          "level": "blocked",
+          "signals": [
+            "duplicate_blocked"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-109",
+      "kind": "third_party_depositor",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 46.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 40.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-110",
+      "kind": "third_party_depositor",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 46.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 40.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-111",
+      "kind": "third_party_depositor",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 46.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 40.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-112",
+      "kind": "third_party_depositor",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 51.4,
+          "level": "high",
+          "signals": [
+            "depositor_not_institution",
+            "history_open_high",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 49.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution",
+            "history_bank_mismatch",
+            "history_open_high"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-113",
+      "kind": "third_party_depositor",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 46.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 40.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-114",
+      "kind": "third_party_depositor",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 46.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 40.0,
+          "level": "medium",
+          "signals": [
+            "depositor_not_institution"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-115",
+      "kind": "missing_lien",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 75.7,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 74.5,
+          "level": "high",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-116",
+      "kind": "missing_lien",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 74.8,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 74.5,
+          "level": "high",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-117",
+      "kind": "missing_lien",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 75.7,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 74.5,
+          "level": "high",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-118",
+      "kind": "missing_lien",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 74.8,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 74.5,
+          "level": "high",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-119",
+      "kind": "missing_lien",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 74.8,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 74.5,
+          "level": "high",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte"
+          ]
+        }
+      }
+    },
+    {
+      "id": "P-120",
+      "kind": "missing_lien",
+      "label": 1,
+      "notes": "",
+      "blocked": false,
+      "stages": {
+        "intake": {
+          "score": 75.7,
+          "level": "high",
+          "signals": [
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte",
+            "unverified"
+          ]
+        },
+        "after_bank_check": {
+          "score": 74.5,
+          "level": "high",
+          "signals": [
+            "history_bank_mismatch",
+            "history_open_high",
+            "lien_document_conflict",
+            "lien_not_aicte"
+          ]
+        }
+      }
+    }
+  ]
+}

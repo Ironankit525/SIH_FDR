@@ -432,3 +432,17 @@ def test_database_migrations_and_raw_sql_audit_protection(tmp_path):
         with pytest.raises(IntegrityError, match="append-only"):
             connection.execute(text("DELETE FROM audit_logs"))
     engine.dispose()
+
+
+def test_postgresql_migrations_render_without_a_server_or_credentials():
+    # env.py's offline mode only needs a URL to pick the dialect; nothing connects, so a placeholder is enough.
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+    url = "postgresql+psycopg://placeholder:placeholder-password@localhost:5432/depositflow"
+    result = subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head", "--sql"], cwd=Path(__file__).resolve().parents[1],
+                            env={**os.environ, "DATABASE_URL": url}, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert "CREATE TABLE risk_assessments" in result.stdout and "CREATE TRIGGER audit_no_change" in result.stdout
+    assert "placeholder-password" not in result.stdout

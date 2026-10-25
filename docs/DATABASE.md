@@ -28,6 +28,8 @@ erDiagram
   release_requests ||--|{ release_clearances : requires
   security_deposits ||--o{ notifications : reminds
   notifications ||--o{ notification_reads : read_by
+  security_deposits ||--o{ risk_assessments : scored_by
+  risk_weight_versions ||--o{ risk_assessments : weighs
   users ||--o{ notification_reads : reads
   users ||--o{ audit_logs : acts
   institutions ||--o{ audit_logs : scopes

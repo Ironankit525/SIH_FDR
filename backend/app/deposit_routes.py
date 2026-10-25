@@ -16,10 +16,11 @@ from .models import (Institution, Programme, SecurityDeposit, Instrument, Docume
                      Replacement, ReleaseRequest, User, utcnow)
 from .security import current_user, require_roles, require_owner, get_deposit, rate_limit
 from .presenters import record, deposit_summary, deposit_detail
+from .risk import assess
 from .rules import calculate
 from .storage import store, validate_file
 from .jobs import dispatch
-from .workflows import current_instrument, detect, flag
+from .workflows import current_instrument, detect, flag, instrument_conflicts, institution_profile
 
 router = APIRouter(prefix="/api", tags=["Institutions and deposits"])
 
@@ -60,7 +61,8 @@ def requirement(body: schemas.RequirementInput, user=Depends(current_user), db=D
 
 @router.get("/deposits")
 def deposits(q: str = "", status: str = "", bank: str = "", programme: str = "", assigned: str = "", min_amount: float | None = None,
-             max_amount: float | None = None, date_from: str = "", date_to: str = "", user=Depends(current_user), db=Depends(get_db)):
+             max_amount: float | None = None, date_from: str = "", date_to: str = "", risk_level: str = "", sort: Literal["", "risk"] = "",
+             user=Depends(current_user), db=Depends(get_db)):
     query = select(SecurityDeposit).order_by(SecurityDeposit.created_at.desc())
     if user.role == "institution":
         query = query.where(SecurityDeposit.institution_id == user.institution_id)
@@ -68,11 +70,30 @@ def deposits(q: str = "", status: str = "", bank: str = "", programme: str = "",
         query = query.where(SecurityDeposit.status == status)
     if assigned == "me":
         query = query.where(SecurityDeposit.assigned_officer_id == user.id)
-    results = [deposit_summary(db, d) for d in db.scalars(query).all()]
+    results = [deposit_summary(db, d, user) for d in db.scalars(query).all()]
+    if "risk" in (results[0] if results else {}):
+        # Riskiest first, so the queue starts where scrutiny matters most.
+        results = [r for r in results if not risk_level or (r["risk"] and r["risk"]["level"] == risk_level)]
+        if sort == "risk":
+            results.sort(key=lambda r: -(r["risk"]["score"] if r["risk"] else 0))
     return [r for r in results if (not q or q.lower() in " ".join([r["reference"], r["institution_name"], r["instrument"]["number"]]).lower())
             and (not bank or bank.lower() in r["instrument"]["bank"].lower()) and (not programme or programme.lower() in r["programme"].lower())
             and (min_amount is None or float(r["instrument"]["amount"]) >= min_amount) and (max_amount is None or float(r["instrument"]["amount"]) <= max_amount)
             and (not date_from or r["instrument"]["maturity_date"] >= date_from) and (not date_to or r["instrument"]["maturity_date"] <= date_to)]
+
+
+def reject_duplicate(db, body, deposit_id=None):
+    # Spacing, punctuation and bank abbreviations must not let one instrument be registered twice.
+    if instrument_conflicts(db, body.bank, body.number, deposit_id)[0]:
+        raise HTTPException(409, "This bank and instrument reference is already registered. Ask an officer to review the possible duplicate.")
+
+
+@router.get("/institutions/{institution_id}/profile")
+def profile(institution_id: str, user=Depends(current_user), db=Depends(get_db)):
+    require_roles(user, "verification", "clearance", "authority", "admin", "auditor")
+    if not db.get(Institution, institution_id):
+        raise HTTPException(404, "Institution not found")
+    return institution_profile(db, institution_id)
 
 
 @router.post("/deposits", status_code=201)
@@ -83,8 +104,7 @@ def create_deposit(body: schemas.DepositInput, user=Depends(current_user), db=De
         raise HTTPException(404, "Programme not found")
     institution = db.get(Institution, user.institution_id)
     requirement = calculate(db, institution, programme)
-    if db.scalar(select(Instrument).where(Instrument.bank == body.bank, Instrument.number == body.number)):
-        raise HTTPException(409, "This bank and instrument reference is already registered. Ask an officer to review the possible duplicate.")
+    reject_duplicate(db, body)
     deposit = SecurityDeposit(institution_id=institution.id, programme_id=programme.id, reference="DF-" + str(utcnow().year) + "-" + secrets.token_hex(3).upper(),
                               rule_version_id=requirement["rule_version_id"], required_amount=requirement["required_amount"], requirement_snapshot=requirement,
                               regulatory_end_date=body.regulatory_end_date, renewal_due_date=body.renewal_due_date, submitted_by=user.id)
@@ -93,12 +113,12 @@ def create_deposit(body: schemas.DepositInput, user=Depends(current_user), db=De
     db.add(Instrument(deposit_id=deposit.id, **body.model_dump(exclude={"programme_id", "regulatory_end_date", "renewal_due_date"})))
     audit(db, user, "deposit_draft_created", deposit.id, deposit.institution_id, after={"reference": deposit.reference})
     db.commit()
-    return deposit_detail(db, deposit)
+    return deposit_detail(db, deposit, user)
 
 
 @router.get("/deposits/{deposit_id}")
 def detail(deposit_id: str, user=Depends(current_user), db=Depends(get_db)):
-    return deposit_detail(db, get_deposit(db, user, deposit_id))
+    return deposit_detail(db, get_deposit(db, user, deposit_id), user)
 
 
 @router.patch("/deposits/{deposit_id}/instrument")
@@ -107,6 +127,7 @@ def update_instrument(deposit_id: str, body: schemas.InstrumentInput, user=Depen
     require_owner(user, deposit)
     if deposit.status not in ("draft", "clarification_required"):
         raise HTTPException(409, "An officer must request clarification before submitted details can be changed")
+    reject_duplicate(db, body, deposit.id)
     inst = current_instrument(db, deposit.id)
     before = record(inst)
     for key, value in body.model_dump().items():
@@ -115,7 +136,7 @@ def update_instrument(deposit_id: str, body: schemas.InstrumentInput, user=Depen
     audit(db, user, "submitted_fields_corrected", deposit.id, deposit.institution_id, before, record(inst))
     detect(db, deposit)
     db.commit()
-    return deposit_detail(db, deposit)
+    return deposit_detail(db, deposit, user)
 
 
 @router.post("/deposits/{deposit_id}/submit")
@@ -131,7 +152,7 @@ def submit(deposit_id: str, user=Depends(current_user), db=Depends(get_db)):
     detect(db, deposit)
     audit(db, user, "deposit_submitted", deposit.id, deposit.institution_id, after={"reference": deposit.reference})
     db.commit()
-    return deposit_detail(db, deposit)
+    return deposit_detail(db, deposit, user)
 
 
 @router.post("/deposits/{deposit_id}/documents", status_code=201)
@@ -158,6 +179,7 @@ async def upload(deposit_id: str, background_tasks: BackgroundTasks, file: Uploa
     db.flush()
     if reused:
         flag(db, deposit, "reused_document:" + sha, "This document fingerprint also occurs in another submission. An authorised officer must investigate reuse.", "high", source="document_hash", instrument_id=inst.id)
+        assess(db, deposit)
     audit(db, user, "document_uploaded", deposit.id, deposit.institution_id, after={"document_id": doc.id, "filename": filename, "category": category, "sha256": sha})
     db.commit()
     dispatch(doc.id, background_tasks)
@@ -240,6 +262,7 @@ def replace(deposit_id: str, body: schemas.ReplacementInput, user=Depends(curren
     require_owner(user, deposit)
     if deposit.status in ("released", "release_authorised", "draft") or db.scalar(select(ReleaseRequest.id).where(ReleaseRequest.deposit_id == deposit.id)):
         raise HTTPException(409, "Replacement requires a submitted case without an existing release workflow")
+    reject_duplicate(db, body, deposit.id)
     previous = current_instrument(db, deposit.id)
     replacement = Instrument(deposit_id=deposit.id, **body.model_dump(exclude={"reason"}))
     previous.status = "replaced"
@@ -248,5 +271,6 @@ def replace(deposit_id: str, body: schemas.ReplacementInput, user=Depends(curren
     db.add(Replacement(deposit_id=deposit.id, previous_id=previous.id, replacement_id=replacement.id, reason=body.reason, actor_id=user.id))
     deposit.status = "clarification_required"
     audit(db, user, "instrument_replaced", deposit.id, deposit.institution_id, before={"instrument_id": previous.id}, after={"instrument_id": replacement.id, "reason": body.reason})
+    detect(db, deposit)
     db.commit()
-    return deposit_detail(db, deposit)
+    return deposit_detail(db, deposit, user)

@@ -1,5 +1,7 @@
 import io
 import csv
+import json
+from pathlib import Path
 from collections import Counter
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,9 +12,10 @@ from .audit import audit, event_digest
 from .config import settings
 from .db import get_db
 from .models import (User, Role, Institution, SecurityDeposit, Instrument, RuleVersion, RegulatoryRule, RuleApproval,
-                     Notification, NotificationRead, AuditLog, AuditChainHead, Configuration, Document, VerificationRequest, VerificationEvidence, ReleaseRequest)
+                     Notification, NotificationRead, AuditLog, AuditChainHead, Configuration, Document, VerificationRequest, VerificationEvidence, ReleaseRequest, RiskWeightVersion)
 from .security import current_user, require_roles, passwords
 from .presenters import record, deposit_summary, audit_record
+from . import risk
 from .workflows import configuration, DEFAULT_WORKFLOW, DEFAULT_ALERTS, monitor
 
 router = APIRouter(prefix="/api", tags=["Dashboards and administration"])
@@ -28,7 +31,7 @@ def scoped_deposits(db, user):
 @router.get("/dashboard")
 def dashboard(user=Depends(current_user), db=Depends(get_db)):
     deposits = scoped_deposits(db, user)
-    rows = [deposit_summary(db, d) for d in deposits]
+    rows = [deposit_summary(db, d, user) for d in deposits]
     total = sum(float(r["instrument"]["amount"]) for r in rows)
     counts = Counter(r["status"] for r in rows)
     maturity = Counter("Overdue" if r["days_to_maturity"] < 0 else "0–30 days" if r["days_to_maturity"] <= 30 else "31–90 days" if r["days_to_maturity"] <= 90 else "90+ days" for r in rows if r["status"] != "released")
@@ -42,7 +45,7 @@ def dashboard(user=Depends(current_user), db=Depends(get_db)):
             turnarounds.append({"reference": d.reference, "hours": round(max(0, (evidence.created_at.replace(tzinfo=None) - d.submitted_at.replace(tzinfo=None)).total_seconds() / 3600), 2)})
     deposit_ids = [d.id for d in deposits]
     pending_releases = db.scalar(select(func.count()).select_from(ReleaseRequest).where(ReleaseRequest.deposit_id.in_(deposit_ids), ReleaseRequest.status.in_(["under_review", "returned"])))
-    return {"total_records": len(rows), "total_value": total, "pending_verification": sum(r["instrument"]["verification_status"] in ("pending", "mock_pending", "inconclusive", "mock_inconclusive") for r in rows),
+    result = {"total_records": len(rows), "total_value": total, "pending_verification": sum(r["instrument"]["verification_status"] in ("pending", "mock_pending", "inconclusive", "mock_inconclusive") for r in rows),
             "officially_confirmed": sum(r["instrument"]["verification_status"] == "officially_confirmed" for r in rows),
             "mock_confirmed": sum(r["instrument"]["verification_status"] == "mock_confirmed" for r in rows),
             "discrepancies": sum(r["open_discrepancies"] for r in rows), "expiring": sum(0 <= r["days_to_maturity"] <= 90 for r in rows),
@@ -52,6 +55,37 @@ def dashboard(user=Depends(current_user), db=Depends(get_db)):
             "maturity_distribution": [{"name": name, "value": maturity[name]} for name in ["Overdue", "0–30 days", "31–90 days", "90+ days"]],
             "monthly_submissions": [{"name": key, "value": value} for key, value in sorted(months.items())],
             "verification_turnaround": turnarounds, "recent": rows[:6], "fictional_data": True}
+    if user.role != "institution":
+        active = [r for r in rows if r["risk"] and r["status"] != "released"]
+        levels = Counter(r["risk"]["level"] for r in active)
+        result["risk_distribution"] = [{"name": level, "value": levels[level]} for level in ("low", "medium", "high", "critical")]
+        institutions = {}
+        for r in active:
+            entry = institutions.setdefault(r["institution_id"], {"institution": r["institution_name"], "cases": 0, "elevated": 0, "highest": 0.0, "highest_level": "low", "highest_reference": ""})
+            entry["cases"] += 1
+            entry["elevated"] += r["risk"]["level"] in ("high", "critical")
+            if r["risk"]["score"] > entry["highest"]:
+                entry["highest"], entry["highest_level"], entry["highest_reference"] = r["risk"]["score"], r["risk"]["level"], r["reference"]
+        result["risk_institutions"] = sorted(institutions.values(), key=lambda e: (-e["elevated"], -e["highest"]))[:5]
+    return result
+
+
+EVALUATION = Path(__file__).resolve().parents[1] / "evaluation" / "latest.json"
+
+
+@router.get("/risk/evaluation")
+def risk_evaluation(user=Depends(current_user)):
+    """Headline results of the latest synthetic-corpus evaluation (python -m evaluation)."""
+    require_roles(user, "verification", "clearance", "authority", "admin", "auditor")
+    if not EVALUATION.exists():
+        raise HTTPException(404, "No evaluation has been run")
+    data = json.loads(EVALUATION.read_text())
+    metrics = data["metrics"]
+    return {"generated_on": data["generated_on"], "engine_version": risk.ENGINE_VERSION, "cases": metrics["cases"],
+            "problem_cases": metrics["problem_cases"], "genuine_cases": metrics["genuine_cases"],
+            "stages": {stage: {key: values[key] for key in ("auc", "recall_at_medium", "recall_at_high", "false_positive_rate_at_medium", "precision_at_10")}
+                       for stage, values in metrics["stages"].items()},
+            "notice": "Measured on a fictional synthetic corpus written by the same team as the detectors. Not real-world fraud detection accuracy."}
 
 
 @router.get("/notifications")
@@ -94,10 +128,13 @@ def export_report(kind: str = "deposits", user=Depends(current_user), db=Depends
         for item in db.scalars(select(AuditLog).order_by(AuditLog.created_at)).all():
             writer.writerow([safe_csv(v) for v in (item.created_at, item.actor_id, item.action, item.entity_id, item.event_hash)])
     elif kind == "deposits":
-        writer.writerow(["Reference", "Institution", "Programme", "Bank", "Instrument", "Amount INR", "Maturity", "Status", "Verification", "Data"])
+        officials = user.role != "institution"
+        writer.writerow(["Reference", "Institution", "Programme", "Bank", "Instrument", "Amount INR", "Maturity", "Status", "Verification"]
+                        + (["Risk score", "Risk level"] if officials else []) + ["Data"])
         for d in scoped_deposits(db, user):
-            r = deposit_summary(db, d)
-            writer.writerow([safe_csv(v) for v in (r["reference"], r["institution_name"], r["programme"], r["instrument"]["bank"], r["instrument"]["number"], r["instrument"]["amount"], r["instrument"]["maturity_date"], r["status"], r["instrument"]["verification_status"], "FICTIONAL DEMO")])
+            r = deposit_summary(db, d, user)
+            risk_columns = [r["risk"]["score"], r["risk"]["level"]] if officials and r["risk"] else ["", ""] if officials else []
+            writer.writerow([safe_csv(v) for v in (r["reference"], r["institution_name"], r["programme"], r["instrument"]["bank"], r["instrument"]["number"], r["instrument"]["amount"], r["instrument"]["maturity_date"], r["status"], r["instrument"]["verification_status"], *risk_columns, "FICTIONAL DEMO")])
     else:
         raise HTTPException(422, "Unsupported report type")
     audit(db, user, "report_exported", user.id, user.institution_id, after={"kind": kind})
@@ -139,6 +176,50 @@ def approve_rule(version_id: str, body: schemas.Note, user=Depends(current_user)
     item.status = "active"
     db.add(RuleApproval(version_id=item.id, approved_by=user.id, notes=body.notes))
     audit(db, user, "rule_change_approved", item.rule_id, after={"version": item.version, "notes": body.notes})
+    db.commit()
+    return record(item)
+
+
+@router.get("/admin/risk-weights")
+def risk_weights(user=Depends(current_user), db=Depends(get_db)):
+    require_roles(user, "admin", "auditor")
+    versions = db.scalars(select(RiskWeightVersion).order_by(RiskWeightVersion.version.desc())).all()
+    return {"active": risk.active_policy(db), "engine_version": risk.ENGINE_VERSION,
+            "signals": {key: {"category": c, "default_weight": w, "strength": s} for key, (c, w, s) in risk.SIGNALS.items()},
+            "versions": [record(v) for v in versions]}
+
+
+@router.post("/admin/risk-weights", status_code=201)
+def propose_risk_weights(body: schemas.RiskWeightsInput, user=Depends(current_user), db=Depends(get_db)):
+    require_roles(user, "admin")
+    number = (db.scalar(select(func.max(RiskWeightVersion.version))) or 0) + 1
+    item = RiskWeightVersion(version=number, weights=body.weights, category_caps=body.category_caps or dict(risk.DEFAULT_CAPS),
+                             thresholds=body.thresholds, notes=body.notes, proposed_by=user.id)
+    db.add(item)
+    audit(db, user, "risk_weights_proposed", "risk-weights", after={"version": number, **body.model_dump()})
+    db.commit()
+    return record(item)
+
+
+@router.post("/admin/risk-weights/{version_id}/approve")
+def approve_risk_weights(version_id: str, body: schemas.Note, user=Depends(current_user), db=Depends(get_db)):
+    require_roles(user, "admin")
+    item = db.scalar(select(RiskWeightVersion).where(RiskWeightVersion.id == version_id).with_for_update())
+    if not item:
+        raise HTTPException(404, "Risk weight version not found")
+    if item.proposed_by == user.id:
+        raise HTTPException(403, "A different administrator must approve the proposed risk weights")
+    if item.status != "proposed":
+        raise HTTPException(409, "Only proposed versions can be approved")
+    for previous in db.scalars(select(RiskWeightVersion).where(RiskWeightVersion.status == "active")).all():
+        previous.status = "superseded"
+    item.status, item.approved_by = "active", user.id
+    audit(db, user, "risk_weights_approved", "risk-weights", after={"version": item.version, "notes": body.notes})
+    db.flush()
+    # Every case is rescored under the new policy, so scores in one queue are comparable.
+    policy = risk.active_policy(db)
+    for deposit in db.scalars(select(SecurityDeposit)).all():
+        risk.assess(db, deposit, policy)
     db.commit()
     return record(item)
 
@@ -214,7 +295,7 @@ def alert_config(body: schemas.AlertInput, user=Depends(current_user), db=Depend
 @router.post("/admin/monitor/run")
 def run_monitor(user=Depends(current_user), db=Depends(get_db)):
     require_roles(user, "admin", "verification")
-    created = monitor(db)
+    created = monitor(db, force_detection=True)
     audit(db, user, "deadline_monitor_run", user.id, after={"notifications_created": created})
     db.commit()
     return {"notifications_created": created}

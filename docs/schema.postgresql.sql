@@ -489,5 +489,85 @@ UPDATE document_extractions SET document_sha256 =
 
 UPDATE alembic_version SET version_num='extraction_provenance' WHERE alembic_version.version_num = 'audit_append_only';
 
+-- Running upgrade extraction_provenance -> risk_safeguards
+
+ALTER TABLE discrepancy_cases ADD COLUMN resolution_kind VARCHAR(20);
+
+ALTER TABLE discrepancy_cases ADD COLUMN resolved_by UUID;
+
+ALTER TABLE discrepancy_cases ADD COLUMN confirmed_by UUID;
+
+ALTER TABLE discrepancy_cases ADD COLUMN condition_active BOOLEAN DEFAULT true NOT NULL;
+
+ALTER TABLE discrepancy_cases ADD CONSTRAINT fk_discrepancy_resolved_by FOREIGN KEY(resolved_by) REFERENCES users (id);
+
+ALTER TABLE discrepancy_cases ADD CONSTRAINT fk_discrepancy_confirmed_by FOREIGN KEY(confirmed_by) REFERENCES users (id);
+
+ALTER TABLE documents ADD COLUMN forensics JSON DEFAULT '{}' NOT NULL;
+
+UPDATE discrepancy_cases SET resolution_kind = 'officer' WHERE status = 'resolved';
+
+UPDATE alembic_version SET version_num='risk_safeguards' WHERE alembic_version.version_num = 'extraction_provenance';
+
+-- Running upgrade risk_safeguards -> risk_engine
+
+CREATE TABLE risk_weight_versions (
+    version INTEGER NOT NULL, 
+    status VARCHAR(20) NOT NULL, 
+    weights JSON NOT NULL, 
+    category_caps JSON NOT NULL, 
+    thresholds JSON NOT NULL, 
+    notes TEXT NOT NULL, 
+    proposed_by UUID NOT NULL, 
+    approved_by UUID, 
+    id UUID NOT NULL, 
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL, 
+    PRIMARY KEY (id), 
+    FOREIGN KEY(proposed_by) REFERENCES users (id), 
+    FOREIGN KEY(approved_by) REFERENCES users (id), 
+    UNIQUE (version)
+);
+
+CREATE INDEX ix_risk_weight_versions_created_at ON risk_weight_versions (created_at);
+
+CREATE TABLE risk_assessments (
+    deposit_id UUID NOT NULL, 
+    instrument_id UUID, 
+    score NUMERIC(4, 1) NOT NULL, 
+    level VARCHAR(10) NOT NULL, 
+    signals JSON NOT NULL, 
+    engine_version VARCHAR(20) NOT NULL, 
+    weights_version INTEGER NOT NULL, 
+    inputs_digest VARCHAR(64) NOT NULL, 
+    id UUID NOT NULL, 
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL, 
+    PRIMARY KEY (id), 
+    CHECK (score >= 0 AND score <= 100), 
+    FOREIGN KEY(deposit_id) REFERENCES security_deposits (id), 
+    FOREIGN KEY(instrument_id) REFERENCES deposit_instruments (id)
+);
+
+CREATE INDEX ix_risk_assessments_created_at ON risk_assessments (created_at);
+
+CREATE INDEX ix_risk_assessments_deposit_id ON risk_assessments (deposit_id);
+
+CREATE INDEX ix_risk_assessments_level ON risk_assessments (level);
+
+UPDATE alembic_version SET version_num='risk_engine' WHERE alembic_version.version_num = 'risk_safeguards';
+
+-- Running upgrade risk_engine -> comparison_keys
+
+ALTER TABLE deposit_instruments ADD COLUMN number_key VARCHAR(100);
+
+ALTER TABLE deposit_instruments ADD COLUMN bank_key VARCHAR(150);
+
+ALTER TABLE document_extractions ADD COLUMN text_fingerprint VARCHAR(64);
+
+CREATE INDEX ix_deposit_instruments_number_key ON deposit_instruments (number_key);
+
+CREATE INDEX ix_document_extractions_text_fingerprint ON document_extractions (text_fingerprint);
+
+UPDATE alembic_version SET version_num='comparison_keys' WHERE alembic_version.version_num = 'risk_engine';
+
 COMMIT;
 
