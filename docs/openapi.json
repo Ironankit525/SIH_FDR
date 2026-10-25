@@ -421,6 +421,16 @@
               "default": "",
               "title": "Sort"
             }
+          },
+          {
+            "name": "escalated",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Escalated"
+            }
           }
         ],
         "responses": {
@@ -1246,6 +1256,108 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ResolutionReview"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/deposits/{deposit_id}/vigilance-clearance": {
+      "post": {
+        "tags": [
+          "Verification and release"
+        ],
+        "summary": "Vigilance Clearance",
+        "description": "Vigilance closes an escalation once every suspicious finding on the case has been resolved.",
+        "operationId": "vigilance_clearance_api_deposits__deposit_id__vigilance_clearance_post",
+        "parameters": [
+          {
+            "name": "deposit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Deposit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Note"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/deposits/{deposit_id}/verification-complete": {
+      "post": {
+        "tags": [
+          "Verification and release"
+        ],
+        "summary": "Verification Complete",
+        "description": "The officer's formal sign-off. Refused until the bank has confirmed, the receipt is checked,\nevery review task is resolved and no suspicion above the limit remains uncleared by Vigilance.",
+        "operationId": "verification_complete_api_deposits__deposit_id__verification_complete_post",
+        "parameters": [
+          {
+            "name": "deposit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Deposit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Note"
               }
             }
           }

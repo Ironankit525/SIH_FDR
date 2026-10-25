@@ -8,10 +8,10 @@ from . import risk as risk_engine
 from .config import settings
 from .db import get_db
 from .models import (SecurityDeposit, Discrepancy, VerificationRequest, VerificationEvidence, Document,
-                     ReleaseRequest, Clearance, Instrument, RiskAssessment, User)
+                     ReleaseRequest, Clearance, Instrument, RiskAssessment, User, utcnow)
 from .security import current_user, get_deposit, require_roles, require_owner
 from .presenters import record, deposit_detail, release_detail, task_for
-from .workflows import current_instrument, detect, flag, configuration, DEFAULT_WORKFLOW, release_blockers, release_reviewers
+from .workflows import RISK_CLEARANCE_CELL, current_instrument, detect, flag, readiness, reopen_verification, configuration, DEFAULT_WORKFLOW, release_blockers, release_reviewers
 
 router = APIRouter(prefix="/api", tags=["Verification and release"])
 
@@ -88,6 +88,7 @@ def clarification(deposit_id: str, body: schemas.Note, user=Depends(current_user
                        evidence_source="officer_review", next_step="Respond with an explanation and supporting documents.", assigned_officer_id=user.id)
     db.add(item)
     deposit.status = "clarification_required"
+    reopen_verification(db, deposit, "Clarification requested")
     audit(db, user, "clarification_requested", deposit.id, deposit.institution_id, after={"notes": body.notes})
     risk_engine.assess(db, deposit)
     db.commit()
@@ -114,6 +115,9 @@ def resolve(case_id: str, body: schemas.Note, user=Depends(current_user), db=Dep
     item = db.get(Discrepancy, case_id)
     if not item:
         raise HTTPException(404, "Discrepancy not found")
+    deposit = get_deposit(db, user, item.deposit_id, lock=True)
+    if risk_engine.is_escalated(deposit) and risk_engine.suspicion_key(db, item):
+        return vigilance_resolution(db, user, deposit, item, body)
     deposit = assigned_review(db, user, item.deposit_id)
     if item.status in ("resolved", "resolution_proposed"):
         raise HTTPException(409, "This discrepancy is already resolved or awaiting confirmation of its resolution")
@@ -143,6 +147,8 @@ def review_resolution(case_id: str, body: schemas.ResolutionReview, user=Depends
     db.refresh(item)
     if item.status != "resolution_proposed":
         raise HTTPException(409, "Only proposed resolutions can be confirmed or rejected")
+    if risk_engine.is_escalated(deposit) and risk_engine.suspicion_key(db, item):
+        raise HTTPException(403, "This case is escalated to Vigilance; only Vigilance can clear its suspicious findings")
     if user.id in (item.resolved_by, deposit.assigned_officer_id):
         raise HTTPException(403, "A second verification officer, not the case officer, must review this resolution")
     if body.decision == "confirm":
@@ -155,6 +161,59 @@ def review_resolution(case_id: str, body: schemas.ResolutionReview, user=Depends
     risk_engine.assess(db, deposit)
     db.commit()
     return record(item)
+
+
+def vigilance_resolution(db, user, deposit, item, body):
+    """On an escalated case, suspicious findings are cleared by Vigilance, independently of the case officer."""
+    if user.role != "clearance" or user.clearance_cell != RISK_CLEARANCE_CELL:
+        raise HTTPException(403, "This case is escalated to Vigilance; only Vigilance can clear its suspicious findings")
+    editable_review(deposit)
+    if item.status == "resolved":
+        raise HTTPException(409, "This discrepancy is already resolved")
+    if len(body.notes) < 20:
+        raise HTTPException(422, "Explain the evidence behind the resolution in at least 20 characters")
+    item.status, item.resolution, item.resolved_by, item.resolution_kind = "resolved", body.notes, user.id, "vigilance"
+    audit(db, user, "discrepancy_resolved_by_vigilance", deposit.id, deposit.institution_id, after={"discrepancy_id": item.id, "code": item.code, "notes": body.notes})
+    risk_engine.assess(db, deposit)
+    db.commit()
+    return record(item)
+
+
+@router.post("/deposits/{deposit_id}/vigilance-clearance")
+def vigilance_clearance(deposit_id: str, body: schemas.Note, user=Depends(current_user), db=Depends(get_db)):
+    """Vigilance closes an escalation once every suspicious finding on the case has been resolved."""
+    require_roles(user, "clearance")
+    if user.clearance_cell != RISK_CLEARANCE_CELL:
+        raise HTTPException(403, "Only the Vigilance cell can clear an escalation")
+    deposit = get_deposit(db, user, deposit_id, lock=True)
+    editable_review(deposit)
+    if not risk_engine.is_escalated(deposit):
+        raise HTTPException(409, "This case is not escalated")
+    still_open = [t for t in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id, Discrepancy.status != "resolved")).all()
+                  if risk_engine.suspicion_key(db, t)]
+    if still_open:
+        raise HTTPException(409, f"Resolve the {len(still_open)} open suspicious finding(s) before clearing the escalation")
+    deposit.vigilance_cleared_at, deposit.vigilance_cleared_by = utcnow(), user.id
+    audit(db, user, "escalation_cleared_by_vigilance", deposit.id, deposit.institution_id, after={"notes": body.notes})
+    db.commit()
+    return deposit_detail(db, deposit, user)
+
+
+@router.post("/deposits/{deposit_id}/verification-complete")
+def verification_complete(deposit_id: str, body: schemas.Note, user=Depends(current_user), db=Depends(get_db)):
+    """The officer's formal sign-off. Refused until the bank has confirmed, the receipt is checked,
+    every review task is resolved and no suspicion above the limit remains uncleared by Vigilance."""
+    deposit = assigned_review(db, user, deposit_id)
+    risk_engine.assess(db, deposit)
+    missing = [c["label"] + ": " + c["detail"] for c in readiness(db, deposit) if not c["met"]]
+    if missing:
+        raise HTTPException(409, {"message": "Verification cannot be completed yet", "blockers": missing})
+    deposit.verified_at, deposit.verified_by = utcnow(), user.id
+    if deposit.status in ("submitted", "under_review", "clarification_required"):
+        deposit.status = "verified"
+    audit(db, user, "verification_completed", deposit.id, deposit.institution_id, after={"notes": body.notes})
+    db.commit()
+    return deposit_detail(db, deposit, user)
 
 
 @router.get("/deposits/{deposit_id}/risk")
@@ -241,6 +300,8 @@ def request_release(deposit_id: str, body: schemas.ReleaseInput, user=Depends(cu
         raise HTTPException(409, "Submit the deposit before requesting release")
     if db.scalar(select(ReleaseRequest.id).where(ReleaseRequest.deposit_id == deposit.id)):
         raise HTTPException(409, "A release request already exists for this deposit")
+    if not deposit.verified_at:
+        raise HTTPException(409, "An officer must complete verification before release can be requested")
     workflow = dict(configuration(db, "workflow", DEFAULT_WORKFLOW))
     if settings.environment == "production":
         workflow["allow_mock_for_demo"] = False

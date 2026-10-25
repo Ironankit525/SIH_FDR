@@ -6,7 +6,7 @@ from app import risk, security
 from app.models import Institution, MockBankRecord, Programme, User
 from app.security import passwords
 
-from .corpus import GENUINE_KINDS, PROBLEM_KINDS
+from .corpus import COMPLIANCE_KINDS, GENUINE_KINDS, PROBLEM_KINDS
 
 PASSWORD = "EvaluationOnly2026!"
 STAGES = ("intake", "after_bank_check")
@@ -46,7 +46,11 @@ def login(client, email, password):
 
 def snapshot(officer, deposit_id):
     data = officer.get(f"/api/deposits/{deposit_id}/risk").json()
-    return {"score": float(data["score"]), "level": data["level"], "signals": sorted({s["key"] for s in data["signals"]})}
+    detail = officer.get(f"/api/deposits/{deposit_id}").json()
+    # A requirement stops the case when a high-severity non-suspicion task is open: verification cannot be completed.
+    requirement = any(t["severity"] == "high" and t["status"] != "resolved" and not t.get("suspicious") for t in detail["discrepancies"])
+    return {"score": float(data["score"]), "level": data["level"], "signals": sorted({s["key"] for s in data["signals"]}),
+            "stopped_by_requirement": requirement}
 
 
 def run(factory, client, names, cases, officer_password):
@@ -62,7 +66,7 @@ def run(factory, client, names, cases, officer_password):
         row = {"id": case.id, "kind": case.kind, "label": case.label, "notes": case.notes}
         if created.status_code == 409:
             # Refused at submission as a duplicate: the strongest possible outcome.
-            row.update(blocked=True, stages={stage: {"score": 100.0, "level": "blocked", "signals": ["duplicate_blocked"]} for stage in STAGES})
+            row.update(blocked=True, stages={stage: {"score": 100.0, "level": "blocked", "signals": ["duplicate_blocked"], "stopped_by_requirement": True} for stage in STAGES})
             results.append(row)
             continue
         assert created.status_code == 201, (case.id, created.text)
@@ -103,23 +107,28 @@ def rate(numerator, denominator):
 
 def metrics(results, thresholds=None):
     thresholds = thresholds or risk.DEFAULT_THRESHOLDS
+    # The suspicion score is measured on deception; honestly declared non-compliance is measured by whether a requirement stops it.
+    suspicion = [r for r in results if not (r["label"] and r["kind"] in COMPLIANCE_KINDS)]
     out = {"cases": len(results), "problem_cases": sum(r["label"] for r in results), "genuine_cases": sum(1 - r["label"] for r in results),
-           "thresholds": thresholds, "stages": {}}
+           "suspicion_problem_cases": sum(r["label"] for r in suspicion), "thresholds": thresholds, "stages": {}}
     for stage in STAGES:
-        scored = [(r, r["stages"][stage]) for r in results]
+        scored = [(r, r["stages"][stage]) for r in suspicion]
+        everything = [(r, r["stages"][stage]) for r in results]
         pos = [s["score"] for r, s in scored if r["label"]]
         neg = [s["score"] for r, s in scored if not r["label"]]
         ranked = sorted(scored, key=lambda item: -item[1]["score"])
         top = ranked[:10]
         per_kind = {}
         for kind in list(GENUINE_KINDS) + list(PROBLEM_KINDS):
-            group = [s["score"] for r, s in scored if r["kind"] == kind]
+            group = [s for r, s in everything if r["kind"] == kind]
             if group:
-                per_kind[kind] = {"cases": len(group), "at_least_medium": rate(sum(x >= thresholds["medium"] for x in group), len(group)),
-                                  "at_least_high": rate(sum(x >= thresholds["high"] for x in group), len(group)),
-                                  "median_score": sorted(group)[len(group) // 2]}
+                scores = [s["score"] for s in group]
+                per_kind[kind] = {"cases": len(group), "at_least_medium": rate(sum(x >= thresholds["medium"] for x in scores), len(group)),
+                                  "at_least_high": rate(sum(x >= thresholds["high"] for x in scores), len(group)),
+                                  "stopped_by_requirement": rate(sum(bool(s.get("stopped_by_requirement")) for s in group), len(group)),
+                                  "median_score": sorted(scores)[len(scores) // 2]}
         detectors = defaultdict(lambda: [0, 0])
-        for r, s in scored:
+        for r, s in everything:
             for key in s["signals"]:
                 detectors[key][1 - r["label"]] += 1
         out["stages"][stage] = {

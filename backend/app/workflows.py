@@ -24,6 +24,7 @@ def flag(db, deposit, code, description, severity="warning", fields=None, source
             existing.resolution_kind = existing.resolved_by = existing.confirmed_by = None
             existing.description, existing.severity, existing.assigned_officer_id = description, severity, deposit.assigned_officer_id
             audit(db, None, "discrepancy_reopened", deposit.id, deposit.institution_id, before, {"code": code, "description": description})
+            reopen_verification(db, deposit, "A review task was reopened")
         elif existing.status != "resolved" and existing.description != description:
             audit(db, None, "discrepancy_evidence_changed", deposit.id, deposit.institution_id,
                   {"code": code, "description": existing.description}, {"code": code, "description": description})
@@ -35,7 +36,18 @@ def flag(db, deposit, code, description, severity="warning", fields=None, source
                        assigned_officer_id=deposit.assigned_officer_id)
     db.add(item)
     audit(db, None, "discrepancy_flagged", deposit.id, deposit.institution_id, after={"code": code, "description": description})
+    reopen_verification(db, deposit, "A new review task was raised")
     return item
+
+
+def reopen_verification(db, deposit, reason):
+    """A completed verification covers the evidence it saw; anything new must be verified again."""
+    if not deposit.verified_at:
+        return
+    deposit.verified_at = deposit.verified_by = None
+    if deposit.status == "verified":
+        deposit.status = "under_review"
+    audit(db, None, "verification_reopened", deposit.id, deposit.institution_id, after={"reason": reason})
 
 
 DETECTOR_CODES = {"missing_document", "amount_shortfall", "rule_review", "matured", "unverified", "coverage_gap", "coverage_lapsed",
@@ -110,7 +122,7 @@ def detect(db, deposit):
     if inst.maturity_date <= today:
         raise_flag("matured" + suffix, "The bank maturity date has been reached. This does not establish release eligibility.", "warning", ["maturity_date"], "submitted_information")
     if inst.verification_status == "pending":
-        raise_flag("unverified" + suffix, "No bank verification finding has been recorded.", "warning", source="verification_history", next_step="Request authorised verification or run the labelled demo adapter.")
+        raise_flag("unverified" + suffix, "The bank has not confirmed this instrument yet.", "warning", source="verification_history", next_step="Request the bank's confirmation through an authorised channel.")
     # The instrument must secure the whole obligation; one that matures earlier needs a renewal in time.
     if deposit.regulatory_end_date and inst.maturity_date < deposit.regulatory_end_date:
         if inst.maturity_date <= today:
@@ -153,8 +165,10 @@ def detect(db, deposit):
                            "Ask the bank to confirm principal, rate and maturity date; a changed principal or date usually leaves the printed maturity value behind.")
         if fields.get("lien"):
             document_liens.append(fields["lien"])
-            if lien_required and not mentions_aicte(fields["lien"]):
-                raise_flag(f"lien_document_conflict:{doc.id}", f"The document records the lien as '{fields['lien']}', which does not name AICTE.", "high", ["lien_details"], "document_extraction", "Obtain an instrument with the lien marked in favour of AICTE.")
+            # Suspicion only when the declaration claims AICTE and the document says otherwise; an honestly
+            # declared lien to someone else is a missing requirement (lien_not_aicte), not a contradiction.
+            if lien_required and not mentions_aicte(fields["lien"]) and (mentions_aicte(inst.lien_details) or mentions_aicte(inst.depositor_name)):
+                raise_flag(f"lien_document_conflict:{doc.id}", f"The institution declared a lien in favour of AICTE, but the document records it as '{fields['lien']}'.", "high", ["lien_details"], "document_extraction", "Obtain the bank's confirmation of the lien holder.")
         if "number" in fields:
             hits = db.scalars(select(Instrument).where(Instrument.number_key == normalise_number(fields["number"]),
                                                        Instrument.deposit_id != deposit.id, Instrument.created_at < doc.created_at)).all()
@@ -198,7 +212,7 @@ DEFAULT_ALERTS = {"reminder_days": [90, 60, 30, 7, 0], "escalation_days": 7}
 def release_reviewers(db, deposit, release):
     actions = ['officer_assigned', 'scrutiny_observation', 'clarification_requested',
                'discrepancy_resolved', 'discrepancy_resolution_proposed', 'discrepancy_resolution_confirmed',
-               'discrepancy_resolution_rejected', 'mock_verification_recorded', 'bank_evidence_received',
+               'discrepancy_resolution_rejected', 'verification_completed', 'mock_verification_recorded', 'bank_evidence_received',
                'clearance_decided', 'extracted_field_corrected']
     actors = set(db.scalars(select(AuditLog.actor_id).where(AuditLog.entity_id == deposit.id,
                            AuditLog.action.in_(actions), AuditLog.actor_id.is_not(None))).all())
@@ -270,7 +284,34 @@ def release_blockers(db, deposit, release):
             blockers.append(f"{item.cell} clearance is {item.status.replace('_', ' ')}.")
     if deposit.status == "draft":
         blockers.append("The deposit has not been submitted.")
+    if not deposit.verified_at:
+        blockers.append("An officer has not completed verification of this case.")
     return blockers
+
+
+def readiness(db, deposit):
+    """What must be true before an officer may mark verification complete. Each item says what is missing."""
+    from .config import settings
+    from .risk import is_escalated, latest as latest_risk
+    workflow = configuration(db, "workflow", DEFAULT_WORKFLOW)
+    inst = current_instrument(db, deposit.id)
+    accepted = ["officially_confirmed"] + (["mock_confirmed"] if workflow.get("allow_mock_for_demo") and settings.environment != "production" else [])
+    confirmed = bool(inst and inst.verification_status in accepted)
+    receipts = db.scalars(select(Document).where(Document.instrument_id == inst.id, Document.category == "instrument")).all() if inst else []
+    checked = bool(receipts) and all(d.processing_status == "completed" for d in receipts)
+    open_tasks = db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id, Discrepancy.status != "resolved")).all()
+    assessment = latest_risk(db, deposit.id)
+    escalated = is_escalated(deposit)
+    return [
+        {"key": "bank", "label": "The bank has confirmed the instrument", "met": confirmed,
+         "detail": "Confirmed" if confirmed else "The bank has not confirmed yet." if not inst or inst.verification_status in ("pending", "mock_pending") else "The bank's answer did not confirm the instrument."},
+        {"key": "documents", "label": "The receipt is uploaded and its checks have finished", "met": checked,
+         "detail": "Uploaded and checked" if checked else "No receipt uploaded." if not receipts else "Checks are still running or failed."},
+        {"key": "tasks", "label": "Every review task is resolved", "met": not open_tasks,
+         "detail": "None open" if not open_tasks else f"{len(open_tasks)} still open."},
+        {"key": "suspicion", "label": "No unresolved suspicion above the limit", "met": not escalated,
+         "detail": "Escalated to Vigilance; only Vigilance can clear it." if escalated else "Below the limit" if not assessment or assessment.level in ("none", "low", "medium") else "Cleared by Vigilance"},
+    ]
 
 
 def monitor(db, today=None, force_detection=False):

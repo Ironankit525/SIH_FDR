@@ -8,8 +8,8 @@ import { dateLabel, label } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ActionDialog, type ActionField, Badge, Empty, ErrorState, Loading, Notice, PageHeader, Panel, Stat } from '@/components/common'
 
-const CATEGORIES = ['identity', 'document_integrity', 'financial', 'coverage', 'duplication', 'verification', 'behaviour', 'process']
-const LEVELS = ['low', 'medium', 'high', 'critical']
+const CATEGORIES = ['identity', 'document_integrity', 'financial', 'duplication', 'verification', 'behaviour']
+const LEVELS = ['none', 'low', 'medium', 'high', 'critical']
 type Thresholds = { medium: string; high: string; critical: string }
 interface Draft { weights: Record<string, string>; caps: Record<string, string>; thresholds: Thresholds }
 interface Policy { weights: Record<string, number>; category_caps: Record<string, number>; thresholds: Record<string, number> }

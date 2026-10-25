@@ -29,13 +29,13 @@ export function RiskEvaluation() {
       </tbody></table></div>
       <p className="padded cell-subtitle">AUC is the chance that a random problem case scores above a random genuine one: 0.5 is guessing, 1.0 is perfect separation.</p>
     </Panel>
-    <Panel title="By kind of case" subtitle="For genuine kinds, lower is better: the percentages are false alarms">
-      <div className="table-scroll"><table><thead><tr><th>Kind</th><th>What it represents</th><th>Cases</th><th>≥ medium at intake</th><th>≥ medium after bank check</th><th>≥ high after bank check</th></tr></thead><tbody>
-        {kinds.map(([kind, info]) => <tr key={kind}><td><strong>{label(kind)}</strong><span className="cell-subtitle">{info.problem ? 'Needs intervention' : 'Genuine'}</span></td><td>{info.description}</td><td className="tabular">{bank.per_kind[kind].cases}</td><td className="tabular">{percent(intake.per_kind[kind].at_least_medium)}</td><td className="tabular">{percent(bank.per_kind[kind].at_least_medium)}</td><td className="tabular">{percent(bank.per_kind[kind].at_least_high)}</td></tr>)}
+    <Panel title="By kind of case" subtitle="For genuine kinds, lower score percentages are better. Declared non-compliance is not scored; it must be stopped by a requirement that blocks verification">
+      <div className="table-scroll"><table><thead><tr><th>Kind</th><th>What it represents</th><th>Cases</th><th>≥ medium at intake</th><th>≥ medium after bank check</th><th>≥ high after bank check</th><th>Stopped by a requirement</th></tr></thead><tbody>
+        {kinds.map(([kind, info]) => <tr key={kind}><td><strong>{label(kind)}</strong><span className="cell-subtitle">{info.compliance ? 'Declared non-compliance · not scored' : info.problem ? 'Suspicious' : 'Genuine'}</span></td><td>{info.description}</td><td className="tabular">{bank.per_kind[kind].cases}</td><td className="tabular">{percent(intake.per_kind[kind].at_least_medium)}</td><td className="tabular">{percent(bank.per_kind[kind].at_least_medium)}</td><td className="tabular">{percent(bank.per_kind[kind].at_least_high)}</td><td className="tabular">{percent(bank.per_kind[kind].stopped_by_requirement)}</td></tr>)}
       </tbody></table></div>
     </Panel>
     <div className="two-columns">
-      <Panel title="Problem cases still below medium" subtitle="After the bank check"><CaseList rows={e.misses}/></Panel>
+      <Panel title="Suspicious cases still below medium" subtitle="After the bank check"><CaseList rows={e.misses}/></Panel>
       <Panel title="Genuine cases at medium or above" subtitle="After the bank check"><CaseList rows={e.false_alarms}/></Panel>
     </div>
     <Panel title="Which signals fired" subtitle="After the bank check · precision is the share of cases with the signal that had a real problem">

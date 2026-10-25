@@ -9,7 +9,7 @@ const THRESHOLDS = [['Medium', 20], ['High', 50], ['Critical', 80]] as const
 function reviewState(signal: Row) {
   if (signal.discount === 1) return signal.task_status ? `Review task ${label(signal.task_status).toLowerCase()}` : 'Observation (no review task)'
   if (signal.discount === 0.5) return signal.task_status === 'resolution_proposed' ? 'Resolution proposed · counts half' : 'Condition no longer detected · counts half'
-  if (signal.discount === 0.1) return 'Resolution confirmed by a second officer · counts 10%'
+  if (signal.discount === 0.1) return 'Resolution confirmed by a second officer or Vigilance · counts 10%'
   return 'Resolved by one officer · counts 20%'
 }
 
@@ -20,10 +20,16 @@ export function RiskPanel({ depositId }: { depositId: string }) {
   const risk = query.data!
   // Assessments can be minutes apart, so the axis shows the time as well as the date.
   const history = risk.history.map((h: Row) => ({ ...h, score: Number(h.score), label: new Date(h.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }))
+  if (risk.level === 'none') return <>
+    <Notice>{risk.notice} Institutions cannot see this tab.</Notice>
+    <Panel title="No suspicious findings" subtitle={`Engine ${risk.engine_version} · weight policy v${risk.weights_version} · checked ${dateLabel(risk.created_at)}`}>
+      <div className="padded"><p>The score appears only when something suspicious is found: altered or reused documents, a duplicate instrument, or evidence that contradicts the declaration. A bank that has not confirmed yet, or paperwork still missing, is not suspicion; those are listed as requirements on the case and block verification until they are met.</p></div>
+    </Panel>
+  </>
   return <>
     <Notice>{risk.notice} Institutions cannot see this tab.</Notice>
     <Panel title="Risk score" subtitle={`Engine ${risk.engine_version} · weight policy v${risk.weights_version} · scored ${dateLabel(risk.created_at)}`}>
-      <div className="padded risk-hero"><strong>{Math.round(Number(risk.score))}</strong><div><RiskBadge risk={{ score: Number(risk.score), level: risk.level }}/><span className="cell-subtitle">Out of 100. Medium from 20, high from 50, critical from 80.</span></div></div>
+      <div className="padded risk-hero"><strong>{Math.round(Number(risk.score))}</strong><div><RiskBadge risk={{ score: Number(risk.score), level: risk.level }}/><span className="cell-subtitle">Out of 100. Medium from 20, high from 50, critical from 80. From 50 the case goes to the Vigilance cell and the case officer cannot clear it.</span></div></div>
     </Panel>
     <div className="risk-columns">
       <Panel title="What is driving the score" subtitle="Each bar: points the score would lose without that signal">

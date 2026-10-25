@@ -734,3 +734,13 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 @media screen { :root[data-theme="dark"] { --brand-ink: #e6edf6; --brand-flow: #6fa8e8; } }
 .brand { color: var(--brand-ink); } .brand-flow { color: var(--brand-flow); }
 .brand-light { color: #fff; } .brand-light .brand-flow { color: #a9c8ee; }
+
+/* Verification boundary: the checklist an officer must satisfy, and the escalation that only Vigilance can clear. */
+.risk-badge.none i { background: var(--line-neutral-91); }
+.readiness-list { list-style: none; margin: 0; padding: .5rem 1.4375rem 1.25rem; display: grid; gap: .875rem; }
+.readiness-list li { display: flex; align-items: flex-start; gap: .75rem; color: var(--text-blue-72); }
+.readiness-list li.met { color: var(--text-green-58); }
+.readiness-list svg { flex: none; margin-top: .0625rem; }
+.readiness-list strong { display: block; font-size: .75rem; font-weight: 550; color: var(--text-blue-53); }
+.readiness-list small { font-size: .6875rem; color: var(--text-blue-65); }
+.escalation-banner p { margin-bottom: 0; }

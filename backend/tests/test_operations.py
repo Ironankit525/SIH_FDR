@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 from sqlalchemy import select, update
 
-from app.models import Document, ReleaseRequest
+from app.models import Document, ReleaseRequest, utcnow
 from test_workflows import get_case, pdf_for
 
 IMPORT_HEADER = "institution_code,programme,level,bank,branch,number,depositor_name,amount,issue_date,maturity_date,lien_details,regulatory_end_date\n"
@@ -54,7 +54,7 @@ def test_audit_search_filters_and_pages(env):
     assert submitted["total"] == 9 and all(e["action"] == "deposit_submitted" for e in submitted["items"])
     assert all(e["actor_name"] == "System" for e in auditor.get("/api/audit?actor=system").json()["items"])
     assert auditor.get(f"/api/audit?actor=Ananya&action=deposit_submitted").json()["total"] == 6
-    today = date.today()
+    today = utcnow().date()  # audit timestamps are UTC
     assert auditor.get(f"/api/audit?date_from={today}&date_to={today}").json()["total"] == everything["total"]
     assert auditor.get(f"/api/audit?date_to={today - timedelta(days=30)}").json()["total"] == 0
     second_page = auditor.get("/api/audit?limit=5&offset=5").json()["items"]

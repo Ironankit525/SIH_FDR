@@ -58,7 +58,7 @@ def dashboard(user=Depends(current_user), db=Depends(get_db)):
     if user.role != "institution":
         active = [r for r in rows if r["risk"] and r["status"] != "released"]
         levels = Counter(r["risk"]["level"] for r in active)
-        result["risk_distribution"] = [{"name": level, "value": levels[level]} for level in ("low", "medium", "high", "critical")]
+        result["risk_distribution"] = [{"name": level, "value": levels[level]} for level in ("none", "low", "medium", "high", "critical")]
         institutions = {}
         for r in active:
             entry = institutions.setdefault(r["institution_id"], {"institution": r["institution_name"], "cases": 0, "elevated": 0, "highest": 0.0, "highest_level": "low", "highest_reference": ""})
@@ -94,16 +94,16 @@ def risk_evaluation_details(user=Depends(current_user)):
     require_roles(user, "verification", "clearance", "authority", "admin", "auditor")
     if not EVALUATION.exists():
         raise HTTPException(404, "No evaluation has been run")
-    from evaluation.corpus import GENUINE_KINDS, PROBLEM_KINDS
+    from evaluation.corpus import COMPLIANCE_KINDS, GENUINE_KINDS, PROBLEM_KINDS
     from evaluation.report import GENUINE_NOTES
     data = json.loads(EVALUATION.read_text())
     metrics = data["metrics"]
     medium = metrics["thresholds"]["medium"]
     after = lambda c: c["stages"]["after_bank_check"]
     return {"generated_on": data["generated_on"], "engine_version": risk.ENGINE_VERSION, "corpus": data["corpus"], "metrics": metrics,
-            "kinds": {**{k: {"problem": True, "description": v} for k, v in PROBLEM_KINDS.items()},
+            "kinds": {**{k: {"problem": True, "compliance": k in COMPLIANCE_KINDS, "description": v} for k, v in PROBLEM_KINDS.items()},
                       **{k: {"problem": False, "description": GENUINE_NOTES[k]} for k in GENUINE_KINDS}},
-            "misses": [{"id": c["id"], "kind": c["kind"], **after(c)} for c in data["cases"] if c["label"] and after(c)["score"] < medium],
+            "misses": [{"id": c["id"], "kind": c["kind"], **after(c)} for c in data["cases"] if c["label"] and c["kind"] not in COMPLIANCE_KINDS and after(c)["score"] < medium],
             "false_alarms": [{"id": c["id"], "kind": c["kind"], **after(c)} for c in data["cases"] if not c["label"] and after(c)["score"] >= medium],
             "notice": "Measured on a fictional synthetic corpus written by the same team as the detectors. Not real-world fraud detection accuracy."}
 
@@ -260,7 +260,7 @@ def preview_risk_weights(body: schemas.RiskPolicyInput, user=Depends(current_use
     weights = {key: weight for key, (_, weight, _) in risk.SIGNALS.items()}
     policy = {"version": "preview", "weights": {**weights, **body.weights}, "thresholds": body.thresholds,
               "category_caps": dict(risk.DEFAULT_CAPS) if body.category_caps is None else body.category_caps}
-    levels = ("low", "medium", "high", "critical")
+    levels = ("none", "low", "medium", "high", "critical")
     current, proposed, changes = dict.fromkeys(levels, 0), dict.fromkeys(levels, 0), []
     for deposit in db.scalars(select(SecurityDeposit).where(SecurityDeposit.status != "released")).all():
         before, after = risk.latest(db, deposit.id), risk.evaluate(db, deposit, policy)

@@ -8,12 +8,14 @@ import { haptic } from '@/lib/feedback'
 import type { Row } from '@/lib/api'
 
 export function Badge({ value, children }: { value: string; children?: ReactNode }) {
-  const color = /officially_confirmed|approved|completed|resolved|active|authorised/.test(value) ? 'green' : /mock/.test(value) ? 'purple' : /failed|high|rejected|overdue|mismatched/.test(value) ? 'red' : /pending|warning|clarification|review|queued|matured|proposed/.test(value) ? 'amber' : 'blue'
+  const color = /officially_confirmed|approved|completed|resolved|active|authorised|^verified$/.test(value) ? 'green' : /mock/.test(value) ? 'purple' : /failed|high|rejected|overdue|mismatched/.test(value) ? 'red' : /pending|warning|clarification|review|queued|matured|proposed/.test(value) ? 'amber' : 'blue'
   return <span className={`badge ${color}`}><i/>{children || label(value)}</span>
 }
 // The level is always written out, so the dot's colour never carries the meaning alone.
 export function RiskBadge({ risk }: { risk?: Row | null }) {
   if (!risk) return <span className="cell-subtitle">Not scored</span>
+  // The score exists only for suspicion; a case with nothing suspicious carries no number at all.
+  if (risk.level === 'none') return <span className="risk-badge none" title="No suspicious findings. Missing confirmations and paperwork are shown as requirements, not scored."><i/>No concerns</span>
   return <span className={`risk-badge ${risk.level}`} title="Orders review work. Not a finding of fraud."><i/>{Math.round(risk.score)} · {label(risk.level)}</span>
 }
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: string; title: string; description?: string; actions?: ReactNode }) { return <div className="page-heading"><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{description && <p>{description}</p>}</div>{actions && <div className="actions">{actions}</div>}</div> }

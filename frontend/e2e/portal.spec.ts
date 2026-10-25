@@ -56,7 +56,13 @@ test('institution creates, uploads, compares and submits; officer reviews simula
   await page.getByRole('tab', { name: 'Bank verification' }).click()
   await page.getByRole('button', { name: 'Run mock verification' }).click()
   await expect(page.getByText(/Unknown reference in the fictional bank dataset/)).toBeVisible()
-  await expect(page.getByText('Mock Inconclusive').first()).toBeVisible()
+  await expect(page.getByText('Mock · inconclusive').first()).toBeVisible()
+  // The officer cannot sign the case off: the bank has not confirmed and review tasks are open.
+  await page.getByRole('tab', { name: 'Case overview' }).click()
+  await expect(page.getByRole('heading', { name: 'Verification checklist' })).toBeVisible()
+  await expect(page.getByText("The bank's answer did not confirm the instrument.")).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Mark verification complete' })).toBeDisabled()
+  await page.screenshot({ path: 'test-results/verification-checklist.png', fullPage: true, animations: 'disabled' })
   await page.getByRole('tab', { name: 'Documents', exact: false }).click()
   await page.getByRole('button', { name: 'Preview', exact: true }).first().click()
   await expect(page.getByTitle('Private document preview')).toBeVisible()
@@ -122,7 +128,7 @@ test('officials import records, reassign work, inspect integrity and risk, and s
   await page.getByRole('tab', { name: /^Documents/ }).click()
   await expect(page.getByText(/Integrity checks · \d+ run/).first()).toBeVisible()
   await page.getByRole('tab', { name: 'Risk', exact: true }).click()
-  await expect(page.getByText('What is driving the score')).toBeVisible()
+  await expect(page.getByText(/What is driving the score|No suspicious findings/).first()).toBeVisible()
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
 
   await signIn(page, 'Auditor')
