@@ -971,6 +971,57 @@
         }
       }
     },
+    "/api/deposits/{deposit_id}/assignment": {
+      "post": {
+        "tags": [
+          "Verification and release"
+        ],
+        "summary": "Reassign",
+        "description": "Administrators move a case between officers; an assigned officer may hand their own case back.",
+        "operationId": "reassign_api_deposits__deposit_id__assignment_post",
+        "parameters": [
+          {
+            "name": "deposit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Deposit Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/deposits/{deposit_id}/observations": {
       "post": {
         "tags": [
@@ -1709,6 +1760,26 @@
         }
       }
     },
+    "/api/risk/evaluation/details": {
+      "get": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Risk Evaluation Details",
+        "description": "Results by kind of case, signal precision, and every miss and false alarm from the latest evaluation.",
+        "operationId": "risk_evaluation_details_api_risk_evaluation_details_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -1716,6 +1787,25 @@
         ],
         "summary": "Notifications",
         "operationId": "notifications_api_notifications_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/read-all": {
+      "post": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Read All Notifications",
+        "operationId": "read_all_notifications_api_notifications_read_all_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1775,12 +1865,111 @@
         ],
         "summary": "Audit Logs",
         "operationId": "audit_logs_api_audit_get",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Action"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Actor"
+            }
+          },
+          {
+            "name": "entity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Entity"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
@@ -1992,6 +2181,46 @@
         }
       }
     },
+    "/api/admin/risk-weights/preview": {
+      "post": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Preview Risk Weights",
+        "description": "What a policy would do to every open case, computed without storing anything.",
+        "operationId": "preview_risk_weights_api_admin_risk_weights_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiskPolicyInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/risk-weights/{version_id}/approve": {
       "post": {
         "tags": [
@@ -2019,6 +2248,46 @@
               }
             }
           }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/import": {
+      "post": {
+        "tags": [
+          "Dashboards and administration"
+        ],
+        "summary": "Import Deposits",
+        "description": "Check (default) or import existing deposit records from CSV. Only rows without problems are imported.",
+        "operationId": "import_deposits_api_admin_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_deposits_api_admin_import_post"
+              }
+            }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2302,6 +2571,52 @@
         ],
         "title": "AlertInput"
       },
+      "AssignmentInput": {
+        "properties": {
+          "officer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Officer Id"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "AssignmentInput"
+      },
+      "Body_import_deposits_api_admin_import_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "commit": {
+            "type": "boolean",
+            "title": "Commit",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_deposits_api_admin_import_post"
+      },
       "Body_upload_api_deposits__deposit_id__documents_post": {
         "properties": {
           "file": {
@@ -2344,6 +2659,87 @@
           "reference"
         ],
         "title": "Completion"
+      },
+      "ConfirmedFields": {
+        "properties": {
+          "bank": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 150
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "depositor_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depositor Name"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000000000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "maturity_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maturity Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ConfirmedFields",
+        "description": "What the bank itself stated, so it can be compared with the declaration rather than taken on trust."
       },
       "Correction": {
         "properties": {
@@ -2564,6 +2960,16 @@
             "type": "string",
             "format": "date",
             "title": "Verified On"
+          },
+          "confirmed_fields": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConfirmedFields"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -3061,6 +3467,51 @@
         ],
         "title": "ResolutionReview"
       },
+      "RiskPolicyInput": {
+        "properties": {
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Weights"
+          },
+          "category_caps": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Caps"
+          },
+          "thresholds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "medium",
+                "high",
+                "critical"
+              ]
+            },
+            "type": "object",
+            "title": "Thresholds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "thresholds"
+        ],
+        "title": "RiskPolicyInput"
+      },
       "RiskWeightsInput": {
         "properties": {
           "weights": {
@@ -3071,10 +3522,17 @@
             "title": "Weights"
           },
           "category_caps": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "type": "object",
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Category Caps"
           },
           "thresholds": {

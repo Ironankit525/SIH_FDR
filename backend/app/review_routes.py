@@ -8,7 +8,7 @@ from . import risk as risk_engine
 from .config import settings
 from .db import get_db
 from .models import (SecurityDeposit, Discrepancy, VerificationRequest, VerificationEvidence, Document,
-                     ReleaseRequest, Clearance, Instrument, RiskAssessment)
+                     ReleaseRequest, Clearance, Instrument, RiskAssessment, User)
 from .security import current_user, get_deposit, require_roles, require_owner
 from .presenters import record, deposit_detail, release_detail, task_for
 from .workflows import current_instrument, detect, flag, configuration, DEFAULT_WORKFLOW, release_blockers, release_reviewers
@@ -43,6 +43,33 @@ def assigned_review(db, user, deposit_id):
     if deposit.assigned_officer_id != user.id:
         raise HTTPException(403, "Assign this case to yourself before recording a finding")
     return deposit
+
+
+@router.post("/deposits/{deposit_id}/assignment")
+def reassign(deposit_id: str, body: schemas.AssignmentInput, user=Depends(current_user), db=Depends(get_db)):
+    """Administrators move a case between officers; an assigned officer may hand their own case back."""
+    require_roles(user, "admin", "verification")
+    deposit = get_deposit(db, user, deposit_id, lock=True)
+    editable_review(deposit)
+    if user.role == "verification" and (body.officer_id or deposit.assigned_officer_id != user.id):
+        raise HTTPException(403, "Officers may only hand back a case assigned to them")
+    if body.officer_id:
+        officer = db.get(User, body.officer_id)
+        if not officer or officer.role != "verification" or not officer.active:
+            raise HTTPException(422, "Choose an active verification officer")
+    previous = deposit.assigned_officer_id
+    if previous == body.officer_id:
+        raise HTTPException(409, "The case is already assigned that way")
+    deposit.assigned_officer_id = body.officer_id
+    if not body.officer_id and deposit.status == "under_review":
+        deposit.status = "submitted"
+    elif body.officer_id and deposit.status == "submitted":
+        deposit.status = "under_review"
+    for item in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id, Discrepancy.status != "resolved")).all():
+        item.assigned_officer_id = body.officer_id
+    audit(db, user, "officer_reassigned", deposit.id, deposit.institution_id, {"officer_id": previous}, {"officer_id": body.officer_id, "reason": body.reason})
+    db.commit()
+    return deposit_detail(db, deposit, user)
 
 
 @router.post("/deposits/{deposit_id}/observations")
@@ -192,7 +219,9 @@ def manual_evidence(request_id: str, body: schemas.EvidenceInput, user=Depends(c
     inst = current_instrument(db, deposit.id)
     if request.instrument_id != inst.id:
         raise HTTPException(409, "Verification request refers to a replaced instrument")
-    evidence = VerificationEvidence(request_id=request.id, **body.model_dump(), recorded_by=user.id, simulated=False)
+    confirmed = body.confirmed_fields.model_dump(mode="json", exclude_none=True) if body.confirmed_fields else {}
+    evidence = VerificationEvidence(request_id=request.id, **body.model_dump(exclude={"confirmed_fields"}), confirmed_fields=confirmed,
+                                    recorded_by=user.id, simulated=False)
     db.add(evidence)
     request.status = body.finding
     inst.verification_status = "officially_confirmed" if body.finding == "confirmed" else body.finding

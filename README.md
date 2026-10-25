@@ -247,10 +247,14 @@ Public routes are `/`, `/information`, `/signin` and `/register`. The authentica
 - Deposit registry, new-deposit form and detailed case tabs.
 - Verification and maturity queues.
 - Evidence comparison, original extraction/correction history and private document preview.
+- Document integrity checks for officials: what each forensic, arithmetic and reuse check examined, and whether it passed or raised a finding.
 - Review tasks, bank verification and release workflow actions.
 - Release requests, institutions and requirement calculation.
 - Notifications, account settings, reports and audit history.
 - Administration for users, rules, workflow, alerts and system monitoring.
+- Management reports (pending verifications, upcoming maturities, missing documents, cases requiring intervention), filtered and paged audit search, case reassignment, and CSV import of existing records with a check before anything is saved.
+- Official bank evidence records the values the bank confirmed, and any difference from the declaration becomes a review task.
+- Risk policy: signal weights, caps and thresholds, an impact preview, proposals approved by a second administrator, and version history (read-only for auditors).
 
 The interface shows actions according to role and case state, while the backend remains authoritative. Receipt screens poll while extraction is queued or processing. Human-corrected values retain the original evidence and do not inherit the parser's confidence score. Matching fields are never presented as proof of authenticity.
 

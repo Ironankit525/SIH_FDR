@@ -34,6 +34,7 @@ SIGNALS = {
     "reused_text": ("duplication", 0.5, 1.0),
     "duplicate_number_other_bank": ("duplication", 0.15, 1.0),
     "bank_mismatched": ("verification", 0.55, 1.0),
+    "bank_confirmed_mismatch": ("verification", 0.6, 1.0),
     "bank_inconclusive": ("verification", 0.2, 1.0),
     "bank_pending": ("verification", 0.05, 1.0),
     "unverified": ("verification", 0.1, 1.0),

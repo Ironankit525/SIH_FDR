@@ -141,3 +141,29 @@ def test_weight_changes_need_a_second_administrator_and_rescore(env):
     admin.post(f"/api/admin/risk-weights/{second['id']}/approve", json={"notes": "Agreed"})
     listing = admin.get("/api/admin/risk-weights").json()
     assert listing["active"]["version"] == 2 and [v["status"] for v in listing["versions"]] == ["active", "superseded"]
+
+
+def test_preview_shows_impact_without_storing_anything(env):
+    factory, client = env
+    admin, auditor, officer = client("admin"), client("auditor"), client("officer")
+    with factory() as db:
+        stored = len(db.scalars(select(RiskAssessment)).all())
+    lowered = {"weights": {}, "thresholds": {"medium": 5, "high": 50, "critical": 80}}
+    preview = admin.post("/api/admin/risk-weights/preview", json=lowered).json()
+    assert preview["cases"] == sum(preview["current"].values()) == sum(preview["proposed"].values())
+    assert preview["proposed"]["medium"] > preview["current"]["medium"] and preview["changed"] == len(preview["changes"])
+    assert all(c["from_level"] == "low" and c["to_level"] == "medium" for c in preview["changes"])
+    assert auditor.post("/api/admin/risk-weights/preview", json=lowered).status_code == 200
+    assert officer.post("/api/admin/risk-weights/preview", json=lowered).status_code == 403
+    with factory() as db:
+        assert len(db.scalars(select(RiskAssessment)).all()) == stored
+
+
+def test_versions_name_people_and_caps_can_be_removed(env):
+    _, client = env
+    admin = client("admin")
+    admin.post("/api/admin/risk-weights", json={"weights": {}, "category_caps": {}, "thresholds": {"medium": 20, "high": 50, "critical": 80},
+                                                "notes": "Remove the behaviour cap for comparison"})
+    version = admin.get("/api/admin/risk-weights").json()["versions"][0]
+    assert version["proposed_by_name"] == "Aditi Verma" and version["approved_by_name"] is None
+    assert version["category_caps"] == {}

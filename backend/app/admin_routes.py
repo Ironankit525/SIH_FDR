@@ -3,8 +3,8 @@ import csv
 import json
 from pathlib import Path
 from collections import Counter
-from datetime import date, datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date, datetime, time, timedelta, timezone
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import select, func, text
 from . import schemas
@@ -15,7 +15,7 @@ from .models import (User, Role, Institution, SecurityDeposit, Instrument, RuleV
                      Notification, NotificationRead, AuditLog, AuditChainHead, Configuration, Document, VerificationRequest, VerificationEvidence, ReleaseRequest, RiskWeightVersion)
 from .security import current_user, require_roles, passwords
 from .presenters import record, deposit_summary, audit_record
-from . import risk
+from . import importer, reports, risk
 from .workflows import configuration, DEFAULT_WORKFLOW, DEFAULT_ALERTS, monitor
 
 router = APIRouter(prefix="/api", tags=["Dashboards and administration"])
@@ -88,12 +88,44 @@ def risk_evaluation(user=Depends(current_user)):
             "notice": "Measured on a fictional synthetic corpus written by the same team as the detectors. Not real-world fraud detection accuracy."}
 
 
+@router.get("/risk/evaluation/details")
+def risk_evaluation_details(user=Depends(current_user)):
+    """Results by kind of case, signal precision, and every miss and false alarm from the latest evaluation."""
+    require_roles(user, "verification", "clearance", "authority", "admin", "auditor")
+    if not EVALUATION.exists():
+        raise HTTPException(404, "No evaluation has been run")
+    from evaluation.corpus import GENUINE_KINDS, PROBLEM_KINDS
+    from evaluation.report import GENUINE_NOTES
+    data = json.loads(EVALUATION.read_text())
+    metrics = data["metrics"]
+    medium = metrics["thresholds"]["medium"]
+    after = lambda c: c["stages"]["after_bank_check"]
+    return {"generated_on": data["generated_on"], "engine_version": risk.ENGINE_VERSION, "corpus": data["corpus"], "metrics": metrics,
+            "kinds": {**{k: {"problem": True, "description": v} for k, v in PROBLEM_KINDS.items()},
+                      **{k: {"problem": False, "description": GENUINE_NOTES[k]} for k in GENUINE_KINDS}},
+            "misses": [{"id": c["id"], "kind": c["kind"], **after(c)} for c in data["cases"] if c["label"] and after(c)["score"] < medium],
+            "false_alarms": [{"id": c["id"], "kind": c["kind"], **after(c)} for c in data["cases"] if not c["label"] and after(c)["score"] >= medium],
+            "notice": "Measured on a fictional synthetic corpus written by the same team as the detectors. Not real-world fraud detection accuracy."}
+
+
 @router.get("/notifications")
 def notifications(user=Depends(current_user), db=Depends(get_db)):
     query = select(Notification).order_by(Notification.created_at.desc())
     if user.role == "institution":
         query = query.where(Notification.institution_id == user.institution_id)
     return [{**record(n), "read": db.get(NotificationRead, (n.id, user.id)) is not None} for n in db.scalars(query).all()]
+
+
+@router.post("/notifications/read-all")
+def read_all_notifications(user=Depends(current_user), db=Depends(get_db)):
+    query = select(Notification.id)
+    if user.role == "institution":
+        query = query.where(Notification.institution_id == user.institution_id)
+    read = set(db.scalars(select(NotificationRead.notification_id).where(NotificationRead.user_id == user.id)).all())
+    unread = [n for n in db.scalars(query).all() if n not in read]
+    db.add_all(NotificationRead(notification_id=n, user_id=user.id) for n in unread)
+    db.commit()
+    return {"marked": len(unread)}
 
 
 @router.post("/notifications/{notification_id}/read")
@@ -108,9 +140,29 @@ def read_notification(notification_id: str, user=Depends(current_user), db=Depen
 
 
 @router.get("/audit")
-def audit_logs(user=Depends(current_user), db=Depends(get_db)):
+def audit_logs(action: str = "", actor: str = "", entity: str = "", date_from: date | None = None, date_to: date | None = None,
+               limit: int = Query(50, ge=1, le=500), offset: int = Query(0, ge=0), user=Depends(current_user), db=Depends(get_db)):
     require_roles(user, "admin", "auditor", "authority", "verification", "clearance")
-    return [audit_record(db, a) for a in db.scalars(select(AuditLog).order_by(AuditLog.created_at.desc()).limit(1000)).all()]
+    query = select(AuditLog)
+    if action:
+        query = query.where(AuditLog.action == action)
+    if actor.strip().lower() == "system":
+        query = query.where(AuditLog.actor_id.is_(None))
+    elif actor:
+        term = f"%{actor.strip().lower()}%"
+        query = query.where(AuditLog.actor_id.in_(select(User.id).where(func.lower(User.name).like(term) | func.lower(User.email).like(term))))
+    if entity:
+        # A deposit reference finds that case's events; anything else matches the start of a record id.
+        deposit_id = db.scalar(select(SecurityDeposit.id).where(SecurityDeposit.reference == entity.strip().upper()))
+        query = query.where(AuditLog.entity_id == deposit_id) if deposit_id else query.where(AuditLog.entity_id.startswith(entity.strip()))
+    if date_from:
+        query = query.where(AuditLog.created_at >= datetime.combine(date_from, time.min, tzinfo=timezone.utc))
+    if date_to:
+        query = query.where(AuditLog.created_at < datetime.combine(date_to + timedelta(days=1), time.min, tzinfo=timezone.utc))
+    total = db.scalar(select(func.count()).select_from(query.subquery()))
+    items = db.scalars(query.order_by(AuditLog.created_at.desc()).limit(limit).offset(offset)).all()
+    return {"items": [audit_record(db, a) for a in items], "total": total, "limit": limit, "offset": offset,
+            "actions": db.scalars(select(AuditLog.action).distinct().order_by(AuditLog.action)).all()}
 
 
 def safe_csv(value):
@@ -122,7 +174,14 @@ def safe_csv(value):
 def export_report(kind: str = "deposits", user=Depends(current_user), db=Depends(get_db)):
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    if kind == "audit":
+    if kind in reports.REPORTS:
+        build, roles = reports.REPORTS[kind]
+        if roles:
+            require_roles(user, *roles)
+        header, rows = build(db, scoped_deposits(db, user))
+        writer.writerow(header)
+        writer.writerows([safe_csv(v) for v in row] for row in rows)
+    elif kind == "audit":
         require_roles(user, "auditor", "admin", "authority")
         writer.writerow(["Time", "Actor", "Action", "Record", "Event hash"])
         for item in db.scalars(select(AuditLog).order_by(AuditLog.created_at)).all():
@@ -186,14 +245,41 @@ def risk_weights(user=Depends(current_user), db=Depends(get_db)):
     versions = db.scalars(select(RiskWeightVersion).order_by(RiskWeightVersion.version.desc())).all()
     return {"active": risk.active_policy(db), "engine_version": risk.ENGINE_VERSION,
             "signals": {key: {"category": c, "default_weight": w, "strength": s} for key, (c, w, s) in risk.SIGNALS.items()},
-            "versions": [record(v) for v in versions]}
+            "versions": [{**record(v), "proposed_by_name": user_name(db, v.proposed_by), "approved_by_name": user_name(db, v.approved_by)} for v in versions]}
+
+
+def user_name(db, user_id):
+    person = db.get(User, user_id) if user_id else None
+    return person.name if person else None
+
+
+@router.post("/admin/risk-weights/preview")
+def preview_risk_weights(body: schemas.RiskPolicyInput, user=Depends(current_user), db=Depends(get_db)):
+    """What a policy would do to every open case, computed without storing anything."""
+    require_roles(user, "admin", "auditor")
+    weights = {key: weight for key, (_, weight, _) in risk.SIGNALS.items()}
+    policy = {"version": "preview", "weights": {**weights, **body.weights}, "thresholds": body.thresholds,
+              "category_caps": dict(risk.DEFAULT_CAPS) if body.category_caps is None else body.category_caps}
+    levels = ("low", "medium", "high", "critical")
+    current, proposed, changes = dict.fromkeys(levels, 0), dict.fromkeys(levels, 0), []
+    for deposit in db.scalars(select(SecurityDeposit).where(SecurityDeposit.status != "released")).all():
+        before, after = risk.latest(db, deposit.id), risk.evaluate(db, deposit, policy)
+        if not before:
+            continue
+        current[before.level] += 1
+        proposed[after["level"]] += 1
+        if after["level"] != before.level:
+            changes.append({"deposit_id": deposit.id, "reference": deposit.reference, "institution": db.get(Institution, deposit.institution_id).name,
+                            "from_score": float(before.score), "from_level": before.level, "to_score": after["score"], "to_level": after["level"]})
+    changes.sort(key=lambda c: -abs(c["to_score"] - c["from_score"]))
+    return {"cases": sum(current.values()), "current": current, "proposed": proposed, "changes": changes[:25], "changed": len(changes)}
 
 
 @router.post("/admin/risk-weights", status_code=201)
 def propose_risk_weights(body: schemas.RiskWeightsInput, user=Depends(current_user), db=Depends(get_db)):
     require_roles(user, "admin")
     number = (db.scalar(select(func.max(RiskWeightVersion.version))) or 0) + 1
-    item = RiskWeightVersion(version=number, weights=body.weights, category_caps=body.category_caps or dict(risk.DEFAULT_CAPS),
+    item = RiskWeightVersion(version=number, weights=body.weights, category_caps=dict(risk.DEFAULT_CAPS) if body.category_caps is None else body.category_caps,
                              thresholds=body.thresholds, notes=body.notes, proposed_by=user.id)
     db.add(item)
     audit(db, user, "risk_weights_proposed", "risk-weights", after={"version": number, **body.model_dump()})
@@ -222,6 +308,20 @@ def approve_risk_weights(version_id: str, body: schemas.Note, user=Depends(curre
         risk.assess(db, deposit, policy)
     db.commit()
     return record(item)
+
+
+@router.post("/admin/import")
+async def import_deposits(file: UploadFile = File(...), commit: bool = Form(False), user=Depends(current_user), db=Depends(get_db)):
+    """Check (default) or import existing deposit records from CSV. Only rows without problems are imported."""
+    require_roles(user, "admin")
+    rows = importer.read_rows(await file.read(importer.MAX_BYTES + 1))
+    result = importer.run(db, user, rows, (file.filename or "import.csv")[:120], commit)
+    if commit:
+        audit(db, user, "deposits_import_completed", user.id, after={"file": file.filename, "imported": result["ready"], "rejected": result["errors"]})
+        db.commit()
+    else:
+        db.rollback()
+    return result
 
 
 @router.get("/admin/users")

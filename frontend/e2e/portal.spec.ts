@@ -82,3 +82,56 @@ test('administrator can inspect monitoring and configure alerts', async ({ page 
   await page.getByRole('button', { name: 'Save alert settings' }).click()
   await expect(page.getByText('Action recorded successfully.')).toBeVisible()
 })
+
+test('officials import records, reassign work, inspect integrity and risk, and search the audit trail', async ({ page }) => {
+  const number = `E2E-IMPORT-${Date.now()}`
+  const today = new Date(); const iso = (d: Date) => d.toISOString().slice(0, 10)
+  const later = (days: number) => iso(new Date(today.getTime() + days * 86400000))
+  const csv = 'institution_code,programme,level,bank,branch,number,depositor_name,amount,issue_date,maturity_date,lien_details,regulatory_end_date\n'
+    + `DEMO-INST-001,Engineering and Technology,undergraduate,Canara Bank,Main,${number},Meridian Institute of Technology,3500000,${later(-30)},${later(700)},AICTE New Delhi,${later(600)}\n`
+    + `NO-SUCH-CODE,Engineering and Technology,undergraduate,Canara Bank,Main,${number}-X,Unknown,3500000,${later(-30)},${later(700)},,\n`
+  await signIn(page, 'Admin')
+  await page.getByRole('link', { name: 'Import records' }).click()
+  await page.getByLabel('Choose CSV').setInputFiles({ name: 'legacy.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
+  await page.getByRole('button', { name: 'Check file' }).click()
+  await expect(page.getByText("Unknown institution code 'NO-SUCH-CODE'")).toBeVisible()
+  await page.getByRole('button', { name: 'Import 1 record' }).click()
+  await expect(page.getByText(/Imported 1 record/)).toBeVisible()
+
+  await page.getByRole('link', { name: 'Deposit registry' }).click()
+  await expect(page.getByRole('heading', { name: 'Deposit registry' })).toBeVisible()
+  await page.getByLabel('Search deposits').fill(number)  // the imported record is in the registry
+  await expect(page.getByRole('link', { name: /^DF-/ })).toHaveCount(1)
+  await page.getByLabel('Search deposits').fill('MATCH-001')
+  await expect(page.getByRole('link', { name: /^DF-/ })).toHaveCount(1)
+  await page.getByRole('link', { name: /^DF-/ }).first().click()
+  await page.getByRole('button', { name: 'Reassign' }).click()
+  // Pick an officer other than the current one, so the test can run again on the same data.
+  const officerSelect = page.getByRole('dialog').getByLabel('Verification officer')
+  const current = await officerSelect.inputValue()
+  const other = await officerSelect.locator('option').evaluateAll((options, now) => options.map(o => (o as HTMLOptionElement).value).find(v => v && v !== now), current)
+  await officerSelect.selectOption(other!)
+  await page.getByRole('dialog').locator('textarea').fill('Balancing review workload for the week')
+  await page.getByRole('dialog').getByRole('button', { name: 'Save record' }).click()
+  await expect(page.getByRole('dialog')).toBeHidden()
+  const caseUrl = page.url()
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+
+  await signIn(page, 'Verification')
+  await page.goto(caseUrl)
+  await page.getByRole('tab', { name: /^Documents/ }).click()
+  await expect(page.getByText(/Integrity checks · \d+ run/).first()).toBeVisible()
+  await page.getByRole('tab', { name: 'Risk', exact: true }).click()
+  await expect(page.getByText('What is driving the score')).toBeVisible()
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+
+  await signIn(page, 'Auditor')
+  const reference = (await page.goto(caseUrl).then(() => page.getByRole('heading', { level: 1 }).textContent()))!.trim()
+  await page.getByRole('link', { name: 'Audit trail' }).click()
+  await page.getByLabel('Record or case reference').fill(reference)
+  await page.getByRole('button', { name: 'Search' }).click()
+  await expect(page.getByRole('cell', { name: 'Officer Reassigned' }).first()).toBeVisible()
+  await page.getByRole('link', { name: 'Analytics & reports' }).click()
+  await expect(page.getByText('Cases requiring intervention')).toBeVisible()
+  await page.screenshot({ path: 'test-results/reports-desktop.png', fullPage: true, animations: 'disabled' })
+})

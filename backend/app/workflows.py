@@ -40,7 +40,8 @@ def flag(db, deposit, code, description, severity="warning", fields=None, source
 
 DETECTOR_CODES = {"missing_document", "amount_shortfall", "rule_review", "matured", "unverified", "coverage_gap", "coverage_lapsed",
                   "depositor_not_institution", "lien_not_aicte", "lien_document_conflict", "duplicate_reference",
-                  "duplicate_number_other_bank", "extracted_number_elsewhere", "reused_text", "maturity_value_inconsistent"}
+                  "duplicate_number_other_bank", "extracted_number_elsewhere", "reused_text", "maturity_value_inconsistent",
+                  "bank_confirmed_mismatch"}
 DETECTOR_PREFIXES = ("extraction_missing_", "mismatch_", "forensic_")
 
 
@@ -165,6 +166,18 @@ def detect(db, deposit):
                 raise_flag(f"reused_text:{doc.id}", "This document's text is identical to an instrument document on another case, although the file differs. It may be a re-saved or re-scanned copy.", "high", source="document_text_fingerprint", next_step="Compare both originals and confirm each instrument independently with the bank.")
         for item in (doc.forensics or {}).get("signals", []):
             raise_flag(f"forensic_{item['code']}:{doc.id}", item["detail"], item["severity"], source="document_forensics", next_step="Inspect the original document and confirm the instrument through an authorised bank channel.")
+    # What the bank itself confirmed must agree with the declaration; an officer's "confirmed" alone does not settle it.
+    official = db.scalar(select(VerificationEvidence).join(VerificationRequest, VerificationEvidence.request_id == VerificationRequest.id)
+                         .where(VerificationRequest.instrument_id == inst.id, VerificationEvidence.simulated.is_(False))
+                         .order_by(VerificationEvidence.created_at.desc()).limit(1))
+    if official and official.confirmed_fields:
+        compare = {"amount": same_amount, "bank": same_bank, "depositor_name": same_name, "number": same_reference}
+        differing = [f"{key.replace('_', ' ')} (bank: {value}; declared: {getattr(inst, key)})" for key, value in official.confirmed_fields.items()
+                     if hasattr(inst, key) and not compare.get(key, same_text)(value, getattr(inst, key))]
+        if differing:
+            raise_flag(f"bank_confirmed_mismatch:{official.id}", "The bank's confirmation differs from the declaration: " + "; ".join(differing) + ".", "high",
+                       [key for key in official.confirmed_fields if hasattr(inst, key)], "bank_confirmation",
+                       "Resolve the difference with the bank before relying on this confirmation.")
     if lien_required and not (mentions_aicte(inst.lien_details) or mentions_aicte(inst.depositor_name) or any(map(mentions_aicte, document_liens))):
         raise_flag("lien_not_aicte" + suffix, "No lien or joint holding in favour of AICTE is declared or shown on the document.", "high", ["lien_details"], "lien_check", "Obtain confirmation that the lien is marked in favour of AICTE.")
     reconcile(db, deposit, raised)
