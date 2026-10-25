@@ -25,7 +25,13 @@ async def lifespan(app):
 
 
 app = FastAPI(title="AICTE DepositFlow", version="1.0.0", description="SIH26265 prototype. Fictional institutions; labelled simulated bank data. No payment execution.", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=[settings.frontend_origin], allow_credentials=True,
+allowed_origins = [settings.frontend_origin]
+if settings.environment != "production":
+    for extra in ("http://localhost:5173", "http://127.0.0.1:5173"):
+        if extra not in allowed_origins:
+            allowed_origins.append(extra)
+
+app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=True,
                    allow_methods=["GET", "POST", "PATCH", "PUT"], allow_headers=["Content-Type", "X-CSRF-Token"])
 
 
@@ -33,7 +39,7 @@ app.add_middleware(CORSMiddleware, allow_origins=[settings.frontend_origin], all
 async def security_headers(request: Request, call_next):
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         origin = request.headers.get("origin")
-        if origin and origin != settings.frontend_origin:
+        if origin and origin not in allowed_origins:
             return JSONResponse(status_code=403, content={"detail": "Untrusted request origin"})
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
