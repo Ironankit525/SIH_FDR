@@ -1,0 +1,12 @@
+.data*
+.env
+.env.*
+*.env
+*.pem
+*.key
+secrets
+credentials
+__pycache__
+.pytest_cache
+demo-data
+tests
