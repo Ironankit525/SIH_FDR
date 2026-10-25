@@ -1,8 +1,10 @@
-# Environment files stay local, including example variants.
+# Environment files stay local; only the reviewed templates are tracked.
 .env
 .env.*
 *.env
 *.env.*
+!/.env.example
+!/backend/.env.example
 # Private credentials and runtime state.
 secrets/
 credentials/
