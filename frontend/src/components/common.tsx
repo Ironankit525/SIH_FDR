@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from './ui/button'
 import { Dialog } from './ui/dialog'
 import { label } from '@/lib/utils'
+import { haptic } from '@/lib/feedback'
 import type { Row } from '@/lib/api'
 
 export function Badge({ value, children }: { value: string; children?: ReactNode }) {
@@ -25,12 +26,12 @@ export function Stat({ title, value, detail, icon, accent = '' }: { title: strin
 export interface ActionField { name: string; label: string; type?: string; options?: { value: string; label: string }[]; value?: string; required?: boolean; minLength?: number; help?: string }
 export function ActionDialog({ open, onClose, title, description, fields, action, onSuccess, submitLabel = 'Save record' }: { open: boolean; onClose: () => void; title: string; description?: string; fields: ActionField[]; action: (data: Record<string, string>) => Promise<unknown>; onSuccess?: () => void; submitLabel?: string }) {
   const qc = useQueryClient()
-  const mutation = useMutation({ mutationFn: action, onSuccess: () => { qc.invalidateQueries(); onSuccess?.(); onClose() } })
+  const mutation = useMutation({ mutationFn: action, onSuccess: () => { haptic('success'); qc.invalidateQueries(); onSuccess?.(); onClose() }, onError: () => haptic('error') })
   return <Dialog open={open} onOpenChange={v => { if (!v && !mutation.isPending) onClose() }} title={title} description={description}><form className="form-stack" onSubmit={e => { e.preventDefault(); mutation.mutate(Object.fromEntries(new FormData(e.currentTarget).entries()) as Record<string, string>) }}>{fields.map(field => field.type === 'checkbox' ? <label key={field.name} className="check-field"><input name={field.name} type="checkbox" required={field.required !== false}/>{field.label}</label> : <label key={field.name} className="field">{field.label}{field.type === 'textarea' ? <textarea name={field.name} required={field.required !== false} minLength={field.minLength || 5} defaultValue={field.value} rows={3}/> : field.options ? <select name={field.name} defaultValue={field.value} required={field.required !== false}>{field.options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input name={field.name} type={field.type || 'text'} required={field.required !== false} minLength={field.minLength} defaultValue={field.value}/>} {field.help && <small>{field.help}</small>}</label>)}{mutation.error && <ErrorState error={mutation.error}/>}<div className="dialog-footer"><Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button><Button disabled={mutation.isPending}>{mutation.isPending && <Loader2 className="spin" size={16}/>} {submitLabel}</Button></div></form></Dialog>
 }
 export function useAction() {
   const [message, setMessage] = useState(''); const [error, setError] = useState<unknown>(null); const qc = useQueryClient()
-  const mutation = useMutation({ mutationFn: (fn: () => Promise<unknown>) => fn(), onSuccess: () => { setError(null); setMessage('Action recorded successfully.'); qc.invalidateQueries() }, onError: error => { setMessage(''); setError(error) } })
+  const mutation = useMutation({ mutationFn: (fn: () => Promise<unknown>) => fn(), onSuccess: () => { haptic('success'); setError(null); setMessage('Action recorded successfully.'); qc.invalidateQueries() }, onError: error => { haptic('error'); setMessage(''); setError(error) } })
   const feedback = <>{message && <div className="notice success" role="status"><CheckCircle2 size={18}/>{message}<button className="icon-button" onClick={() => setMessage('')} aria-label="Dismiss notification"><X size={16}/></button></div>}{error ? <ErrorState error={error}/> : null}</>
   return { run: mutation.mutate, busy: mutation.isPending, feedback }
 }

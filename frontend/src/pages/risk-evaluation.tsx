@@ -21,7 +21,7 @@ export function RiskEvaluation() {
   const kinds = Object.entries(e.kinds as Record<string, Row>).filter(([kind]) => bank.per_kind[kind])
   return <>
     <Link to="/app" className="back-link"><ArrowLeft size={15}/>Back to overview</Link>
-    <PageHeader eyebrow="RISK ENGINE" title="Evaluation results" description={`${m.cases} synthetic cases (${m.problem_cases} with problems, ${m.genuine_cases} genuine) · evaluated ${dateLabel(e.generated_on)} · engine ${e.engine_version} · seed ${e.corpus.seed}`}/>
+    <PageHeader eyebrow="Risk engine" title="Evaluation results" description={`${m.cases} synthetic cases (${m.problem_cases} with problems, ${m.genuine_cases} genuine) · evaluated ${dateLabel(e.generated_on)} · engine ${e.engine_version} · seed ${e.corpus.seed}`}/>
     <Notice>{e.notice} Medium means a score of {m.thresholds.medium} or more; high means {m.thresholds.high} or more.</Notice>
     <Panel title="Headline">
       <div className="table-scroll"><table><thead><tr><th>Stage</th><th>AUC</th><th>Problem cases ≥ medium</th><th>Problem cases ≥ high</th><th>Genuine cases ≥ medium</th><th>Problem cases in top 10</th></tr></thead><tbody>

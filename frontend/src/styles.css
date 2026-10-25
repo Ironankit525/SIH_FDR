@@ -621,3 +621,100 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* Segmented choice (appearance) */
 .segmented{display:inline-flex;padding:3px;border-radius:9px;background:var(--chart-cursor);border:1px solid var(--border);gap:2px}.segmented label{position:relative;padding:.4rem .9rem;border-radius:7px;font-size:.75rem;font-weight:550;cursor:pointer;transition:background-color var(--quick) var(--ease-out),box-shadow var(--quick) var(--ease-out)}.segmented input{position:absolute;opacity:0;pointer-events:none}.segmented label.selected{background:var(--surface-neutral-100);box-shadow:0 1px 3px rgb(0 0 0 / .12)}.segmented label:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
 .sidebar .brand small{font-size:.5625rem;letter-spacing:.08em}
+
+/* ==========================================================================
+   Visual language (SKILL.md §12 materials, §15 typography, §16 craft):
+   generous continuous radii, layered soft depth, hairline edges, a heavier
+   sidebar material, larger titles with tight tracking, comfortable controls.
+   ========================================================================== */
+:root {
+  --radius-control: 10px; --radius-inner: 12px; --radius-card: 16px; --radius-sheet: 20px; --radius-pill: 999px;
+  --hairline: color-mix(in oklab, var(--border) 80%, transparent);
+  --elev-1: 0 1px 1px rgb(15 23 42 / .03), 0 2px 8px rgb(15 23 42 / .045);
+  --elev-2: 0 1px 2px rgb(15 23 42 / .05), 0 10px 28px rgb(15 23 42 / .08);
+  --elev-3: 0 2px 6px rgb(15 23 42 / .06), 0 32px 80px rgb(15 23 42 / .24);
+  --sidebar-material: rgb(237 241 247 / .8);
+  --accent-tint: color-mix(in oklab, var(--focus) 13%, transparent);
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --elev-1: 0 1px 2px rgb(0 0 0 / .35); --elev-2: 0 1px 2px rgb(0 0 0 / .3), 0 12px 32px rgb(0 0 0 / .38);
+    --elev-3: 0 30px 90px rgb(0 0 0 / .62); --sidebar-material: rgb(12 15 20 / .8); }
+}
+@media screen { :root[data-theme="dark"] { --elev-1: 0 1px 2px rgb(0 0 0 / .35); --elev-2: 0 1px 2px rgb(0 0 0 / .3), 0 12px 32px rgb(0 0 0 / .38);
+    --elev-3: 0 30px 90px rgb(0 0 0 / .62); --sidebar-material: rgb(12 15 20 / .8); } }
+
+/* Type: hierarchy from weight, size and leading together; no tracked capitals. */
+body { font-size: .875rem; }
+h1 { font-size: clamp(1.625rem, 1.15rem + 1.4vw, 2rem); font-weight: 700; letter-spacing: -.022em; line-height: 1.12; }
+h2, .panel-heading h2 { font-size: 1rem; font-weight: 650; letter-spacing: -.012em; }
+h3 { font-size: .875rem; font-weight: 620; letter-spacing: -.006em; }
+p { line-height: 1.6; }
+.page-heading p { font-size: .9375rem; }
+.eyebrow { font-size: .8125rem; font-weight: 590; letter-spacing: 0; text-transform: none; margin-bottom: .375rem; }
+small, .cell-subtitle { font-size: .75rem; }
+table { font-size: .8125rem; } td, td strong, .record-link { font-size: .8125rem; }
+th { font-size: .75rem; font-weight: 590; letter-spacing: 0; }
+.stat-value { font-size: clamp(1.75rem, 1.3rem + 1.2vw, 2.25rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.05; }
+.stat-top { font-size: .8125rem; } .stat-detail { font-size: .75rem; }
+.field { font-size: .8125rem; font-weight: 550; } .notice { font-size: .8125rem; line-height: 1.6; }
+.nav-link { font-size: .8125rem; } .nav-label { font-size: .75rem; letter-spacing: 0; font-weight: 600; }
+.tabs button { font-size: .8125rem; font-weight: 550; }
+.brand small { letter-spacing: .04em; }
+
+/* Shape and depth: bigger surfaces read as thicker; edges are hairlines, not frames. */
+.panel, .stat-card, .case-summary, .case-progress { border-radius: var(--radius-card); border-color: var(--hairline); box-shadow: var(--elev-1); }
+.overview-banner, .notice, .version-card, .clearance, .discrepancy-card, .release-blockers, .upload-area, .quoted-note, .document-viewer { border-radius: var(--radius-inner); }
+.dialog-content { border-radius: var(--radius-sheet); border-color: var(--hairline); box-shadow: var(--elev-3); }
+
+/* Controls: comfortable targets, soft focus glow. */
+.btn { border-radius: var(--radius-control); min-height: 40px; padding: .625rem 1.125rem; font-size: .8125rem; font-weight: 590; }
+.btn-sm { min-height: 34px; border-radius: 9px; padding: .375rem .875rem; font-size: .75rem; }
+.btn-primary { box-shadow: 0 1px 2px rgb(15 23 42 / .14), inset 0 1px 0 rgb(255 255 255 / .14); }
+.btn-outline { border-color: var(--hairline); box-shadow: var(--elev-1); }
+.icon-button { border-radius: var(--radius-control); min-width: 40px; min-height: 40px; }
+.badge, .risk-badge, .check-outcome { border-radius: var(--radius-pill); padding: .25rem .625rem; font-size: .6875rem; font-weight: 590; }
+input, select, textarea { border-radius: var(--radius-control); min-height: 42px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--focus); box-shadow: 0 0 0 4px var(--accent-tint); }
+
+/* Sidebar: a heavier, distinct material for the structural region; selection is a filled capsule. */
+.sidebar { background: var(--sidebar-material); -webkit-backdrop-filter: blur(30px) saturate(160%); backdrop-filter: blur(30px) saturate(160%); border-right: 1px solid var(--hairline); }
+.nav-link { border-radius: 9px; min-height: 36px; }
+.nav-link.active { background: var(--accent-tint); }
+.nav-link.active:before { display: none; }
+.topbar { height: 64px; }
+
+/* Tabs: one indicator that springs between tabs (see components/motion.tsx). */
+.tabs { position: relative; border-bottom-color: var(--hairline); }
+.tabs button, .tabs button.active { border-bottom-color: transparent; }
+.tab-indicator { position: absolute; left: 0; bottom: 0; width: 0; height: 2.5px; border-radius: 2px; background: var(--focus); pointer-events: none; will-change: transform, width; }
+
+/* Phone dialogs are bottom sheets driven by a spring; a grabber invites the drag. */
+.sheet-grabber { display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--chart-axis); margin: 0 auto .875rem; }
+.dialog-content.sheet { left: 0; right: 0; top: auto; bottom: 0; width: 100%; max-height: 88vh; border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  border-bottom: 0; transform: translateY(100%); padding-top: .625rem; padding-bottom: calc(1.375rem + env(safe-area-inset-bottom)); }
+.dialog-content.sheet .dialog-grab { touch-action: none; cursor: grab; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A centred dialog materialises: blur and scale settle together, and it leaves the same way. */
+  @keyframes materialize-in { from { opacity: 0; transform: translate(-50%, -48%) scale(.96); filter: blur(8px); } }
+  @keyframes materialize-out { to { opacity: 0; transform: translate(-50%, -48%) scale(.96); filter: blur(8px); } }
+  @keyframes sheet-down { to { transform: translateY(100%); } }
+  .dialog-content[data-state="open"] { animation: materialize-in var(--move) var(--ease-out); }
+  .dialog-content[data-state="closed"] { animation: materialize-out 200ms var(--ease-in); }
+  .dialog-content.sheet[data-state="open"], .dialog-overlay.sheet[data-state="open"] { animation: none; }
+  .dialog-content.sheet[data-state="closed"] { animation: sheet-down 260ms var(--ease-in); }
+  .dialog-overlay.sheet[data-state="closed"] { animation: scrim-out 260ms var(--ease-in); }
+  .dialog-content.sheet.leaving[data-state="closed"], .dialog-overlay.sheet.leaving[data-state="closed"] { animation: none; }
+  .action-item, .document-row, tbody tr { transition: background-color var(--quick) var(--ease-out); }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+  .sidebar { transition: none; touch-action: pan-y; }
+  .sidebar.is-dragging { cursor: grabbing; user-select: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar { background: var(--surface-neutral-100); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --hairline: var(--contrast-line); }
+  .sidebar { background: var(--surface-neutral-100); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

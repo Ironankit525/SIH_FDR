@@ -29,7 +29,7 @@ export function ImportRecords() {
   if (user.role !== 'admin') return <Notice>Administrator access is required for this page.</Notice>
   const result: Row | undefined = send.data
   return <>
-    <PageHeader eyebrow="ADMINISTRATION" title="Import existing records" description="Bring security deposits recorded elsewhere into the portal from a CSV file."
+    <PageHeader eyebrow="Administration" title="Import existing records" description="Bring security deposits recorded elsewhere into the portal from a CSV file."
       actions={<Button variant="outline" onClick={downloadTemplate}><Download size={16}/>Download template</Button>}/>
     <Notice>Every file is checked first and nothing is saved until you confirm. Only rows without problems are imported, and an instrument already in the portal is never imported twice. Imported cases start as submitted and go through the same checks; most will need their receipt uploaded.</Notice>
     <Panel title="1. Choose a file" subtitle={`Required columns: ${COLUMNS.slice(0, 10).join(', ')}. Optional: ${COLUMNS.slice(10).join(', ')}. Dates as YYYY-MM-DD; up to 2,000 rows.`}>

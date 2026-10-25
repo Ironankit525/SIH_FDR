@@ -87,7 +87,7 @@ export function RiskPolicy() {
   })
 
   return <>
-    <PageHeader eyebrow="ADMINISTRATION" title="Risk policy" description="The weights, caps and thresholds that turn review findings into a risk score."
+    <PageHeader eyebrow="Administration" title="Risk policy" description="The weights, caps and thresholds that turn review findings into a risk score."
       actions={admin && (draft ? <Button variant="outline" onClick={() => { setDraft(null); preview.reset() }}><X size={16}/>Discard draft</Button>
         : <Button onClick={() => setDraft(draftFrom(active))}><Pencil size={16}/>Propose changes</Button>)}/>
     <Notice>A score orders review work; it never approves or refuses a case. Every change needs a second administrator's approval, and approval rescores all cases. {admin ? '' : 'Auditors have read-only access.'}</Notice>
