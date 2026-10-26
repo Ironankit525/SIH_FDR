@@ -2,7 +2,7 @@
 
 DepositFlow is a working prototype for managing institutional security deposits and Fixed Deposit Receipts (FDRs): submission, document review, bank evidence, maturity monitoring, renewal, clearances and release authorisation.
 
-The project includes a **React/TypeScript frontend**, a **FastAPI backend**, a relational database, encrypted document storage, OCR, role-based workflows and automated tests. **The recommended local setup uses SQLite and runs without Docker.** PostgreSQL, MinIO and Redis/Celery are included as an optional deployment configuration.
+The project includes a **React/TypeScript frontend**, a **FastAPI backend**, a relational database, encrypted document storage, Colab VLM integration, OCR for supporting documents, role-based workflows and automated tests. **The recommended local setup uses SQLite and runs without Docker.** PostgreSQL, MinIO and Redis/Celery are included as an optional deployment configuration.
 
 This is a Smart India Hackathon prototype, not an official AICTE service or a certified production deployment. Demo institutions and bank records are fictional; regulatory rules are illustrative. The portal records release decisions and completion references; it never transfers money.
 
@@ -24,7 +24,36 @@ This is a Smart India Hackathon prototype, not an official AICTE service or a ce
 | Reporting | Dashboards, charts, searchable tables, CSV exports, printable reports and audit history |
 | Reliability | Persistent extraction claims, bounded retries, recovery and rejection of stale worker results |
 
-**VLM integration is deferred.** PDF text extraction and Tesseract OCR work now. Optional provider hooks exist, but no trained model is connected, downloaded or needed to run the project. The active database stack is SQLAlchemy with SQLite/PostgreSQL; MongoDB is not used.
+**Gemma 3 27B VLM integration is available through an authenticated Colab HTTP worker.** See [Team testing with the shared Colab VLM](docs/TEAM_TESTING.md) for fresh-checkout setup, connection checks, test receipts and the full workflow. Each teammate can run the portal locally while sharing one running model. OCR remains the default without VLM configuration and handles supporting documents. The active database stack is SQLAlchemy with SQLite/PostgreSQL; MongoDB is not used.
+
+## Start here: clone, connect Colab, and test the VLM
+
+**[Complete setup: laptop → ngrok → Google Colab](docs/VLM_SETUP.md)** covers a new teammate's installation, model-folder access, GPU setup, ngrok account/token/domain, notebook cell order, environment import and troubleshooting.
+
+| Where | What runs there |
+| --- | --- |
+| Each teammate's laptop | React UI, FastAPI backend, SQLite database and encrypted documents; no GPU required |
+| Colab owner's GPU runtime | Gemma 3 27B base + trained LoRA adapter and authenticated extraction API |
+| ngrok | HTTPS tunnel from each laptop backend to the Colab worker |
+
+To use an existing team worker, obtain its current `backend-vlm.env` privately from its owner, then run on your laptop:
+
+```bash
+git clone --branch llm_integerate https://github.com/alokkumardalei-wq/SIH_FDR.git
+cd SIH_FDR
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.lock
+npm --prefix frontend ci
+.venv/bin/python scripts/connect_vlm.py "$HOME/Downloads/backend-vlm.env"
+.venv/bin/python scripts/prepare_team_demo.py
+python3 scripts/dev.py
+```
+
+Open **http://localhost:5173**. Use `institution@demo.local` / `DemoFlow2026!` for the default demo. Follow the [two-receipt and role-by-role test guide](docs/TEAM_TESTING.md). Use Python 3.12 and Node.js 22; Windows users can follow the WSL paths in the complete guide. The private repository requires collaborator access.
+
+To run **your own Colab worker**, obtain the complete saved adapter export in Drive and upload [Gemma3_27B_Review_and_Serve.ipynb](training/gemma3_27b/Gemma3_27B_Review_and_Serve.ipynb) to Colab. Use the recorded A100 80 GB class, configure `ROOT`, leave `RUN_EVALUATION=False`, and run setup, model loading, inference and the API smoke test in order. Add `NGROK_AUTHTOKEN` and `NGROK_DOMAIN` in Colab Secrets, then run the server cell with `START_WORKER=True`. It downloads the connection file used above. [Detailed instructions and recovery steps](docs/VLM_SETUP.md#4-run-the-saved-model-in-colab).
+
+The model weights stay in Drive/Colab; **cloning code alone does not grant model access or start a worker**. A teammate sharing your running worker needs only its current connection file. Each laptop has independent cases; a shared model does not share databases. Keep the Colab worker running, and re-import new settings/restart the backend whenever the runtime or credentials change.
 
 ## Run locally without Docker
 
@@ -39,7 +68,7 @@ The commands below target macOS/Linux. On Windows, WSL provides the same shell a
 ### Install and start
 
 ```bash
-git clone https://github.com/alokkumardalei-wq/SIH_FDR.git
+git clone --branch llm_integerate https://github.com/alokkumardalei-wq/SIH_FDR.git
 cd SIH_FDR
 python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.lock
@@ -59,7 +88,7 @@ The launcher applies Alembic migrations, seeds fictional demo data idempotently 
 
 Use `http://localhost:5173` consistently. The configured origin protects write requests; opening the frontend through `127.0.0.1` instead can cause origin errors. Backend automatic reload is disabled to reduce local overhead: restart the launcher after Python changes. Frontend changes use Vite hot reload.
 
-No `.env` file is required for this default setup. This private development snapshot includes `backend/.data/local-secrets.json`; the backend uses those keys when environment overrides are absent. If that file is absent, development keys are generated locally on first use.
+No `.env` file is required for the default OCR setup. VLM connections use private settings in `backend/.env`. A fresh checkout should omit local keys and runtime data; development keys are generated locally on first use. Existing installations must preserve their encryption keys to keep stored documents readable.
 
 Install Tesseract if needed:
 
@@ -139,7 +168,9 @@ flowchart LR
     API --> Audit[Append-only audit events and chain heads]
     DB --> Jobs[Persistent extraction queue]
     Jobs --> Worker[Local worker / Celery]
-    Worker --> OCR[PyMuPDF and Tesseract]
+    Worker --> VLM[Authenticated Colab VLM for configured instrument uploads]
+    Worker --> OCR[PyMuPDF and Tesseract for OCR mode / supporting documents]
+    VLM --> DB
     OCR --> DB
     Worker --> Alerts[Deadline monitoring and notifications]
 ```
@@ -158,7 +189,7 @@ All application modules are under `backend/app/`.
 | `rules.py` | Effective-dated requirement rules, exemptions, multipliers and calculation snapshots |
 | `storage.py` | Upload validation, optional ClamAV scanning, Fernet encryption and local/S3 storage |
 | `extraction.py` | PDF text extraction, Tesseract fallback and heuristic structured-field parsing |
-| `extraction_engine.py` | OCR provider interface and inactive hooks for a future trained VLM |
+| `extraction_engine.py` | OCR/local/HTTP extraction providers, strict VLM response validation and connection-error handling |
 | `jobs.py`, `worker.py` | Persistent claims, retries, recovery, local scheduling and optional Celery tasks |
 | `bank.py` | Bank adapter protocol and deterministic fictional verification fixtures |
 | `workflows.py` | Discrepancy detection, release prerequisites, reviewer separation and deadline reminders |
@@ -273,7 +304,7 @@ In development, Vite proxies `/api` to `127.0.0.1:8000`. The optional container 
 
 ## Configuration and secret handling
 
-The root `.env.example` and `backend/.env.example` templates are included in this repository. Real `.env` files remain ignored. This private development snapshot also includes `backend/.data/local-secrets.json`, containing the local signing and document encryption keys, at the repository owner's request. Repository collaborators and clones can access those keys. Use separate environment-provided keys for deployments; do not put API keys or database passwords in frontend code.
+The root `.env.example` and `backend/.env.example` templates are included in this repository. Real `.env` files remain ignored. The current branch omits `backend/.data/local-secrets.json`; fresh installations generate their own local keys. Previously committed keys remain in older Git history. Use separate environment-provided keys for deployments; do not put API keys or database passwords in frontend code.
 
 For optional native overrides, create your own untracked `backend/.env`. Shell environment variables also work. These are the main settings:
 
@@ -286,14 +317,14 @@ For optional native overrides, create your own untracked `backend/.env`. Shell e
 | `FRONTEND_ORIGIN` | `http://localhost:5173` |
 | `COOKIE_SECURE` | `false` for loopback HTTP; required in production |
 | `REQUIRE_MALWARE_SCAN`, `CLAMAV_HOST` | Optional locally; configure the scanner for production |
-| `EXTRACTION_PROVIDER` | `ocr`; leave unchanged until VLM integration is requested |
+| `EXTRACTION_PROVIDER` | `ocr` by default; use `vlm_http` with the private Colab worker settings |
 | `EXTRACTION_MAX_ATTEMPTS`, `EXTRACTION_LEASE_SECONDS` | `3`, `900` |
 | `SECRET_KEY`, `STORAGE_ENCRYPTION_KEY` | Generated locally in development; explicit private values required in production |
 | `DEMO_PASSWORD` | Optional password override before initial seeding |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Optional private S3/MinIO configuration |
 | `REDIS_URL` | Broker connection for optional Celery mode |
 
-Development runtime files live under `backend/.data/`: the SQLite database, encrypted documents and `local-secrets.json`. Runtime data remains ignored; `local-secrets.json` is an explicitly committed exception in this private snapshot. Backups, other private keys, credentials, dependency folders, builds and test artifacts remain ignored. Preserve the database, encrypted objects **and their encryption key together** in a private backup; the key is required to read existing documents.
+Development runtime files live under `backend/.data/`: the SQLite database, encrypted documents and `local-secrets.json`. Runtime data and `local-secrets.json` remain ignored in the current branch. Backups, other private keys, credentials, dependency folders, builds and test artifacts remain ignored. Preserve the database, encrypted objects **and their encryption key together** in a private backup; the key is required to read existing documents.
 
 ## Optional Docker deployment
 
@@ -342,7 +373,7 @@ npm run test:e2e
 
 An existing compatible Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Browser tests use one worker, create fictional `E2E-*` records and retain ignored screenshots/traces under `frontend/test-results/`.
 
-Latest verified results: **113 backend tests (including the risk-evaluation regression gate and an offline PostgreSQL migration check) and 6 frontend tests passed; the TypeScript/production build and migration alignment check passed.** The 4 Playwright browser tests last passed before the risk-engine work and have not been re-run since. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for the tested scope and limitations. These are recorded local results, not a claim of a configured GitHub Actions pipeline.
+Team-release validation: **149 backend tests and 31 worker/setup tests passed in an isolated source copy without the active database or credentials.** Fresh database/receipt preparation also passed twice without duplicating data. The merged frontend previously passed **16 tests and its TypeScript/production build** and is unchanged by the VLM setup work. Migration checks passed. Browser tests and the revised notebook on a live GPU were not rerun for this release; local software tests do not establish model accuracy. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for earlier checks.
 
 ## Troubleshooting and maintenance
 
@@ -390,6 +421,8 @@ SIH_FDR/
 ```
 
 - [Architecture and security boundaries](docs/ARCHITECTURE.md)
+- [Complete Colab/ngrok VLM setup](docs/VLM_SETUP.md)
+- [Team workflow tests and demo receipt values](docs/TEAM_TESTING.md)
 - [Backend progress and deferred VLM work](docs/BACKEND_PROGRESS.md)
 - [Database relationships](docs/DATABASE.md) and [PostgreSQL schema](docs/schema.postgresql.sql)
 - [API guide](docs/API.md) and [OpenAPI snapshot](docs/openapi.json)
@@ -398,4 +431,4 @@ SIH_FDR/
 - [Known limitations and remaining integrations](docs/LIMITATIONS.md)
 - [Risk engine evaluation](docs/RISK_EVALUATION.md)
 
-Live bank/AICTE connectivity, trained VLM integration, real email/SMS delivery, SSO/MFA, production deployment hardening and formal regulatory review remain future work. Existing automated checks assist officers; human decisions and independently obtained evidence remain essential.
+Live bank/AICTE connectivity, production VLM hosting and real-receipt accuracy validation, real email/SMS delivery, SSO/MFA, production deployment hardening and formal regulatory review remain future work. The trained VLM can run through the temporary Colab worker. Existing automated checks assist officers; human decisions and independently obtained evidence remain essential.

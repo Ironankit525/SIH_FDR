@@ -512,38 +512,38 @@ UPDATE alembic_version SET version_num='risk_safeguards' WHERE alembic_version.v
 -- Running upgrade risk_safeguards -> risk_engine
 
 CREATE TABLE risk_weight_versions (
-    version INTEGER NOT NULL, 
-    status VARCHAR(20) NOT NULL, 
-    weights JSON NOT NULL, 
-    category_caps JSON NOT NULL, 
-    thresholds JSON NOT NULL, 
-    notes TEXT NOT NULL, 
-    proposed_by UUID NOT NULL, 
-    approved_by UUID, 
-    id UUID NOT NULL, 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL, 
-    PRIMARY KEY (id), 
-    FOREIGN KEY(proposed_by) REFERENCES users (id), 
-    FOREIGN KEY(approved_by) REFERENCES users (id), 
+    version INTEGER NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    weights JSON NOT NULL,
+    category_caps JSON NOT NULL,
+    thresholds JSON NOT NULL,
+    notes TEXT NOT NULL,
+    proposed_by UUID NOT NULL,
+    approved_by UUID,
+    id UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY(proposed_by) REFERENCES users (id),
+    FOREIGN KEY(approved_by) REFERENCES users (id),
     UNIQUE (version)
 );
 
 CREATE INDEX ix_risk_weight_versions_created_at ON risk_weight_versions (created_at);
 
 CREATE TABLE risk_assessments (
-    deposit_id UUID NOT NULL, 
-    instrument_id UUID, 
-    score NUMERIC(4, 1) NOT NULL, 
-    level VARCHAR(10) NOT NULL, 
-    signals JSON NOT NULL, 
-    engine_version VARCHAR(20) NOT NULL, 
-    weights_version INTEGER NOT NULL, 
-    inputs_digest VARCHAR(64) NOT NULL, 
-    id UUID NOT NULL, 
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL, 
-    PRIMARY KEY (id), 
-    CHECK (score >= 0 AND score <= 100), 
-    FOREIGN KEY(deposit_id) REFERENCES security_deposits (id), 
+    deposit_id UUID NOT NULL,
+    instrument_id UUID,
+    score NUMERIC(4, 1) NOT NULL,
+    level VARCHAR(10) NOT NULL,
+    signals JSON NOT NULL,
+    engine_version VARCHAR(20) NOT NULL,
+    weights_version INTEGER NOT NULL,
+    inputs_digest VARCHAR(64) NOT NULL,
+    id UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (id),
+    CHECK (score >= 0 AND score <= 100),
+    FOREIGN KEY(deposit_id) REFERENCES security_deposits (id),
     FOREIGN KEY(instrument_id) REFERENCES deposit_instruments (id)
 );
 

@@ -93,8 +93,20 @@ def http_extract(data, content_type):
             with client.stream('POST', settings.vlm_endpoint, headers=headers,
                                data={'model': settings.vlm_model},
                                files={'file': ('document' + suffix, data, content_type)}) as response:
+                if response.status_code in (401, 403):
+                    raise ExtractionFailure(
+                        'The VLM service could not authenticate this backend. Reconnect it using the current '
+                        'worker credentials, restart the backend, and retry extraction.')
+                if response.headers.get('ngrok-error-code') == 'ERR_NGROK_3200':
+                    raise ExtractionFailure(
+                        'The Colab extraction tunnel is offline. Restart the worker and tunnel, update the '
+                        'backend connection settings if they changed, and retry extraction.', retryable=True)
                 if response.status_code == 429 or response.status_code >= 500:
                     raise ExtractionFailure('The VLM service is temporarily unavailable. Extraction will be retried.', retryable=True)
+                if response.status_code == 404:
+                    raise ExtractionFailure(
+                        'The VLM extraction endpoint was not found. Check the current worker address and '
+                        '/api/v1/extract-only path, restart the backend after updating its settings, and retry.')
                 if response.status_code != 200:
                     raise ExtractionFailure('The VLM service rejected the request. Check its configuration and supported document formats.')
                 raw = bytearray()
