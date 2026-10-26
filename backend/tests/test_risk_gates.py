@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from app.models import (AuditLog, Clearance, Discrepancy, Instrument, ReleaseRequest, SecurityDeposit, VerificationEvidence,
                         VerificationRequest)
+from test_risk_engine import add_suspicion
 from test_workflows import get_case
 
 
@@ -28,11 +29,12 @@ def approve(authority, release, **extra):
 
 
 def test_queue_sorts_and_filters_by_risk(env):
-    _, client = env
+    factory, client = env
     officer, owner = client("officer"), client()
+    add_suspicion(factory, "MATCH-001")
     rows = officer.get("/api/deposits?sort=risk").json()
     scores = [r["risk"]["score"] for r in rows]
-    assert scores == sorted(scores, reverse=True) and rows[0]["instrument"]["number"] == "SHORT-002"
+    assert scores == sorted(scores, reverse=True) and rows[0]["instrument"]["number"] == "MATCH-001"
     assert {r["risk"]["level"] for r in officer.get("/api/deposits?risk_level=medium").json()} == {"medium"}
     assert all("risk" not in r for r in owner.get("/api/deposits?sort=risk").json())
 
@@ -46,7 +48,8 @@ def test_institutions_never_see_scores(env):
     assert "risk_distribution" not in owner.get("/api/dashboard").json()
     assert "Risk score" not in owner.get("/api/reports/export?kind=deposits").text
     official = officer.get(f"/api/deposits/{case['id']}").json()
-    assert official["risk"]["level"] in ("low", "medium", "high", "critical")
+    assert official["risk"]["level"] in ("none", "low", "medium", "high", "critical")
+    assert "escalated_at" not in own and "readiness" not in own and "readiness" in official
     assert any(e["action"] == "risk_assessed" for e in official["timeline"])
 
 
@@ -54,11 +57,11 @@ def test_dashboard_and_export_show_risk_to_officials(env):
     _, client = env
     officer = client("officer")
     dashboard = officer.get("/api/dashboard").json()
-    assert [d["name"] for d in dashboard["risk_distribution"]] == ["low", "medium", "high", "critical"]
+    assert [d["name"] for d in dashboard["risk_distribution"]] == ["none", "low", "medium", "high", "critical"]
     assert sum(d["value"] for d in dashboard["risk_distribution"]) == 9
     assert dashboard["risk_institutions"][0]["institution"] == "Meridian Institute of Technology"
     rows = list(csv.DictReader(io.StringIO(officer.get("/api/reports/export?kind=deposits").text)))
-    assert rows[0]["Risk level"] in ("low", "medium", "high", "critical")
+    assert rows[0]["Risk level"] in ("none", "low", "medium", "high", "critical")
 
 
 def test_high_risk_refuses_simulated_verification(env):
@@ -67,6 +70,7 @@ def test_high_risk_refuses_simulated_verification(env):
     vigilance = client("vigilance")
     clearance = next(c for c in release["clearances"] if c["cell"] == "Vigilance")
     vigilance.post(f"/api/clearances/{clearance['id']}/decision", json={"decision": "approved", "notes": "No vigilance concerns"})
+    add_suspicion(env[0], "RELEASE-006", resolution_kind="officer_confirmed")   # resolved, so it leaves a small trace
     set_thresholds(client, 1, 2, 99)
     detail = authority.get("/api/releases").json()[0]
     assert detail["risk"]["level"] == "high"
@@ -85,6 +89,7 @@ def test_critical_risk_requires_vigilance_fresh_check_and_acknowledgement(env):
         evidence = db.scalar(select(VerificationEvidence).join(VerificationRequest).where(VerificationRequest.deposit_id == release.deposit_id))
         evidence.verified_on = date.today() - timedelta(days=10)
         db.commit()
+    add_suspicion(factory, "RELEASE-006", code="forensic_conflicting_values", severity="high", resolution_kind="officer_confirmed")
     set_thresholds(client, 1, 2, 3)
     authority, detail = release_case(client)
     assert detail["risk"]["level"] == "critical" and detail["risk_acknowledgement_required"]
@@ -109,7 +114,7 @@ def test_decisions_record_the_risk_at_the_time(env):
     authority.post(f"/api/releases/{release['id']}/decision", json={"decision": "returned", "notes": "Please attach the original receipt"})
     with factory() as db:
         event = db.scalar(select(AuditLog).where(AuditLog.action == "release_returned"))
-        assert event.after["risk_level"] == "low" and "risk_score" in event.after
+        assert event.after["risk_level"] == "none" and event.after["risk_score"] == 0
 
 
 def test_institution_response_to_hidden_task_stays_generic(env):

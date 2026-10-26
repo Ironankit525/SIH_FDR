@@ -35,9 +35,11 @@ describe('independent evidence display', () => {
     expect(screen.queryByRole('button', { name: 'Record correction' })).not.toBeInTheDocument()
   })
 
-  it('does not mark evidence review complete when mock findings are disallowed', () => {
-    render(<CaseProgress deposit={fixture()} role="authority"/> )
-    const step = screen.getByText('Evidence reviewed').closest('li')!
-    expect(within(step).getByText('Pending')).toBeInTheDocument()
+  it('marks verification complete only after the officer signs it off, not on a bank finding alone', () => {
+    const { unmount } = render(<CaseProgress deposit={fixture()} role="authority"/> )
+    expect(within(screen.getByText('Verification complete').closest('li')!).getByText('Pending')).toBeInTheDocument()
+    unmount()
+    render(<CaseProgress deposit={{ ...fixture(), verified_at: '2026-01-02' }} role="authority"/> )
+    expect(within(screen.getByText('Verification complete').closest('li')!).getByText('Complete')).toBeInTheDocument()
   })
 })

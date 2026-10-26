@@ -177,7 +177,9 @@ def test_official_verification_needs_bank_document(env):
     body = {"document_id": detail["documents"][0]["id"], "source": "Authorised demo branch correspondence", "reference": "OFFICIAL-TEST-001", "finding": "confirmed", "observations": "Officer reviewed authorised confirmation evidence.", "verified_on": str(date.today())}
     assert c.post(f"/api/verifications/{request['id']}/evidence", json=body).status_code == 422
     doc = c.post(f"/api/deposits/{case['id']}/documents", data={"category": "bank_confirmation"}, files={"file": ("bank.pdf", pdf_for(case), "application/pdf")}).json()
-    assert c.post(f"/api/verifications/{request['id']}/evidence", json={**body, "document_id": doc["id"]}).status_code == 200
+    assert c.post(f"/api/verifications/{request['id']}/evidence", json={**body, "document_id": doc["id"]}).status_code == 422  # values not stated
+    confirmed = {"amount": case["instrument"]["amount"], "maturity_date": case["instrument"]["maturity_date"]}
+    assert c.post(f"/api/verifications/{request['id']}/evidence", json={**body, "document_id": doc["id"], "confirmed_fields": confirmed}).status_code == 200
     assert c.get(f"/api/deposits/{case['id']}").json()["instrument"]["verification_status"] == "officially_confirmed"
 
 

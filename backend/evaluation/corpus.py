@@ -40,6 +40,10 @@ PROBLEM_KINDS = {
 }
 
 
+# Honestly declared non-compliance: stopped by requirements (open review tasks block verification), not by suspicion.
+COMPLIANCE_KINDS = {"third_party_depositor", "missing_lien"}
+
+
 @dataclass
 class Case:
     id: str

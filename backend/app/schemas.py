@@ -105,6 +105,16 @@ class VerificationInput(StrictModel):
     channel: Literal["approved_bank_correspondence", "authorised_bank_portal", "branch_confirmation"]
 
 
+class ConfirmedFields(StrictModel):
+    """What the bank itself stated, so it can be compared with the declaration rather than taken on trust."""
+    bank: str | None = Field(default=None, max_length=150)
+    number: str | None = Field(default=None, max_length=100)
+    depositor_name: str | None = Field(default=None, max_length=200)
+    amount: float | None = Field(default=None, gt=0, le=1_000_000_000_000, allow_inf_nan=False)
+    issue_date: date | None = None
+    maturity_date: date | None = None
+
+
 class EvidenceInput(StrictModel):
     document_id: str
     source: str = Field(min_length=5, max_length=200)
@@ -112,6 +122,7 @@ class EvidenceInput(StrictModel):
     finding: Literal["confirmed", "mismatched", "inconclusive", "pending"]
     observations: str = Field(min_length=10, max_length=4000)
     verified_on: date
+    confirmed_fields: ConfirmedFields | None = None
 
     @field_validator("verified_on")
     @classmethod
@@ -119,6 +130,18 @@ class EvidenceInput(StrictModel):
         if v > date.today():
             raise ValueError("Verification date cannot be in the future")
         return v
+
+    @model_validator(mode="after")
+    def confirmation_states_values(self):
+        fields = self.confirmed_fields
+        if self.finding == "confirmed" and not (fields and fields.amount and fields.maturity_date):
+            raise ValueError("A confirmed finding must record at least the amount and maturity date the bank confirmed")
+        return self
+
+
+class AssignmentInput(StrictModel):
+    officer_id: str | None = None  # None leaves the case unassigned
+    reason: str = Field(min_length=10, max_length=2000)
 
 
 class ReleaseInput(StrictModel):
@@ -196,23 +219,27 @@ class RuleInput(StrictModel):
         return self
 
 
-class RiskWeightsInput(StrictModel):
+class RiskPolicyInput(StrictModel):
     weights: dict[str, float] = Field(default_factory=dict)
-    category_caps: dict[str, float] = Field(default_factory=dict)
+    category_caps: dict[str, float] | None = None  # None keeps the default caps; {} removes every cap
     thresholds: dict[Literal["medium", "high", "critical"], int]
-    notes: str = Field(min_length=10, max_length=2000)
 
     @model_validator(mode="after")
     def valid_policy(self):
         from .risk import CATEGORIES, SIGNALS
         if set(self.weights) - set(SIGNALS) or any(not 0 <= v <= 0.95 for v in self.weights.values()):
             raise ValueError("Weights must name known signals and lie between 0 and 0.95")
-        if set(self.category_caps) - set(CATEGORIES) or any(not 0 < v <= 1 for v in self.category_caps.values()):
+        caps = self.category_caps or {}
+        if set(caps) - set(CATEGORIES) or any(not 0 < v <= 1 for v in caps.values()):
             raise ValueError("Category caps must name known categories and lie between 0 and 1")
         t = self.thresholds
         if set(t) != {"medium", "high", "critical"} or not 0 < t["medium"] < t["high"] < t["critical"] < 100:
             raise ValueError("Thresholds must rise: 0 < medium < high < critical < 100")
         return self
+
+
+class RiskWeightsInput(RiskPolicyInput):
+    notes: str = Field(min_length=10, max_length=2000)
 
 
 class UserInput(StrictModel):

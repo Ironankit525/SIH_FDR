@@ -1,5 +1,5 @@
 {
-  "generated_on": "2026-10-25",
+  "generated_on": "2026-10-26",
   "corpus": {
     "genuine": 60,
     "per_problem": 6,
@@ -9,6 +9,7 @@
     "cases": 120,
     "problem_cases": 60,
     "genuine_cases": 60,
+    "suspicion_problem_cases": 48,
     "thresholds": {
       "medium": 20,
       "high": 50,
@@ -16,9 +17,9 @@
     },
     "stages": {
       "intake": {
-        "auc": 0.989,
-        "recall_at_medium": 0.9,
-        "recall_at_high": 0.667,
+        "auc": 0.938,
+        "recall_at_medium": 0.875,
+        "recall_at_high": 0.688,
         "false_positive_rate_at_medium": 0.0,
         "false_positive_rate_at_high": 0.0,
         "precision_at_10": 1.0,
@@ -27,101 +28,111 @@
             "cases": 29,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 10.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_scanned": {
             "cases": 10,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 10.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_joint_holding": {
             "cases": 7,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 10.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_bank_abbreviation": {
             "cases": 9,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 10.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_coverage_gap": {
             "cases": 5,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 10.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "overlay_amount": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
-            "median_score": 80.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 77.7
           },
           "incremental_date_edit": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 0.0,
-            "median_score": 38.2
+            "stopped_by_requirement": 0.0,
+            "median_score": 27.8
           },
           "hidden_text_layer": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
-            "median_score": 83.6
+            "stopped_by_requirement": 0.0,
+            "median_score": 81.8
           },
           "editor_regenerated": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 0.5,
-            "median_score": 67.6
+            "stopped_by_requirement": 0.0,
+            "median_score": 64.0
           },
           "clean_regenerated": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
-            "median_score": 63.5
+            "stopped_by_requirement": 0.0,
+            "median_score": 59.5
           },
           "fabricated": {
             "cases": 6,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 16.0
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "reused_receipt_rescan": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
-            "median_score": 92.8
+            "stopped_by_requirement": 0.0,
+            "median_score": 92.0
           },
           "duplicate_declared": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
+            "stopped_by_requirement": 1.0,
             "median_score": 100.0
           },
           "third_party_depositor": {
             "cases": 6,
-            "at_least_medium": 1.0,
-            "at_least_high": 0.167,
-            "median_score": 46.0
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "stopped_by_requirement": 1.0,
+            "median_score": 0.0
           },
           "missing_lien": {
             "cases": 6,
-            "at_least_medium": 1.0,
-            "at_least_high": 1.0,
-            "median_score": 75.7
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "stopped_by_requirement": 1.0,
+            "median_score": 0.0
           }
         },
         "detectors": {
-          "unverified": {
-            "problem_cases": 54,
-            "genuine_cases": 60,
-            "precision": 0.474
-          },
           "history_open_high": {
-            "problem_cases": 28,
+            "problem_cases": 16,
             "genuine_cases": 0,
             "precision": 1.0
           },
@@ -136,11 +147,6 @@
             "precision": 1.0
           },
           "mismatch_amount": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
-          "extraction_missing": {
             "problem_cases": 6,
             "genuine_cases": 0,
             "precision": 1.0
@@ -180,30 +186,10 @@
             "genuine_cases": 0,
             "precision": 1.0
           },
-          "depositor_not_institution": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
-          "lien_document_conflict": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
-          "lien_not_aicte": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
           "reused_text": {
             "problem_cases": 4,
             "genuine_cases": 0,
             "precision": 1.0
-          },
-          "coverage_gap": {
-            "problem_cases": 0,
-            "genuine_cases": 2,
-            "precision": 0.0
           },
           "reused_document": {
             "problem_cases": 2,
@@ -220,8 +206,8 @@
       "after_bank_check": {
         "auc": 1.0,
         "recall_at_medium": 1.0,
-        "recall_at_high": 0.8,
-        "false_positive_rate_at_medium": 0.017,
+        "recall_at_high": 1.0,
+        "false_positive_rate_at_medium": 0.0,
         "false_positive_rate_at_high": 0.0,
         "precision_at_10": 1.0,
         "per_kind": {
@@ -229,113 +215,123 @@
             "cases": 29,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 10.6
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_scanned": {
             "cases": 10,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 3.3
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_joint_holding": {
             "cases": 7,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 3.3
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_bank_abbreviation": {
             "cases": 9,
             "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 13.7
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "genuine_coverage_gap": {
             "cases": 5,
-            "at_least_medium": 0.2,
+            "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 13.7
+            "stopped_by_requirement": 0.0,
+            "median_score": 0.0
           },
           "overlay_amount": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
+            "stopped_by_requirement": 0.0,
             "median_score": 91.5
           },
           "incremental_date_edit": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
-            "median_score": 73.7
+            "stopped_by_requirement": 0.0,
+            "median_score": 72.4
           },
           "hidden_text_layer": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
+            "stopped_by_requirement": 0.0,
             "median_score": 93.0
           },
           "editor_regenerated": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
+            "stopped_by_requirement": 0.0,
             "median_score": 84.9
           },
           "clean_regenerated": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
+            "stopped_by_requirement": 0.0,
             "median_score": 82.8
           },
           "fabricated": {
             "cases": 6,
             "at_least_medium": 1.0,
-            "at_least_high": 0.0,
-            "median_score": 32.0
+            "at_least_high": 1.0,
+            "stopped_by_requirement": 0.0,
+            "median_score": 61.8
           },
           "reused_receipt_rescan": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
-            "median_score": 94.2
+            "stopped_by_requirement": 0.0,
+            "median_score": 96.7
           },
           "duplicate_declared": {
             "cases": 6,
             "at_least_medium": 1.0,
             "at_least_high": 1.0,
+            "stopped_by_requirement": 1.0,
             "median_score": 100.0
           },
           "third_party_depositor": {
             "cases": 6,
-            "at_least_medium": 1.0,
+            "at_least_medium": 0.0,
             "at_least_high": 0.0,
-            "median_score": 40.0
+            "stopped_by_requirement": 1.0,
+            "median_score": 0.0
           },
           "missing_lien": {
             "cases": 6,
-            "at_least_medium": 1.0,
-            "at_least_high": 1.0,
-            "median_score": 74.5
+            "at_least_medium": 0.0,
+            "at_least_high": 0.0,
+            "stopped_by_requirement": 1.0,
+            "median_score": 0.0
           }
         },
         "detectors": {
           "history_open_high": {
-            "problem_cases": 44,
-            "genuine_cases": 44,
-            "precision": 0.5
+            "problem_cases": 37,
+            "genuine_cases": 0,
+            "precision": 1.0
           },
           "history_bank_mismatch": {
-            "problem_cases": 39,
-            "genuine_cases": 23,
-            "precision": 0.629
+            "problem_cases": 32,
+            "genuine_cases": 0,
+            "precision": 1.0
           },
           "bank_mismatched": {
             "problem_cases": 30,
             "genuine_cases": 0,
             "precision": 1.0
-          },
-          "history_duplication": {
-            "problem_cases": 10,
-            "genuine_cases": 9,
-            "precision": 0.526
           },
           "maturity_value_inconsistent": {
             "problem_cases": 13,
@@ -347,17 +343,17 @@
             "genuine_cases": 0,
             "precision": 1.0
           },
-          "bank_inconclusive": {
+          "bank_no_record": {
             "problem_cases": 12,
             "genuine_cases": 0,
             "precision": 1.0
           },
-          "mismatch_amount": {
-            "problem_cases": 6,
+          "history_duplication": {
+            "problem_cases": 10,
             "genuine_cases": 0,
             "precision": 1.0
           },
-          "extraction_missing": {
+          "mismatch_amount": {
             "problem_cases": 6,
             "genuine_cases": 0,
             "precision": 1.0
@@ -397,30 +393,10 @@
             "genuine_cases": 0,
             "precision": 1.0
           },
-          "depositor_not_institution": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
-          "lien_document_conflict": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
-          "lien_not_aicte": {
-            "problem_cases": 6,
-            "genuine_cases": 0,
-            "precision": 1.0
-          },
           "reused_text": {
             "problem_cases": 4,
             "genuine_cases": 0,
             "precision": 1.0
-          },
-          "coverage_gap": {
-            "problem_cases": 0,
-            "genuine_cases": 2,
-            "precision": 0.0
           },
           "reused_document": {
             "problem_cases": 2,
@@ -440,16 +416,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -461,18 +437,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -484,19 +458,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 10.6,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -508,18 +479,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -531,18 +500,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -554,16 +521,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -575,18 +542,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -598,19 +563,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -622,16 +584,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -643,20 +605,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -668,20 +626,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -693,19 +647,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 19.0,
-          "level": "low",
-          "signals": [
-            "coverage_gap",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "coverage_gap"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -717,18 +668,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -740,16 +689,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -761,20 +710,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -786,19 +731,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -810,19 +752,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -834,19 +773,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -858,16 +794,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -879,18 +815,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -902,16 +836,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -923,16 +857,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -944,19 +878,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -968,16 +899,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -989,18 +920,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1012,18 +941,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1035,18 +962,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1058,19 +983,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1082,16 +1004,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1103,19 +1025,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1127,18 +1046,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1150,18 +1067,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1173,19 +1088,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1197,19 +1109,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1221,19 +1130,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1245,19 +1151,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 10.6,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1269,18 +1172,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1292,19 +1193,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1316,19 +1214,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1340,19 +1235,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1364,18 +1256,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1387,18 +1277,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1410,20 +1298,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1435,18 +1319,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1458,19 +1340,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1482,19 +1361,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_duplication",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1506,16 +1382,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1527,16 +1403,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1548,19 +1424,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1572,16 +1445,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1593,21 +1466,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 19.0,
-          "level": "low",
-          "signals": [
-            "coverage_gap",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 23.5,
-          "level": "medium",
-          "signals": [
-            "coverage_gap",
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1619,16 +1487,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1640,19 +1508,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1664,16 +1529,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1685,16 +1550,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 0.0,
-          "level": "low",
-          "signals": []
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1706,19 +1571,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1730,19 +1592,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1754,19 +1613,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 15.0,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1778,18 +1634,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 3.3,
-          "level": "low",
-          "signals": [
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1801,19 +1655,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 13.7,
-          "level": "low",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1825,13 +1676,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 80.0,
-          "level": "critical",
+          "score": 77.7,
+          "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
-            "mismatch_amount",
-            "unverified"
-          ]
+            "mismatch_amount"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 91.5,
@@ -1843,7 +1694,8 @@
             "history_duplication",
             "history_open_high",
             "mismatch_amount"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1855,13 +1707,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 80.0,
-          "level": "critical",
+          "score": 77.7,
+          "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
-            "mismatch_amount",
-            "unverified"
-          ]
+            "mismatch_amount"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 91.5,
@@ -1872,7 +1724,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_amount"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1884,13 +1737,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 80.0,
-          "level": "critical",
+          "score": 77.7,
+          "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
-            "mismatch_amount",
-            "unverified"
-          ]
+            "mismatch_amount"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 90.0,
@@ -1899,7 +1752,8 @@
             "bank_mismatched",
             "forensic_text_layer_mismatch",
             "mismatch_amount"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1911,14 +1765,14 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 81.3,
-          "level": "critical",
+          "score": 79.2,
+          "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
             "history_open_high",
-            "mismatch_amount",
-            "unverified"
-          ]
+            "mismatch_amount"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 91.5,
@@ -1929,7 +1783,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_amount"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1941,16 +1796,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 80.0,
-          "level": "critical",
+          "score": 77.7,
+          "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
-            "mismatch_amount",
-            "unverified"
-          ]
+            "mismatch_amount"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 91.5,
+          "score": 91.3,
           "level": "critical",
           "signals": [
             "bank_mismatched",
@@ -1958,7 +1813,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_amount"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1970,13 +1826,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 80.0,
-          "level": "critical",
+          "score": 77.7,
+          "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
-            "mismatch_amount",
-            "unverified"
-          ]
+            "mismatch_amount"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 91.5,
@@ -1987,7 +1843,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_amount"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -1999,28 +1856,27 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 42.3,
+          "score": 32.6,
           "level": "medium",
           "signals": [
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
-            "history_open_high",
-            "unverified"
-          ]
+            "history_open_high"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 73.7,
+          "score": 72.4,
           "level": "high",
           "signals": [
             "bank_mismatched",
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
             "history_bank_mismatch",
             "history_duplication",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2032,26 +1888,25 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 38.2,
+          "score": 27.8,
           "level": "medium",
           "signals": [
-            "extraction_missing",
             "forensic_incremental_update",
-            "forensic_modified_after_creation",
-            "unverified"
-          ]
+            "forensic_modified_after_creation"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 73.7,
+          "score": 72.4,
           "level": "high",
           "signals": [
             "bank_mismatched",
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2063,28 +1918,27 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 42.3,
+          "score": 32.6,
           "level": "medium",
           "signals": [
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
-            "history_open_high",
-            "unverified"
-          ]
+            "history_open_high"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 73.7,
+          "score": 72.4,
           "level": "high",
           "signals": [
             "bank_mismatched",
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
             "history_bank_mismatch",
             "history_duplication",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2096,24 +1950,23 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 38.2,
+          "score": 27.8,
           "level": "medium",
           "signals": [
-            "extraction_missing",
             "forensic_incremental_update",
-            "forensic_modified_after_creation",
-            "unverified"
-          ]
+            "forensic_modified_after_creation"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 69.1,
+          "score": 67.5,
           "level": "high",
           "signals": [
             "bank_mismatched",
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2125,27 +1978,26 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 38.2,
+          "score": 27.8,
           "level": "medium",
           "signals": [
-            "extraction_missing",
             "forensic_incremental_update",
-            "forensic_modified_after_creation",
-            "unverified"
-          ]
+            "forensic_modified_after_creation"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 73.7,
+          "score": 72.4,
           "level": "high",
           "signals": [
             "bank_mismatched",
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
             "history_bank_mismatch",
             "history_duplication",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2157,25 +2009,24 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 38.2,
+          "score": 27.8,
           "level": "medium",
           "signals": [
-            "extraction_missing",
             "forensic_incremental_update",
-            "forensic_modified_after_creation",
-            "unverified"
-          ]
+            "forensic_modified_after_creation"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 70.1,
+          "score": 68.6,
           "level": "high",
           "signals": [
             "bank_mismatched",
-            "extraction_missing",
             "forensic_incremental_update",
             "forensic_modified_after_creation",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2187,13 +2038,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 83.6,
+          "score": 81.8,
           "level": "critical",
           "signals": [
             "forensic_text_layer_mismatch",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 93.0,
@@ -2204,7 +2055,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2216,13 +2068,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 83.6,
+          "score": 81.8,
           "level": "critical",
           "signals": [
             "forensic_text_layer_mismatch",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 93.0,
@@ -2233,7 +2085,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2245,12 +2098,12 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 63.5,
+          "score": 59.5,
           "level": "high",
           "signals": [
-            "forensic_text_layer_mismatch",
-            "unverified"
-          ]
+            "forensic_text_layer_mismatch"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 84.5,
@@ -2261,7 +2114,8 @@
             "history_bank_mismatch",
             "history_duplication",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2273,13 +2127,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 67.2,
+          "score": 63.5,
           "level": "high",
           "signals": [
             "forensic_text_layer_mismatch",
-            "history_open_high",
-            "unverified"
-          ]
+            "history_open_high"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 84.5,
@@ -2289,7 +2143,8 @@
             "forensic_text_layer_mismatch",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2301,14 +2156,14 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 84.7,
+          "score": 83.0,
           "level": "critical",
           "signals": [
             "forensic_text_layer_mismatch",
             "history_open_high",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 93.0,
@@ -2319,7 +2174,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2331,14 +2187,14 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 84.1,
+          "score": 82.4,
           "level": "critical",
           "signals": [
             "forensic_text_layer_mismatch",
             "history_open_high",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 93.0,
@@ -2350,7 +2206,8 @@
             "history_duplication",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2362,12 +2219,12 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 28.0,
+          "score": 20.0,
           "level": "medium",
           "signals": [
-            "forensic_editing_software",
-            "unverified"
-          ]
+            "forensic_editing_software"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 68.9,
@@ -2377,7 +2234,8 @@
             "forensic_editing_software",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2389,13 +2247,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 67.6,
+          "score": 64.0,
           "level": "high",
           "signals": [
             "forensic_editing_software",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 86.2,
@@ -2406,7 +2264,8 @@
             "history_duplication",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2418,13 +2277,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 32.8,
+          "score": 25.3,
           "level": "medium",
           "signals": [
             "forensic_editing_software",
-            "history_open_high",
-            "unverified"
-          ]
+            "history_open_high"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 69.4,
@@ -2434,7 +2293,8 @@
             "forensic_editing_software",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2446,13 +2306,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 32.8,
+          "score": 25.3,
           "level": "medium",
           "signals": [
             "forensic_editing_software",
-            "history_open_high",
-            "unverified"
-          ]
+            "history_open_high"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 69.4,
@@ -2462,7 +2322,8 @@
             "forensic_editing_software",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2474,14 +2335,14 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 70.8,
+          "score": 67.6,
           "level": "high",
           "signals": [
             "forensic_editing_software",
             "history_open_high",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 86.2,
@@ -2492,7 +2353,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2504,13 +2366,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 67.6,
+          "score": 64.0,
           "level": "high",
           "signals": [
             "forensic_editing_software",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 84.9,
@@ -2520,7 +2382,8 @@
             "forensic_editing_software",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2532,12 +2395,12 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 59.5,
+          "score": 55.0,
           "level": "high",
           "signals": [
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 81.9,
@@ -2547,7 +2410,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2559,12 +2423,12 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 59.5,
+          "score": 55.0,
           "level": "high",
           "signals": [
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 79.8,
@@ -2572,7 +2436,8 @@
           "signals": [
             "bank_mismatched",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2584,13 +2449,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 63.5,
+          "score": 59.5,
           "level": "high",
           "signals": [
             "history_open_high",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 82.8,
@@ -2600,7 +2465,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2612,13 +2478,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 63.5,
+          "score": 59.5,
           "level": "high",
           "signals": [
             "history_open_high",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 82.8,
@@ -2628,7 +2494,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2640,13 +2507,13 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 63.5,
+          "score": 59.5,
           "level": "high",
           "signals": [
             "history_open_high",
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 82.8,
@@ -2656,7 +2523,8 @@
             "history_bank_mismatch",
             "history_open_high",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2668,12 +2536,12 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 59.5,
+          "score": 55.0,
           "level": "high",
           "signals": [
-            "maturity_value_inconsistent",
-            "unverified"
-          ]
+            "maturity_value_inconsistent"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
           "score": 79.8,
@@ -2681,7 +2549,8 @@
           "signals": [
             "bank_mismatched",
             "maturity_value_inconsistent"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2693,22 +2562,21 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 19.0,
-          "level": "low",
-          "signals": [
-            "history_open_high",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 32.0,
-          "level": "medium",
+          "score": 61.8,
+          "level": "high",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "history_bank_mismatch",
             "history_duplication",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2720,21 +2588,20 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 13.0,
-          "level": "low",
-          "signals": [
-            "history_open_high",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 32.0,
-          "level": "medium",
+          "score": 61.8,
+          "level": "high",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2746,21 +2613,20 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 16.0,
-          "level": "low",
-          "signals": [
-            "history_open_high",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 32.0,
-          "level": "medium",
+          "score": 61.8,
+          "level": "high",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2772,20 +2638,20 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 10.0,
-          "level": "low",
-          "signals": [
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 28.5,
-          "level": "medium",
+          "score": 59.8,
+          "level": "high",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2797,21 +2663,20 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 19.0,
-          "level": "low",
-          "signals": [
-            "history_open_high",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 32.0,
-          "level": "medium",
+          "score": 61.8,
+          "level": "high",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2823,21 +2688,20 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 13.0,
-          "level": "low",
-          "signals": [
-            "history_open_high",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 32.0,
-          "level": "medium",
+          "score": 61.8,
+          "level": "high",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "history_bank_mismatch",
             "history_open_high"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2849,29 +2713,30 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 93.0,
+          "score": 92.3,
           "level": "critical",
           "signals": [
             "extracted_number_elsewhere",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
-            "reused_text",
-            "unverified"
-          ]
+            "reused_text"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 94.2,
+          "score": 96.7,
           "level": "critical",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "extracted_number_elsewhere",
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
             "reused_text"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2883,29 +2748,30 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 92.8,
+          "score": 92.0,
           "level": "critical",
           "signals": [
             "extracted_number_elsewhere",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
-            "reused_document",
-            "unverified"
-          ]
+            "reused_document"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 94.2,
+          "score": 96.7,
           "level": "critical",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "extracted_number_elsewhere",
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
             "reused_document"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2917,28 +2783,29 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 92.3,
+          "score": 91.4,
           "level": "critical",
           "signals": [
             "extracted_number_elsewhere",
             "mismatch_depositor_name",
             "mismatch_number",
-            "reused_text",
-            "unverified"
-          ]
+            "reused_text"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 94.2,
+          "score": 96.7,
           "level": "critical",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "extracted_number_elsewhere",
             "history_duplication",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
             "reused_text"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2950,26 +2817,27 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 92.3,
+          "score": 91.4,
           "level": "critical",
           "signals": [
-            "extracted_number_elsewhere",
-            "mismatch_depositor_name",
-            "mismatch_number",
-            "reused_text",
-            "unverified"
-          ]
-        },
-        "after_bank_check": {
-          "score": 93.1,
-          "level": "critical",
-          "signals": [
-            "bank_inconclusive",
             "extracted_number_elsewhere",
             "mismatch_depositor_name",
             "mismatch_number",
             "reused_text"
-          ]
+          ],
+          "stopped_by_requirement": false
+        },
+        "after_bank_check": {
+          "score": 96.1,
+          "level": "critical",
+          "signals": [
+            "bank_no_record",
+            "extracted_number_elsewhere",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_text"
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -2981,29 +2849,30 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 92.5,
+          "score": 91.7,
           "level": "critical",
           "signals": [
             "extracted_number_elsewhere",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
-            "reused_text",
-            "unverified"
-          ]
+            "reused_text"
+          ],
+          "stopped_by_requirement": false
         },
         "after_bank_check": {
-          "score": 94.1,
+          "score": 96.7,
           "level": "critical",
           "signals": [
-            "bank_inconclusive",
+            "bank_no_record",
             "extracted_number_elsewhere",
             "history_bank_mismatch",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
             "reused_text"
-          ]
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -3015,30 +2884,31 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 93.4,
+          "score": 92.7,
           "level": "critical",
           "signals": [
-            "extracted_number_elsewhere",
-            "history_duplication",
-            "history_open_high",
-            "mismatch_depositor_name",
-            "mismatch_number",
-            "reused_document",
-            "unverified"
-          ]
-        },
-        "after_bank_check": {
-          "score": 94.2,
-          "level": "critical",
-          "signals": [
-            "bank_inconclusive",
             "extracted_number_elsewhere",
             "history_duplication",
             "history_open_high",
             "mismatch_depositor_name",
             "mismatch_number",
             "reused_document"
-          ]
+          ],
+          "stopped_by_requirement": false
+        },
+        "after_bank_check": {
+          "score": 96.7,
+          "level": "critical",
+          "signals": [
+            "bank_no_record",
+            "extracted_number_elsewhere",
+            "history_duplication",
+            "history_open_high",
+            "mismatch_depositor_name",
+            "mismatch_number",
+            "reused_document"
+          ],
+          "stopped_by_requirement": false
         }
       }
     },
@@ -3054,14 +2924,16 @@
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
           "score": 100.0,
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3077,14 +2949,16 @@
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
           "score": 100.0,
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3100,14 +2974,16 @@
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
           "score": 100.0,
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3123,14 +2999,16 @@
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
           "score": 100.0,
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3146,14 +3024,16 @@
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
           "score": 100.0,
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3169,14 +3049,16 @@
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
           "score": 100.0,
           "level": "blocked",
           "signals": [
             "duplicate_blocked"
-          ]
+          ],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3188,19 +3070,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 46.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 40.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3212,19 +3091,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 46.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 40.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3236,19 +3112,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 46.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 40.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3260,22 +3133,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 51.4,
-          "level": "high",
-          "signals": [
-            "depositor_not_institution",
-            "history_open_high",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 49.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution",
-            "history_bank_mismatch",
-            "history_open_high"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3287,19 +3154,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 46.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 40.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3311,19 +3175,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 46.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 40.0,
-          "level": "medium",
-          "signals": [
-            "depositor_not_institution"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3335,24 +3196,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 75.7,
-          "level": "high",
-          "signals": [
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 74.5,
-          "level": "high",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3364,24 +3217,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 74.8,
-          "level": "high",
-          "signals": [
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 74.5,
-          "level": "high",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3393,24 +3238,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 75.7,
-          "level": "high",
-          "signals": [
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 74.5,
-          "level": "high",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3422,24 +3259,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 74.8,
-          "level": "high",
-          "signals": [
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 74.5,
-          "level": "high",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3451,24 +3280,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 74.8,
-          "level": "high",
-          "signals": [
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 74.5,
-          "level": "high",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     },
@@ -3480,24 +3301,16 @@
       "blocked": false,
       "stages": {
         "intake": {
-          "score": 75.7,
-          "level": "high",
-          "signals": [
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte",
-            "unverified"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         },
         "after_bank_check": {
-          "score": 74.5,
-          "level": "high",
-          "signals": [
-            "history_bank_mismatch",
-            "history_open_high",
-            "lien_document_conflict",
-            "lien_not_aicte"
-          ]
+          "score": 0.0,
+          "level": "none",
+          "signals": [],
+          "stopped_by_requirement": true
         }
       }
     }

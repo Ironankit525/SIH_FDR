@@ -23,7 +23,10 @@ def test_detection_does_not_regress(env):
         assert now["false_positive_rate_at_medium"] <= expected["false_positive_rate_at_medium"], (stage, "more genuine cases alarmed")
         assert now["auc"] >= expected["auc"] - 0.02, (stage, "separation between problem and genuine cases fell")
         for kind, values in expected["per_kind"].items():
-            if kind in corpus.PROBLEM_KINDS:
+            if kind in corpus.COMPLIANCE_KINDS:
+                # Declared non-compliance is not scored; it must be stopped by an open requirement instead.
+                assert now["per_kind"][kind]["stopped_by_requirement"] >= values.get("stopped_by_requirement", 1.0), (stage, kind)
+            elif kind in corpus.PROBLEM_KINDS:
                 assert now["per_kind"][kind]["at_least_medium"] >= values["at_least_medium"], (stage, kind)
 
 

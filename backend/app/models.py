@@ -103,6 +103,13 @@ class SecurityDeposit(Identity, Base):
     assigned_officer_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     submitted_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # An officer's formal "verification complete"; cleared whenever new evidence or a new review task appears.
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    # Suspicion at or above the policy's high threshold hands the suspicious findings to Vigilance.
+    escalated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    vigilance_cleared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    vigilance_cleared_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
 
 class Instrument(Identity, Base):

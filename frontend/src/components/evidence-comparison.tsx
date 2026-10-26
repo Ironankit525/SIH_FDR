@@ -68,6 +68,15 @@ export function EvidenceComparison({ deposit, canCorrect, onCorrect }: {
           </tr>
         })}</tbody>
       </table></div>
+      {extraction && ['rate', 'maturity_value', 'lien'].some(key => present(extraction.fields?.[key])) && <div className="padded">
+        <strong>Also read from the document</strong>
+        <dl className="detail-list">
+          {present(extraction.fields.rate) && <div><dt>Interest rate</dt><dd>{extraction.fields.rate}% a year</dd></div>}
+          {present(extraction.fields.maturity_value) && <div><dt>Maturity value</dt><dd>{display('amount', extraction.fields.maturity_value)}</dd></div>}
+          {present(extraction.fields.lien) && <div><dt>Lien</dt><dd>{extraction.fields.lien}</dd></div>}
+        </dl>
+        <small className="cell-subtitle">Used to check that the receipt's figures fit together; the Documents tab shows the result.</small>
+      </div>}
       <div className="padded"><strong>Configured deposit requirement: </strong>{deposit.required_amount == null ? 'Manual review required' : money(deposit.required_amount)}
         <small className="cell-subtitle">{deposit.requirement_snapshot.illustrative ? 'Illustrative rule; officer review is required.' : deposit.requirement_snapshot.source_reference}</small>
       </div>
