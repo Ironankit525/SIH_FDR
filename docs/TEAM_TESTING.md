@@ -2,6 +2,8 @@
 
 Each teammate runs the frontend and backend on their own laptop and connects their backend to the same running Gemma 3 27B worker. No local GPU, model download, retraining, MongoDB or Docker is needed for this setup.
 
+**First time setting up Colab/ngrok? Start with [the complete VLM setup guide](VLM_SETUP.md).** It covers both consuming the owner's worker and starting your own from the saved adapter, including every notebook cell and the errors encountered during setup.
+
 ```text
 Teammate A's browser -> A's backend/database --\
                                              -> shared ngrok HTTPS API -> Colab GPU/model
@@ -19,9 +21,9 @@ Each laptop has independent users, deposits, documents and audit records. Changi
 
 If the owner is unavailable, another teammate can run their own Colab copy of [the notebook](../training/gemma3_27b/Gemma3_27B_Review_and_Serve.ipynb). They need access to the saved adapter and processor files, the correct Drive path, a suitable GPU runtime, and their own ngrok account/domain configuration. See [the model guide](../training/gemma3_27b/README.md). Sharing an `.ipynb` alone does not grant access to the model files.
 
-## 2. Publish the code needed by a fresh checkout
+## 2. What a fresh checkout includes
 
-Push the branch containing the current backend, frontend, `training/gemma3_27b/`, both new setup scripts, and this guide. The examples below use `llm_integerate`; substitute the branch where these changes were actually published. An older remote branch will not contain the new commands until you push them.
+Clone the `llm_integerate` branch. It includes the current backend, frontend, `training/gemma3_27b/`, the connection and fixture setup scripts, and these guides. Git does not include the trained model weights or a live worker API key.
 
 The setup generates the test PDFs and mock-bank records. Include `demo-data/receipt-tests/README.md` as well so teammates can see the form values. Do not rely on `.data/vlm-review/` helpers or your existing local database: those are local runtime artifacts, not a reproducible team setup.
 
@@ -70,6 +72,7 @@ Default demo password: **`DemoFlow2026!`**. Sign-in shortcuts fill these demo cr
 | --- | --- |
 | institution@demo.local | Create deposits, upload, respond, request release |
 | officer@demo.local | Assign cases, review and verify |
+| officer2@demo.local | Confirm high-severity resolutions when a second verification officer is required |
 | clearance@demo.local | PGRC clearance |
 | vigilance@demo.local | Vigilance clearance |
 | authority@demo.local | Final release decision and completion |
@@ -89,6 +92,7 @@ As Institution, select New deposit and Engineering and Technology, then use thes
 | Depositor | Meridian Institute of Technology | Meridian Institute of Technology |
 | Issue date | 2026-01-15 | 2026-01-15 |
 | Maturity date | 2034-01-15 | 2034-01-15 |
+| Lien / security details | Deposit pledged in favour of AICTE | Deposit pledged in favour of AICTE |
 | PDF in demo-data/receipt-tests | CORRECT-TEST-VALID-001.pdf | INCORRECT-TEST-ALTERED-001.pdf |
 
 Leave optional regulatory-end and renewal-action dates blank for this extraction/bank-comparison test. These cases are not the prepared successful-release case. The separate regulatory security period is not derived from the bank maturity date.
@@ -99,6 +103,7 @@ Leave optional regulatory-end and renewal-action dates blank for this extraction
 4. Open Evidence comparison. Confirm `Model extraction`, the Gemma 3 27B identity, and the values. The model can make mistakes; compare all six fields and record any human corrections with reasons.
 5. Submit each case for review.
 6. Sign out; sign in as Officer. Open each case, select **Assign to me**, then **Bank verification -> Run mock verification**.
+7. Inspect the **Verification checklist** in Case overview. Bank confirmation alone does not finish verification. Resolve review tasks with appropriate evidence and obtain any required Vigilance clearance before **Mark verification complete** becomes available.
 
 Expected results:
 
@@ -112,9 +117,10 @@ The VLM reads the document; matching form/document values alone do not establish
 
 ## 5. Continue the full workflow
 
-- **Clarification:** Officer requests clarification; Institution responds; Officer records an evidence-based resolution. The institution cannot resolve an officer's task itself.
-- **Blocked release:** On a submitted test case create a release request. Missing documents, bank verification, regulatory-period completion, open review tasks and pending clearances must block authority approval. Do not approve fictional missing evidence merely to make this test pass.
-- **Successful release:** Use seeded `RELEASE-006`. Initially PGRC is approved and Vigilance is pending. Authority approval must fail. As Vigilance record approval; as Authority approve, then separately record a fictional completion reference. Expect Release Authorised, then Released. No funds move.
+- **Clarification:** Officer requests clarification; Institution responds; Officer records an evidence-based resolution. High-severity resolutions can require a different officer (`officer2@demo.local`) to confirm them. The institution cannot resolve an officer's task itself.
+- **Suspicion escalation:** If a case is escalated, follow the Vigilance review queue. Suspicion findings are resolved by Vigilance and its separate case clearance is required before verification completes. This case escalation clearance is distinct from the release request's Vigilance clearance.
+- **Blocked verification/release:** Before verification is complete, requesting release must be blocked. After the officer completes verification, missing release documents, regulatory-period completion or pending release clearances must still block authority approval. Do not approve fictional missing evidence merely to make this test pass.
+- **Successful release:** On a fresh seed use `RELEASE-006`, which has verification recorded. Initially PGRC is approved and release Vigilance is pending. Authority approval must fail. As Vigilance record approval; as Authority approve, then separately record a fictional completion reference. Expect Release Authorised, then Released. No funds move. Existing installations preserve old seed data: if verification is missing, its assigned officer must complete the current verification checklist first.
 - **Return/rejection:** Use separate release requests to test authority return -> institution resubmission and final rejection.
 - **Maturity:** Inspect `MATURITY-004` and run the admin deadline monitor twice; the same reminder stage should not duplicate notifications.
 - **Renewal:** Inspect `RENEWED-005` for retained predecessor evidence. Perform a new replacement on a submitted case without a release request; upload the new receipt and resubmit. Old bank verification must not carry over.
@@ -141,7 +147,7 @@ From the repository root:
 
 ```bash
 .venv/bin/python -m pytest scripts/tests -q
-.venv/bin/python -m pytest training/gemma3_27b/test_worker.py -q
+.venv/bin/python -m pytest training/gemma3_27b/test_worker.py training/gemma3_27b/test_colab_setup.py -q
 cd backend
 ../.venv/bin/python -m pytest -q
 ../.venv/bin/python -m alembic check

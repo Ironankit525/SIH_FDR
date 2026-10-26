@@ -2,7 +2,7 @@
 START_WORKER = False
 if START_WORKER:
     from pathlib import Path
-    import sys, re, secrets
+    import sys, re, secrets, importlib
     if 'worker_server' in globals() and worker_server.started and not worker_server.should_exit:
         raise RuntimeError('Worker is already running. Use the stop cell before restarting.')
     package_root = Path('/content/depositflow_gemma_review')
@@ -12,6 +12,7 @@ if START_WORKER:
             'Do not pip-install gemma3_27b; it is bundled project code.')
     if str(package_root) not in sys.path:
         sys.path.insert(0, str(package_root))
+    importlib.invalidate_caches()
     from gemma3_27b.service import MODEL_ID, ReviewPolicy, create_app
     if (globals().get('model') is None or globals().get('processor') is None
             or not callable(globals().get('infer'))

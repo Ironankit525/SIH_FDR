@@ -19,7 +19,9 @@ or use the earlier 8B model. It provides unseen-data evaluation, deterministic d
 and the exact API used by your portal. Start in a **fresh Colab A100 GPU session**; your recorded training
 used an A100 80 GB. Other hardware has not been tested here.
 
-Run cells in order. Evaluation defaults to **24 newly generated fictional receipts**, never used for training.
+Run cells in order. **RUN_EVALUATION = False** starts the saved model for team testing without a training
+dataset or a benchmark run. The API check still makes one real inference on a fictional receipt.
+Enable evaluation to compare the base and adapter on **24 newly generated fictional receipts**.
 They exercise the pipeline but do not establish real-bank accuracy. For a real assessment, supply labelled
 receipts excluded from all training and tuning. Evaluation outputs save to Drive; actual API keys do not.
 
@@ -38,11 +40,11 @@ subprocess.check_call([sys.executable, '-m', 'pip', 'install',
 print('If Colab requests a restart, restart now and continue at Mount Drive. Do not run old installation cells.')
 ''')
 md('''
-## Mount Drive and configure this evaluation
+## Mount Drive and configure serving or evaluation
 
 The default path matches your shared export's folder name. Change ROOT if your Drive copy is elsewhere.
 For real evaluation, put `test.jsonl` and its labelled PNG/JPG pages under `ROOT/real_holdout/` and choose REAL.
-No GPU jobs are started before the dataset and export have been checked.
+Leave RUN_EVALUATION=False to serve the saved adapter; the original training images are needed only for evaluation.
 
 The optional term threshold is **disabled by default**. `8` with an explicit illustrative reference can reproduce
 that part of your old demo. An authorised, applicable policy is required before using any term threshold in real cases.
@@ -57,17 +59,18 @@ drive.mount('/content/drive')
 ROOT = Path('/content/drive/MyDrive/SIH26265_AICTE_VLM_27B_12B')
 ADAPTER_DIR = ROOT / 'fine_tuned_vlm_lora'
 TRAINING_IMAGES = ROOT / 'fdr_dataset_images'
+RUN_EVALUATION = False       # True only when running the holdout benchmark; not needed to serve.
 EVALUATION_KIND = 'SYNTHETIC'  # SYNTHETIC or REAL
 REAL_MANIFEST = ROOT / 'real_holdout' / 'test.jsonl'
 MINIMUM_TERM_YEARS = None     # e.g. 8 only with an appropriate POLICY_REFERENCE
 POLICY_REFERENCE = ''        # e.g. 'Illustrative old-demo rule; not verified APH policy'
 MAX_NEW_TOKENS = 640
 MAX_CONTEXT_TOKENS = 2048
-RUN_NAME = datetime.now(timezone.utc).strftime('review-%Y%m%d-%H%M%S')
+RUN_NAME = datetime.now(timezone.utc).strftime('review-%Y%m%d-%H%M%S-%f')
 RUN_DIR = ROOT / 'review_runs' / RUN_NAME
 RUN_DIR.mkdir(parents=True, exist_ok=False)
 assert EVALUATION_KIND in ('SYNTHETIC', 'REAL')
-print('Evaluation artifacts:', RUN_DIR)
+print('Run artifacts:', RUN_DIR)
 ''')
 md('''
 ## Install the bundled, CPU-tested worker and evaluation code
@@ -78,7 +81,7 @@ unreviewed code from your Drive. The same source is available in the project's `
 bundled = {name: (HERE / name).read_text() for name in ('__init__.py', 'service.py', 'evaluation.py')}
 code('bundled-code', f'''
 from pathlib import Path
-import sys
+import sys, importlib
 package_root = Path('/content/depositflow_gemma_review')
 package = package_root / 'gemma3_27b'
 package.mkdir(parents=True, exist_ok=True)
@@ -87,27 +90,33 @@ for name, source in bundled_sources.items():
     (package / name).write_text(source)
 if str(package_root) not in sys.path:
     sys.path.insert(0, str(package_root))
+# A previous failed import may have cached this formerly missing directory.
+importlib.invalidate_caches()
 from gemma3_27b.service import MODEL_ID, PROMPT, ReviewPolicy, create_app, portal_response
 from gemma3_27b.evaluation import make_synthetic_holdout, load_manifest, evaluate
 policy = ReviewPolicy(globals().get('MINIMUM_TERM_YEARS'), globals().get('POLICY_REFERENCE', ''))
 print('Worker and evaluation code ready; existing model state was not changed.')
 ''')
 code('prepare-holdout', '''
-if EVALUATION_KIND == 'SYNTHETIC':
-    manifest_path = make_synthetic_holdout(RUN_DIR / 'synthetic_holdout', count=24)
+rows, provenance = [], None
+if not RUN_EVALUATION:
+    print('Serving mode: holdout preparation skipped. No evaluation metrics will be claimed.')
 else:
-    manifest_path = REAL_MANIFEST
-rows, provenance = load_manifest(manifest_path, TRAINING_IMAGES)
-if EVALUATION_KIND == 'REAL' and provenance['kinds'] != ['real']:
-    raise ValueError('REAL mode requires real-labelled holdout rows; do not relabel synthetic images as real.')
-(RUN_DIR / 'dataset_provenance.json').write_text(json.dumps(provenance, indent=2))
-(RUN_DIR / 'heldout_labels.jsonl').write_text(''.join(json.dumps({k:v for k,v in row.items() if k != '_path'}) + '\\n' for row in rows))
-print(json.dumps(provenance, indent=2))
-from PIL import Image
-from IPython.display import display
-with Image.open(rows[0]['_path']) as preview:
-    display(preview.resize((750, round(preview.height * 750 / preview.width))))
-print('Manually exclude related pages, crops and near-duplicates; exact pixel checks cannot prove full independence.')
+    if EVALUATION_KIND == 'SYNTHETIC':
+        manifest_path = make_synthetic_holdout(RUN_DIR / 'synthetic_holdout', count=24)
+    else:
+        manifest_path = REAL_MANIFEST
+    rows, provenance = load_manifest(manifest_path, TRAINING_IMAGES)
+    if EVALUATION_KIND == 'REAL' and provenance['kinds'] != ['real']:
+        raise ValueError('REAL mode requires real-labelled holdout rows; do not relabel synthetic images as real.')
+    (RUN_DIR / 'dataset_provenance.json').write_text(json.dumps(provenance, indent=2))
+    (RUN_DIR / 'heldout_labels.jsonl').write_text(''.join(json.dumps({k:v for k,v in row.items() if k != '_path'}) + '\\n' for row in rows))
+    print(json.dumps(provenance, indent=2))
+    from PIL import Image
+    from IPython.display import display
+    with Image.open(rows[0]['_path']) as preview:
+        display(preview.resize((750, round(preview.height * 750 / preview.width))))
+    print('Manually exclude related pages, crops and near-duplicates; exact pixel checks cannot prove full independence.')
 ''')
 md('''
 ## Reload the saved adapter in this fresh runtime
@@ -120,6 +129,8 @@ code('load-model', '''
 # Import Unsloth before torch/transformers.
 from unsloth import FastVisionModel
 import torch, subprocess, sys, time
+if globals().get('RUN_EVALUATION', False) and not globals().get('provenance'):
+    raise RuntimeError('Run the holdout-preparation cell before loading for evaluation, or set RUN_EVALUATION=False for serving.')
 if not torch.cuda.is_available():
     raise RuntimeError('Select a GPU runtime; use the A100 class used for your recorded 27B training.')
 print('GPU:', torch.cuda.get_device_name(0), 'GiB:', round(torch.cuda.get_device_properties(0).total_memory / 2**30, 1))
@@ -142,13 +153,20 @@ model.eval()
 run_info = {'model': MODEL_ID, 'adapter_sha256': adapter_sha256,
     'adapter_directory': str(ADAPTER_DIR), 'base_revision_recorded_by_adapter': adapter_config.get('revision'),
     'loaded_config_revision': getattr(model.config, '_commit_hash', None),
-    'dataset': provenance, 'prompt': PROMPT,
+    'dataset': globals().get('provenance') if globals().get('RUN_EVALUATION', False) else None,
+    'evaluation_requested': globals().get('RUN_EVALUATION', False), 'prompt': PROMPT,
     'policy': {'minimum_years': MINIMUM_TERM_YEARS, 'reference': POLICY_REFERENCE},
     'max_context_tokens': MAX_CONTEXT_TOKENS, 'max_new_tokens': MAX_NEW_TOKENS}
 (RUN_DIR / 'run_info.json').write_text(json.dumps(run_info, indent=2))
 (RUN_DIR / 'extraction_prompt.txt').write_text(PROMPT)
 (RUN_DIR / 'environment.freeze.txt').write_text(subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'], text=True))
 print('Fresh-session adapter load completed. Adapter fingerprint:', adapter_sha256)
+''')
+md('''
+## Define receipt inference
+
+Run this cell after the model-loading cell. It defines `infer(image)`, which the HTTP worker calls for each
+receipt. It does not reload or retrain the model. Defining the function is required even when evaluation is skipped.
 ''')
 code('inference', '''
 @torch.inference_mode()
@@ -173,23 +191,29 @@ def infer(image):
 md('''
 ## Compare the pretrained base and your adapter on exactly the same unseen receipts
 
+Skipped when RUN_EVALUATION=False. This benchmark is optional for connecting an already-trained model.
 This performs inference only. The base pass temporarily disables LoRA; the second pass re-enables your adapter.
 Both passes use the same prompt, image processing, deterministic generation and full holdout. Raw outputs and
 per-field accuracy are saved alongside JSON validity, null-field hallucinations, review-flag precision/recall and latency.
 Synthetic results measure only this fictional dataset. Inspect real-data errors before using the service on real cases.
 ''')
 code('evaluate', '''
-if not hasattr(model, 'disable_adapter'):
-    raise RuntimeError('PEFT adapter disable context is unavailable; do not label an adapted run as the baseline.')
-with model.disable_adapter():
-    baseline = evaluate(infer, rows, policy, RUN_DIR, 'base')
-adapted = evaluate(infer, rows, policy, RUN_DIR, 'adapter')
-comparison = {'base': baseline, 'adapter': adapted,
-    'exact_record_delta': adapted['exact_record_accuracy'] - baseline['exact_record_accuracy'],
-    'same_ids': [row['id'] for row in rows], 'dataset_sha256': provenance['sha256']}
-(RUN_DIR / 'comparison.json').write_text(json.dumps(comparison, indent=2))
-print(json.dumps(comparison, indent=2))
-print('SYNTHETIC ONLY: not a real-bank accuracy claim.' if EVALUATION_KIND == 'SYNTHETIC' else 'Review the predictions and human labels before accepting the model.')
+if not RUN_EVALUATION:
+    print('Serving mode: benchmark skipped. Use the API check below to test one real inference.')
+else:
+    if not globals().get('rows') or not globals().get('provenance'):
+        raise RuntimeError('Run holdout preparation before evaluating.')
+    if not hasattr(model, 'disable_adapter'):
+        raise RuntimeError('PEFT adapter disable context is unavailable; do not label an adapted run as the baseline.')
+    with model.disable_adapter():
+        baseline = evaluate(infer, rows, policy, RUN_DIR, 'base')
+    adapted = evaluate(infer, rows, policy, RUN_DIR, 'adapter')
+    comparison = {'base': baseline, 'adapter': adapted,
+        'exact_record_delta': adapted['exact_record_accuracy'] - baseline['exact_record_accuracy'],
+        'same_ids': [row['id'] for row in rows], 'dataset_sha256': provenance['sha256']}
+    (RUN_DIR / 'comparison.json').write_text(json.dumps(comparison, indent=2))
+    print(json.dumps(comparison, indent=2))
+    print('SYNTHETIC ONLY: not a real-bank accuracy claim.' if EVALUATION_KIND == 'SYNTHETIC' else 'Review the predictions and human labels before accepting the model.')
 ''')
 md('''
 ## Check the exact portal API locally inside Colab
@@ -200,8 +224,18 @@ This test uses the real loaded model. An unreadable/all-null result must be revi
 The frontend already displays these warnings in its evidence comparison panel.
 ''')
 code('api-check', '''
-import secrets
+import secrets, json, tempfile
+from pathlib import Path
 from fastapi.testclient import TestClient
+if 'worker_server' in globals() and worker_server.started and not worker_server.should_exit:
+    raise RuntimeError('Stop the serving cell before running a separate API inference test.')
+if globals().get('rows'):
+    smoke_path = Path(rows[0]['_path'])
+else:
+    # Temporary fictional input for an API smoke test; no accuracy/leakage claim.
+    smoke_manifest = make_synthetic_holdout(Path(tempfile.mkdtemp()) / 'api-smoke', count=2)
+    smoke_record = json.loads(smoke_manifest.read_text().splitlines()[1])
+    smoke_path = smoke_manifest.parent / smoke_record['image']
 if 'WORKER_API_KEY' not in globals():
     WORKER_API_KEY = secrets.token_urlsafe(32)  # Reuse this runtime's key; never print it.
 worker = create_app(infer, api_key=WORKER_API_KEY, model_id=MODEL_ID, policy=policy)
@@ -209,7 +243,7 @@ with TestClient(worker) as test_client:
     headers = {'Authorization': 'Bearer ' + WORKER_API_KEY}
     assert test_client.get('/health').status_code == 401
     assert test_client.get('/health', headers=headers).status_code == 200
-    path = Path(rows[0]['_path'])
+    path = smoke_path
     mime = 'image/png' if path.suffix.lower() == '.png' else 'image/jpeg'
     response = test_client.post('/api/v1/extract-only', headers=headers,
         data={'model': MODEL_ID}, files={'file': (path.name, path.read_bytes(), mime)})
@@ -222,7 +256,7 @@ print('Portal request/response smoke test passed with the loaded adapter.')
 md('''
 ## Optional: connect your local portal to this temporary GPU worker
 
-First inspect the evaluation and API test. Set `START_WORKER = True` to serve the model. Store your ngrok
+First inspect the API test (and evaluation if enabled). Set `START_WORKER = True` to serve the model. Store your ngrok
 account token in Colab Secrets as `NGROK_AUTHTOKEN`, or enter it through the hidden prompt.
 Open https://dashboard.ngrok.com/domains in the same account and request a development domain if none
 exists. Copy the assigned hostname into Colab Secrets as `NGROK_DOMAIN` and enable notebook access,
@@ -237,7 +271,7 @@ code('serve', '''
 START_WORKER = False
 if START_WORKER:
     from pathlib import Path
-    import sys, re, secrets
+    import sys, re, secrets, importlib
     if 'worker_server' in globals() and worker_server.started and not worker_server.should_exit:
         raise RuntimeError('Worker is already running. Use the stop cell before restarting.')
     package_root = Path('/content/depositflow_gemma_review')
@@ -247,6 +281,7 @@ if START_WORKER:
             'Do not pip-install gemma3_27b; it is bundled project code.')
     if str(package_root) not in sys.path:
         sys.path.insert(0, str(package_root))
+    importlib.invalidate_caches()
     from gemma3_27b.service import MODEL_ID, ReviewPolicy, create_app
     if (globals().get('model') is None or globals().get('processor') is None
             or not callable(globals().get('infer'))

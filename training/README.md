@@ -1,4 +1,6 @@
-# Train the DepositFlow vision model in Google Colab
+# DepositFlow model setup and earlier training experiment
+
+**To run the current project with a team, start at [the complete Colab/ngrok setup guide](../docs/VLM_SETUP.md). No new training is required.**
 
 For your **separate, already-trained Gemma 3 27B adapter**, use the [27B evaluation and integration guide](gemma3_27b/README.md) and its [self-contained Colab notebook](gemma3_27b/Gemma3_27B_Review_and_Serve.ipynb). The instructions below are for the earlier 8B training plan.
 

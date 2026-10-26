@@ -2,6 +2,8 @@
 
 Open **[Gemma3_27B_Review_and_Serve.ipynb](Gemma3_27B_Review_and_Serve.ipynb)** in Google Colab. It is self-contained: uploading this one notebook is enough. It loads your existing adapter from `MyDrive/SIH26265_AICTE_VLM_27B_12B/fine_tuned_vlm_lora`; it does not retrain, overwrite it, or use the earlier 8B model.
 
+**First-time team setup:** follow [VLM_SETUP.md](../../docs/VLM_SETUP.md) for laptop installation, Drive model access, ngrok setup and every notebook cell. The default `RUN_EVALUATION=False` serves the saved model without training images or a holdout benchmark. Code is in Git; trained weights and worker credentials must be obtained separately.
+
 ## What is fixed
 
 - The worker accepts the portal's multipart `file` and `model` fields and Bearer authentication, and returns its exact `fields`, `confidences`, `original_text`, `warnings` contract. No backend schema weakening or frontend redesign is needed.
@@ -18,9 +20,9 @@ The existing frontend already renders extraction warnings in the side-by-side ev
 
 1. Upload the notebook to Colab and save a copy in your Drive. Use a fresh **A100 GPU runtime**, matching the class used for your recorded 27B run. GPU reload has not been executed locally; do not assume a smaller GPU will fit.
 2. Run the install cell. If Colab requests a restart, restart and continue at Mount Drive. Unsloth 2026.10.8, Transformers 5.17.0 and PEFT 0.21.2 match the versions recorded in your run/export. Transitive GPU dependencies resolve for the runtime; the full package list is saved per evaluation.
-3. Mount Drive. Confirm `ROOT` and `TRAINING_IMAGES` point to your original model and 36 training images. Keep `EVALUATION_KIND = 'SYNTHETIC'` for the first pipeline check.
-4. Run through the evaluation and API check cells. The notebook creates 24 new, clearly fictional receipts with different layouts/values, missing fields and independent combinations of holding/lien/stamp conditions. It checks for exact image duplication against the original training folder. No training happens.
-5. Review `comparison.json`, both prediction files, and per-field results. The baseline disables LoRA; the adapted pass uses the same inputs, prompt and generation settings. Both run on every holdout example. Synthetic scores do not establish real-bank accuracy.
+3. Mount Drive. Confirm `ROOT` points to the folder containing your saved adapter. Leave `RUN_EVALUATION=False` for serving; training images are not required. For evaluation, set it to `True`, point `TRAINING_IMAGES` to the original training images, and choose `EVALUATION_KIND`.
+4. Run bundled code, holdout preparation, model loading, **Define receipt inference**, evaluation and API check in order. With evaluation disabled the holdout/benchmark cells skip their work and the API check generates a fictional smoke-test receipt. It still performs one actual model inference. No training happens.
+5. If evaluation is enabled, the default synthetic benchmark creates 24 fictional receipts and checks exact pixel duplication against the training folder. Review `comparison.json`, prediction files, and per-field results. The baseline disables LoRA; the adapted pass uses the same inputs and generation settings. Synthetic scores do not establish real-bank accuracy.
 6. To serve the model, set `START_WORKER = True` in the optional server cell. Put your ngrok account token in Colab Secrets as `NGROK_AUTHTOKEN`, or enter it through the hidden prompt. Open [ngrok Domains](https://dashboard.ngrok.com/domains) in that same account; request/create the assigned development domain if none exists. Add its hostname as `NGROK_DOMAIN` in Colab Secrets and enable notebook access for both secrets, or enter the hostname when prompted. The API has a separate random Bearer key; the ngrok account token is not API authentication.
 7. The cell downloads `backend-vlm.env` to your computer. From the project root run `.venv/bin/python scripts/connect_vlm.py /path/to/backend-vlm.env` to validate worker health and merge only its connection settings. Restart the backend, then upload a new instrument receipt. The existing instrument-extraction job will use `vlm_http`. For teammates sharing this worker, follow [the team testing guide](../../docs/TEAM_TESTING.md).
 
@@ -36,7 +38,7 @@ Only instrument uploads use the configured VLM; existing supporting-document han
 
 This is bundled project code, not a package to install from PyPI. The serving cell alone does not create it.
 
-1. In your Colab notebook rerun **Install the bundled, CPU-tested worker and evaluation code**. If your notebook lacks that cell, upload [bootstrap_colab.py](bootstrap_colab.py) using Colab's Files sidebar and run `%run /content/bootstrap_colab.py` in a new cell. This restores the package and imports without reloading model weights.
+1. In your Colab notebook rerun **Install the bundled, CPU-tested worker and evaluation code**. If your notebook lacks that cell, upload [bootstrap_colab.py](bootstrap_colab.py) using Colab's Files sidebar and copy its actual path. Run `%run /content/bootstrap_colab.py` if it is under `/content`, or `%run /bootstrap_colab.py` if it is at `/`. Use a notebook code cell, not the terminal. This restores the package, refreshes cached imports and leaves model weights loaded.
 2. Paste the updated [serve_colab.py](serve_colab.py) into the serving cell, set `START_WORKER = True`, and run it. It restores the import path and checks that the model, processor, inference function and adapter fingerprint exist before opening a tunnel.
 3. If Colab reset the runtime, run dependencies, Drive configuration, bundled code, holdout preparation, model loading and inference in notebook order first. Previously saved weights remain on Drive; no retraining is needed. The evaluation benchmark need not be repeated merely to restart serving.
 4. Import the newly downloaded `backend-vlm.env` with `scripts/connect_vlm.py`, then restart your backend.
@@ -64,13 +66,13 @@ Use null for absent, ambiguous or unreadable values. Claim labels describe what 
 
 Keep related scans, pages, crops, renewals and other near-duplicates out of training. `group_id` records the source grouping; the code cannot reconstruct the old notebook's missing training manifests. Pixel hashes catch exact duplicates only. Hold out different layouts as well, and do not tune against the final test set.
 
-Choose `EVALUATION_KIND = 'REAL'` and rerun in a new evaluation directory. The notebook rejects synthetic-labelled rows in REAL mode, but human provenance review remains necessary. It reports schema validity, exact-record and per-field accuracy, visible-field accuracy, invented values on null labels, document-review flag precision/recall and latency. Invalid predictions count as failures. Hardware/runtime errors stop evaluation instead of becoming misleading accuracy scores.
+Choose `RUN_EVALUATION = True` and `EVALUATION_KIND = 'REAL'` and rerun in a new evaluation directory. The notebook rejects synthetic-labelled rows in REAL mode, but human provenance review remains necessary. It reports schema validity, exact-record and per-field accuracy, visible-field accuracy, invented values on null labels, document-review flag precision/recall and latency. Invalid predictions count as failures. Hardware/runtime errors stop evaluation instead of becoming misleading accuracy scores.
 
 The original 36 examples have no validation/test split. Do not relabel them as unseen or claim the new synthetic benchmark measures real-document performance. If the adapted model underperforms its base, inspect errors before deciding whether to retrain.
 
 ## Saved artifacts
 
-`MyDrive/SIH26265_AICTE_VLM_27B_12B/review_runs/<RUN_NAME>/` contains the dataset fingerprint and labels, extraction prompt, policy settings, adapter weight hash, installed package versions, base/adapter raw predictions, per-run metrics and comparison. Original weights remain unchanged. `minimum_years=None` intentionally reports an unconfigured term check instead of clearance.
+Every run saves model/prompt/environment metadata under `MyDrive/SIH26265_AICTE_VLM_27B_12B/review_runs/<RUN_NAME>/`. Serving mode records a null dataset and no accuracy metrics. With evaluation enabled, the directory also contains the dataset fingerprint and labels, extraction prompt, policy settings, adapter weight hash, installed package versions, base/adapter raw predictions, per-run metrics and comparison. Original weights remain unchanged. `minimum_years=None` intentionally reports an unconfigured term check instead of clearance.
 
 ## Local validation and source files
 
@@ -83,7 +85,7 @@ The original 36 examples have no validation/test split. Do not relabel them as u
 From the project root:
 
 ```bash
-.venv/bin/python -m pytest training/gemma3_27b/test_worker.py -q
+.venv/bin/python -m pytest training/gemma3_27b/test_worker.py training/gemma3_27b/test_colab_setup.py -q
 cd backend
 ../.venv/bin/python -m pytest tests/test_gemma_worker_contract.py -q
 ```

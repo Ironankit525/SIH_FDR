@@ -2,7 +2,7 @@
 
 DepositFlow is a working prototype for managing institutional security deposits and Fixed Deposit Receipts (FDRs): submission, document review, bank evidence, maturity monitoring, renewal, clearances and release authorisation.
 
-The project includes a **React/TypeScript frontend**, a **FastAPI backend**, a relational database, encrypted document storage, OCR, role-based workflows and automated tests. **The recommended local setup uses SQLite and runs without Docker.** PostgreSQL, MinIO and Redis/Celery are included as an optional deployment configuration.
+The project includes a **React/TypeScript frontend**, a **FastAPI backend**, a relational database, encrypted document storage, Colab VLM integration, OCR for supporting documents, role-based workflows and automated tests. **The recommended local setup uses SQLite and runs without Docker.** PostgreSQL, MinIO and Redis/Celery are included as an optional deployment configuration.
 
 This is a Smart India Hackathon prototype, not an official AICTE service or a certified production deployment. Demo institutions and bank records are fictional; regulatory rules are illustrative. The portal records release decisions and completion references; it never transfers money.
 
@@ -26,6 +26,35 @@ This is a Smart India Hackathon prototype, not an official AICTE service or a ce
 
 **Gemma 3 27B VLM integration is available through an authenticated Colab HTTP worker.** See [Team testing with the shared Colab VLM](docs/TEAM_TESTING.md) for fresh-checkout setup, connection checks, test receipts and the full workflow. Each teammate can run the portal locally while sharing one running model. OCR remains the default without VLM configuration and handles supporting documents. The active database stack is SQLAlchemy with SQLite/PostgreSQL; MongoDB is not used.
 
+## Start here: clone, connect Colab, and test the VLM
+
+**[Complete setup: laptop → ngrok → Google Colab](docs/VLM_SETUP.md)** covers a new teammate's installation, model-folder access, GPU setup, ngrok account/token/domain, notebook cell order, environment import and troubleshooting.
+
+| Where | What runs there |
+| --- | --- |
+| Each teammate's laptop | React UI, FastAPI backend, SQLite database and encrypted documents; no GPU required |
+| Colab owner's GPU runtime | Gemma 3 27B base + trained LoRA adapter and authenticated extraction API |
+| ngrok | HTTPS tunnel from each laptop backend to the Colab worker |
+
+To use an existing team worker, obtain its current `backend-vlm.env` privately from its owner, then run on your laptop:
+
+```bash
+git clone --branch llm_integerate https://github.com/alokkumardalei-wq/SIH_FDR.git
+cd SIH_FDR
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.lock
+npm --prefix frontend ci
+.venv/bin/python scripts/connect_vlm.py "$HOME/Downloads/backend-vlm.env"
+.venv/bin/python scripts/prepare_team_demo.py
+python3 scripts/dev.py
+```
+
+Open **http://localhost:5173**. Use `institution@demo.local` / `DemoFlow2026!` for the default demo. Follow the [two-receipt and role-by-role test guide](docs/TEAM_TESTING.md). Use Python 3.12 and Node.js 22; Windows users can follow the WSL paths in the complete guide. The private repository requires collaborator access.
+
+To run **your own Colab worker**, obtain the complete saved adapter export in Drive and upload [Gemma3_27B_Review_and_Serve.ipynb](training/gemma3_27b/Gemma3_27B_Review_and_Serve.ipynb) to Colab. Use the recorded A100 80 GB class, configure `ROOT`, leave `RUN_EVALUATION=False`, and run setup, model loading, inference and the API smoke test in order. Add `NGROK_AUTHTOKEN` and `NGROK_DOMAIN` in Colab Secrets, then run the server cell with `START_WORKER=True`. It downloads the connection file used above. [Detailed instructions and recovery steps](docs/VLM_SETUP.md#4-run-the-saved-model-in-colab).
+
+The model weights stay in Drive/Colab; **cloning code alone does not grant model access or start a worker**. A teammate sharing your running worker needs only its current connection file. Each laptop has independent cases; a shared model does not share databases. Keep the Colab worker running, and re-import new settings/restart the backend whenever the runtime or credentials change.
+
 ## Run locally without Docker
 
 ### Prerequisites
@@ -39,7 +68,7 @@ The commands below target macOS/Linux. On Windows, WSL provides the same shell a
 ### Install and start
 
 ```bash
-git clone https://github.com/alokkumardalei-wq/SIH_FDR.git
+git clone --branch llm_integerate https://github.com/alokkumardalei-wq/SIH_FDR.git
 cd SIH_FDR
 python3 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.lock
@@ -344,7 +373,7 @@ npm run test:e2e
 
 An existing compatible Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Browser tests use one worker, create fictional `E2E-*` records and retain ignored screenshots/traces under `frontend/test-results/`.
 
-Merge validation: **129 backend tests, 28 worker/setup tests and 6 frontend tests passed; the TypeScript/production build and migration alignment check passed.** The earlier browser checks are recorded in [docs/VERIFICATION.md](docs/VERIFICATION.md); they have not been rerun for this merge. Local software tests do not establish model accuracy.
+Team-release validation: **149 backend tests and 31 worker/setup tests passed in an isolated source copy without the active database or credentials.** Fresh database/receipt preparation also passed twice without duplicating data. The merged frontend previously passed **16 tests and its TypeScript/production build** and is unchanged by the VLM setup work. Migration checks passed. Browser tests and the revised notebook on a live GPU were not rerun for this release; local software tests do not establish model accuracy. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for earlier checks.
 
 ## Troubleshooting and maintenance
 
@@ -392,6 +421,8 @@ SIH_FDR/
 ```
 
 - [Architecture and security boundaries](docs/ARCHITECTURE.md)
+- [Complete Colab/ngrok VLM setup](docs/VLM_SETUP.md)
+- [Team workflow tests and demo receipt values](docs/TEAM_TESTING.md)
 - [Backend progress and deferred VLM work](docs/BACKEND_PROGRESS.md)
 - [Database relationships](docs/DATABASE.md) and [PostgreSQL schema](docs/schema.postgresql.sql)
 - [API guide](docs/API.md) and [OpenAPI snapshot](docs/openapi.json)

@@ -1,6 +1,6 @@
 # Run in Colab to restore the bundled worker without reloading model weights.
 from pathlib import Path
-import sys
+import sys, importlib
 package_root = Path('/content/depositflow_gemma_review')
 package = package_root / 'gemma3_27b'
 package.mkdir(parents=True, exist_ok=True)
@@ -9,6 +9,8 @@ for name, source in bundled_sources.items():
     (package / name).write_text(source)
 if str(package_root) not in sys.path:
     sys.path.insert(0, str(package_root))
+# A previous failed import may have cached this formerly missing directory.
+importlib.invalidate_caches()
 from gemma3_27b.service import MODEL_ID, PROMPT, ReviewPolicy, create_app, portal_response
 from gemma3_27b.evaluation import make_synthetic_holdout, load_manifest, evaluate
 policy = ReviewPolicy(globals().get('MINIMUM_TERM_YEARS'), globals().get('POLICY_REFERENCE', ''))
