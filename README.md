@@ -23,7 +23,7 @@ This is a Smart India Hackathon prototype, not an official AICTE service or a ce
 | Reporting | Dashboards, charts, searchable tables, CSV exports, printable reports and audit history |
 | Reliability | Persistent extraction claims, bounded retries, recovery and rejection of stale worker results |
 
-**VLM integration is deferred.** PDF text extraction and Tesseract OCR work now. Optional provider hooks exist, but no trained model is connected, downloaded or needed to run the project. The active database stack is SQLAlchemy with SQLite/PostgreSQL; MongoDB is not used.
+**Gemma 3 27B VLM integration is available through an authenticated Colab HTTP worker.** See [Team testing with the shared Colab VLM](docs/TEAM_TESTING.md) for fresh-checkout setup, connection checks, test receipts and the full workflow. Each teammate can run the portal locally while sharing one running model. OCR remains the default without VLM configuration and handles supporting documents. The active database stack is SQLAlchemy with SQLite/PostgreSQL; MongoDB is not used.
 
 ## Run locally without Docker
 
@@ -58,7 +58,7 @@ The launcher applies Alembic migrations, seeds fictional demo data idempotently 
 
 Use `http://localhost:5173` consistently. The configured origin protects write requests; opening the frontend through `127.0.0.1` instead can cause origin errors. Backend automatic reload is disabled to reduce local overhead: restart the launcher after Python changes. Frontend changes use Vite hot reload.
 
-No `.env` file is required for this default setup. This private development snapshot includes `backend/.data/local-secrets.json`; the backend uses those keys when environment overrides are absent. If that file is absent, development keys are generated locally on first use.
+No `.env` file is required for the default OCR setup. VLM connections use private settings in `backend/.env`. A fresh checkout should omit local keys and runtime data; development keys are generated locally on first use. Existing installations must preserve their encryption keys to keep stored documents readable.
 
 Install Tesseract if needed:
 
@@ -137,7 +137,9 @@ flowchart LR
     API --> Audit[Append-only audit events and chain heads]
     DB --> Jobs[Persistent extraction queue]
     Jobs --> Worker[Local worker / Celery]
-    Worker --> OCR[PyMuPDF and Tesseract]
+    Worker --> VLM[Authenticated Colab VLM for configured instrument uploads]
+    Worker --> OCR[PyMuPDF and Tesseract for OCR mode / supporting documents]
+    VLM --> DB
     OCR --> DB
     Worker --> Alerts[Deadline monitoring and notifications]
 ```
@@ -156,7 +158,7 @@ All application modules are under `backend/app/`.
 | `rules.py` | Effective-dated requirement rules, exemptions, multipliers and calculation snapshots |
 | `storage.py` | Upload validation, optional ClamAV scanning, Fernet encryption and local/S3 storage |
 | `extraction.py` | PDF text extraction, Tesseract fallback and heuristic structured-field parsing |
-| `extraction_engine.py` | OCR provider interface and inactive hooks for a future trained VLM |
+| `extraction_engine.py` | OCR/local/HTTP extraction providers, strict VLM response validation and connection-error handling |
 | `jobs.py`, `worker.py` | Persistent claims, retries, recovery, local scheduling and optional Celery tasks |
 | `bank.py` | Bank adapter protocol and deterministic fictional verification fixtures |
 | `workflows.py` | Discrepancy detection, release prerequisites, reviewer separation and deadline reminders |
@@ -322,7 +324,7 @@ npm run test:e2e
 
 An existing compatible Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Browser tests use one worker, create fictional `E2E-*` records and retain ignored screenshots/traces under `frontend/test-results/`.
 
-Latest verified results: **60 backend tests, 6 frontend tests and 4 browser tests passed; the TypeScript/production build and migration alignment check passed.** See [docs/VERIFICATION.md](docs/VERIFICATION.md) for the tested scope and limitations. These are recorded local results, not a claim of a configured GitHub Actions pipeline.
+Latest team-release checks: **67 backend tests, 27 worker/setup tests and 6 frontend tests passed; the TypeScript/production build passed.** The earlier browser and migration checks are recorded in [docs/VERIFICATION.md](docs/VERIFICATION.md); browser tests were not rerun for this release. These are local results, not a claim of a configured GitHub Actions pipeline or measured model accuracy.
 
 ## Troubleshooting and maintenance
 
@@ -377,4 +379,4 @@ SIH_FDR/
 - [Verification results](docs/VERIFICATION.md)
 - [Known limitations and remaining integrations](docs/LIMITATIONS.md)
 
-Live bank/AICTE connectivity, trained VLM integration, real email/SMS delivery, SSO/MFA, production deployment hardening and formal regulatory review remain future work. Existing automated checks assist officers; human decisions and independently obtained evidence remain essential.
+Live bank/AICTE connectivity, production VLM hosting and real-receipt accuracy validation, real email/SMS delivery, SSO/MFA, production deployment hardening and formal regulatory review remain future work. The trained VLM can run through the temporary Colab worker. Existing automated checks assist officers; human decisions and independently obtained evidence remain essential.

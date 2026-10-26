@@ -1,0 +1,52 @@
+[
+  {
+    "kind": "correct",
+    "number": "TEST-VALID-001",
+    "amount": 3500000,
+    "filename": "CORRECT-TEST-VALID-001.pdf",
+    "expected_mock_finding": "confirmed",
+    "institution_form": {
+      "bank": "EXAMPLE LEARNING BANK",
+      "branch": "DEMO BRANCH",
+      "depositor_name": "Meridian Institute of Technology",
+      "issue_date": "2026-01-15",
+      "maturity_date": "2034-01-15",
+      "number": "TEST-VALID-001",
+      "amount": 3500000
+    },
+    "mock_bank": {
+      "bank": "EXAMPLE LEARNING BANK",
+      "depositor_name": "Meridian Institute of Technology",
+      "issue_date": "2026-01-15",
+      "maturity_date": "2034-01-15",
+      "number": "TEST-VALID-001",
+      "amount": 3500000.0
+    },
+    "sha256": "ec8e6b13fbb9defead47add2dc17cb010fa8b3a122929788665a5c9669c0acd1"
+  },
+  {
+    "kind": "altered",
+    "number": "TEST-ALTERED-001",
+    "amount": 5000000,
+    "filename": "INCORRECT-TEST-ALTERED-001.pdf",
+    "expected_mock_finding": "mismatched",
+    "institution_form": {
+      "bank": "EXAMPLE LEARNING BANK",
+      "branch": "DEMO BRANCH",
+      "depositor_name": "Meridian Institute of Technology",
+      "issue_date": "2026-01-15",
+      "maturity_date": "2034-01-15",
+      "number": "TEST-ALTERED-001",
+      "amount": 5000000
+    },
+    "mock_bank": {
+      "bank": "EXAMPLE LEARNING BANK",
+      "depositor_name": "Meridian Institute of Technology",
+      "issue_date": "2026-01-15",
+      "maturity_date": "2034-01-15",
+      "number": "TEST-ALTERED-001",
+      "amount": 3500000.0
+    },
+    "sha256": "921874fe362d0d3997f939b531f8cc86eeb6aadfdd6a091783e1b7fba2a4f0d3"
+  }
+]
