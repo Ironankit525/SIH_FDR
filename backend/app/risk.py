@@ -1,22 +1,23 @@
-"""Explainable risk score that orders review work. A score prompts scrutiny; it never establishes fraud.
+"""Suspicion score: how strongly the evidence suggests something is wrong with a case. 0 means nothing suspicious.
 
-Signals come from review tasks, so nothing raises the score without also being in front of an officer,
-plus a few score-only observations (parser confidence, verification age, institution history).
+Only suspicion counts. Waiting for the bank, missing paperwork or an early maturity are statuses and requirements,
+shown and enforced elsewhere, never points. Signals come from review tasks, so nothing raises the score without also
+being in front of a reviewer; institution history only adds weight to a case that is already suspicious.
+At the policy's high threshold the case is escalated to Vigilance (see escalate()).
 """
 import hashlib
 import json
-from datetime import date
 from math import prod
 
 from sqlalchemy import select
 
 from .audit import audit
-from .models import (Clearance, Discrepancy, Document, Extraction, FieldCorrection, Instrument, Replacement, RiskAssessment,
-                     ReleaseRequest, RiskWeightVersion, SecurityDeposit, VerificationEvidence, VerificationRequest)
-from .workflows import DEFAULT_WORKFLOW, RISK_CLEARANCE_CELL, configuration, current_instrument
+from .models import (Clearance, Discrepancy, Extraction, FieldCorrection, Instrument, Replacement, RiskAssessment, ReleaseRequest,
+                     RiskWeightVersion, SecurityDeposit, VerificationEvidence, VerificationRequest, utcnow)
+from .workflows import RISK_CLEARANCE_CELL, current_instrument, reopen_verification
 
-ENGINE_VERSION = "1.0.0"
-CATEGORIES = ("identity", "document_integrity", "financial", "coverage", "duplication", "verification", "behaviour", "process")
+ENGINE_VERSION = "2.0.0"
+CATEGORIES = ("identity", "document_integrity", "financial", "duplication", "verification", "behaviour")
 
 # key: (category, default weight, evidence strength). Weights are policy and versioned; strength is how
 # directly the evidence shows the problem and stays in code.
@@ -27,48 +28,30 @@ SIGNALS = {
     "forensic_modified_after_creation": ("document_integrity", 0.15, 1.0),
     "forensic_incremental_update": ("document_integrity", 0.15, 1.0),
     "maturity_value_inconsistent": ("document_integrity", 0.55, 1.0),
-    "low_parser_confidence": ("document_integrity", 0.1, 1.0),
     "extracted_number_elsewhere": ("duplication", 0.65, 1.0),
     "duplicate_reference": ("duplication", 0.6, 1.0),
     "reused_document": ("duplication", 0.5, 1.0),
     "reused_text": ("duplication", 0.5, 1.0),
     "duplicate_number_other_bank": ("duplication", 0.15, 1.0),
     "bank_mismatched": ("verification", 0.55, 1.0),
-    "bank_inconclusive": ("verification", 0.2, 1.0),
-    "bank_pending": ("verification", 0.05, 1.0),
-    "unverified": ("verification", 0.1, 1.0),
-    "stale_verification": ("verification", 0.1, 1.0),
+    "bank_confirmed_mismatch": ("verification", 0.6, 1.0),
+    "bank_no_record": ("verification", 0.55, 1.0),     # the bank has no such instrument
+    "bank_inconclusive": ("verification", 0.2, 1.0),   # the bank could neither confirm nor deny
     "mismatch_amount": ("financial", 0.5, 1.0),
     "mismatch_maturity_date": ("financial", 0.5, 1.0),
     "mismatch_issue_date": ("financial", 0.3, 1.0),
     "mismatch_number": ("identity", 0.5, 1.0),
     "mismatch_depositor_name": ("identity", 0.35, 1.0),
     "mismatch_bank": ("identity", 0.35, 1.0),
-    "depositor_not_institution": ("identity", 0.4, 1.0),
-    "amount_shortfall": ("financial", 0.3, 1.0),
     "lien_document_conflict": ("financial", 0.5, 1.0),
-    "lien_not_aicte": ("financial", 0.4, 1.0),
-    "coverage_lapsed": ("coverage", 0.4, 1.0),
-    "coverage_gap": ("coverage", 0.1, 1.0),
-    "matured": ("coverage", 0.05, 1.0),
-    "missing_document": ("process", 0.3, 1.0),
-    "officer_clarification": ("process", 0.15, 1.0),
-    "extraction_failed": ("process", 0.1, 1.0),
-    "extraction_missing": ("process", 0.05, 1.0),
-    "rule_review": ("process", 0.0, 1.0),  # about the rule, not the instrument
-    "unclassified_high": ("process", 0.3, 1.0),
-    "unclassified_warning": ("process", 0.1, 1.0),
     "history_duplication": ("behaviour", 0.15, 1.0),
     "history_bank_mismatch": ("behaviour", 0.15, 1.0),
     "history_open_high": ("behaviour", 0.1, 1.0),
     "history_late_renewal": ("behaviour", 0.05, 1.0),
 }
 # Weak, indirect evidence must not outweigh direct evidence however much of it accumulates.
-# History alone stays below the medium threshold: it can add weight to direct evidence, never replace it.
 DEFAULT_CAPS = {"behaviour": 0.15}
 DEFAULT_THRESHOLDS = {"medium": 20, "high": 50, "critical": 80}
-LOW_CONFIDENCE = 0.6
-CRITICAL_FIELDS = ("number", "amount", "issue_date", "maturity_date")
 
 
 def active_policy(db):
@@ -83,22 +66,32 @@ def signal_key(code):
     base = code.split(":", 1)[0]
     if base.startswith("forensic_"):
         return next((key for key in SIGNALS if key.startswith("forensic_") and base.startswith(key)), None)
-    if base.startswith("extraction_missing_"):
-        return "extraction_missing"
-    if base == "officer":
-        return "officer_clarification"
-    return base if base in SIGNALS else None
+    return base if base in SIGNALS and not base.startswith("history_") else None
 
 
 def bank_key(db, code):
-    """Bank review tasks are weighted by what the bank actually reported."""
+    """Bank review tasks are weighted by what the bank actually reported; "not yet answered" is not suspicion."""
     kind, _, ref = code.partition(":")
-    if kind == "manual_bank":
-        finding = db.scalar(select(VerificationRequest.status).where(VerificationRequest.id == ref))
-    else:
-        finding = db.scalar(select(VerificationRequest.status).where(VerificationRequest.instrument_id == ref,
-                            VerificationRequest.channel.startswith("SIMULATED")).order_by(VerificationRequest.created_at.desc()).limit(1))
-    return {"mismatched": "bank_mismatched", "pending": "bank_pending"}.get(finding, "bank_inconclusive")
+    query = select(VerificationRequest).where(VerificationRequest.id == ref) if kind == "manual_bank" else select(VerificationRequest).where(
+        VerificationRequest.instrument_id == ref, VerificationRequest.channel.startswith("SIMULATED")).order_by(VerificationRequest.created_at.desc()).limit(1)
+    request = db.scalar(query)
+    if not request or request.status == "pending":
+        return None
+    if request.status == "mismatched":
+        return "bank_mismatched"
+    evidence = db.scalar(select(VerificationEvidence).where(VerificationEvidence.request_id == request.id))
+    no_record = evidence is not None and evidence.simulated and not evidence.confirmed_fields
+    return "bank_no_record" if no_record else "bank_inconclusive"
+
+
+def suspicion_key(db, item):
+    """The suspicion signal a review task carries, or None for paperwork and status tasks."""
+    base = item.code.split(":", 1)[0]
+    return bank_key(db, item.code) if base in ("mock_bank", "manual_bank") else signal_key(item.code)
+
+
+def is_escalated(deposit):
+    return bool(deposit.escalated_at and not deposit.vigilance_cleared_at)
 
 
 def discount(item):
@@ -108,7 +101,7 @@ def discount(item):
         # trace, so an institution that once submitted, say, a reused receipt remains slightly more visible.
         if item.resolution_kind == "automatic" or (not item.condition_active and item.severity != "high"):
             return 0.0
-        return 0.1 if item.resolution_kind == "officer_confirmed" else 0.2
+        return 0.1 if item.resolution_kind in ("officer_confirmed", "vigilance") else 0.2
     if item.status == "resolution_proposed" or not item.condition_active:
         return 0.5
     return 1.0
@@ -137,42 +130,11 @@ def reading_strength(db, item, key):
 def task_signals(db, deposit, policy):
     signals = []
     for item in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id).order_by(Discrepancy.created_at, Discrepancy.code)).all():
-        base = item.code.split(":", 1)[0]
-        key = bank_key(db, item.code) if base in ("mock_bank", "manual_bank") else signal_key(item.code)
-        key = key or ("unclassified_high" if item.severity == "high" else "unclassified_warning")
-        signals.append(make_signal(key, policy, item.description, item.evidence_source, strength=reading_strength(db, item, key),
-                                   discount_factor=discount(item), task=item))
+        key = suspicion_key(db, item)
+        if key:
+            signals.append(make_signal(key, policy, item.description, item.evidence_source, strength=reading_strength(db, item, key),
+                                       discount_factor=discount(item), task=item))
     return signals
-
-
-def confidence_signals(db, inst, policy):
-    weakest = None
-    for doc in db.scalars(select(Document).where(Document.instrument_id == inst.id, Document.category == "instrument")).all():
-        extraction = db.scalar(select(Extraction).where(Extraction.document_id == doc.id))
-        if not extraction:
-            continue
-        corrected = set(db.scalars(select(FieldCorrection.field).where(FieldCorrection.extraction_id == extraction.id)).all())
-        for field in CRITICAL_FIELDS:
-            value = extraction.confidences.get(field)
-            if value is not None and field not in corrected and value < LOW_CONFIDENCE and (weakest is None or value < weakest[1]):
-                weakest = (field, value)
-    if not weakest:
-        return []
-    field, value = weakest
-    return [make_signal("low_parser_confidence", policy, f"The document states the {field.replace('_', ' ')} unclearly (parser confidence {value:.2f}).",
-                        "document_extraction", strength=1 - value)]
-
-
-def verification_signals(db, deposit, inst, policy):
-    if inst.verification_status not in ("officially_confirmed", "mock_confirmed"):
-        return []
-    max_age = configuration(db, "workflow", DEFAULT_WORKFLOW).get("verification_max_age_days", DEFAULT_WORKFLOW["verification_max_age_days"])
-    latest = db.scalar(select(VerificationEvidence.verified_on).join(VerificationRequest, VerificationEvidence.request_id == VerificationRequest.id)
-                       .where(VerificationRequest.instrument_id == inst.id, VerificationEvidence.finding == "confirmed")
-                       .order_by(VerificationEvidence.verified_on.desc()).limit(1))
-    if latest and (date.today() - latest).days > max_age:
-        return [make_signal("stale_verification", policy, f"The latest bank confirmation is from {latest}; the instrument may have changed since.", "verification_history")]
-    return []
 
 
 def history_signals(db, deposit, policy):
@@ -207,6 +169,8 @@ def combine(signals, caps, thresholds):
                 remaining *= 1 - min(chance, caps.get(category, 1.0))
         return 100 * (1 - remaining)
 
+    if not signals:
+        return 0.0, "none"
     raw = total(signals)
     for item in signals:
         # Explanation: how far the score would fall without this signal.
@@ -220,11 +184,9 @@ def combine(signals, caps, thresholds):
 def evaluate(db, deposit, policy=None):
     policy = policy or active_policy(db)
     inst = current_instrument(db, deposit.id)
-    signals = task_signals(db, deposit, policy)
-    if inst:
-        signals += confidence_signals(db, inst, policy) + verification_signals(db, deposit, inst, policy)
-    signals += history_signals(db, deposit, policy)
-    signals = [s for s in signals if s["weight"] * s["strength"] * s["discount"] > 0]
+    signals = [s for s in task_signals(db, deposit, policy) if s["weight"] * s["strength"] * s["discount"] > 0]
+    if signals:  # history adds weight to a suspicious case; it never makes a clean case suspicious
+        signals += [s for s in history_signals(db, deposit, policy) if s["weight"] * s["strength"] > 0]
     score, level = combine(signals, policy["category_caps"], policy["thresholds"])
     signals.sort(key=lambda s: -s["contribution"])
     return {"score": score, "level": level, "signals": signals, "instrument_id": inst.id if inst else None, "weights_version": policy["version"]}
@@ -248,6 +210,7 @@ def assess(db, deposit, policy=None):
     db.add(item)
     if result["level"] == "critical":
         require_risk_clearance(db, deposit)
+    escalate(db, deposit, result["score"], (policy or active_policy(db))["thresholds"]["high"])
     audit(db, None, "risk_assessed", deposit.id, deposit.institution_id,
           {"score": float(previous.score), "level": previous.level} if previous else {},
           {"score": result["score"], "level": result["level"], "engine_version": ENGINE_VERSION, "weights_version": result["weights_version"]})
@@ -261,3 +224,12 @@ def require_risk_clearance(db, deposit):
         return
     db.add(Clearance(release_id=release.id, cell=RISK_CLEARANCE_CELL))
     audit(db, None, "risk_clearance_required", deposit.id, deposit.institution_id, after={"release_id": release.id, "cell": RISK_CLEARANCE_CELL})
+
+
+def escalate(db, deposit, score, limit):
+    """At or above the limit the suspicious findings go to Vigilance; the officer can no longer clear them alone."""
+    if score < limit or is_escalated(deposit):
+        return
+    deposit.escalated_at, deposit.vigilance_cleared_at, deposit.vigilance_cleared_by = utcnow(), None, None
+    reopen_verification(db, deposit, "Suspicion reached the escalation limit")
+    audit(db, None, "escalated_to_vigilance", deposit.id, deposit.institution_id, after={"score": score, "limit": limit})

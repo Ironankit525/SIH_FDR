@@ -569,5 +569,23 @@ CREATE INDEX ix_document_extractions_text_fingerprint ON document_extractions (t
 
 UPDATE alembic_version SET version_num='comparison_keys' WHERE alembic_version.version_num = 'risk_engine';
 
+-- Running upgrade comparison_keys -> verification_gate
+
+ALTER TABLE security_deposits ADD COLUMN verified_at TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE security_deposits ADD COLUMN verified_by UUID;
+
+ALTER TABLE security_deposits ADD COLUMN escalated_at TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE security_deposits ADD COLUMN vigilance_cleared_at TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE security_deposits ADD COLUMN vigilance_cleared_by UUID;
+
+ALTER TABLE security_deposits ADD CONSTRAINT fk_deposit_verified_by FOREIGN KEY(verified_by) REFERENCES users (id);
+
+ALTER TABLE security_deposits ADD CONSTRAINT fk_deposit_vigilance_cleared_by FOREIGN KEY(vigilance_cleared_by) REFERENCES users (id);
+
+UPDATE alembic_version SET version_num='verification_gate' WHERE alembic_version.version_num = 'comparison_keys';
+
 COMMIT;
 

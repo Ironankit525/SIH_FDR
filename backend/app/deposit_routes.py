@@ -20,7 +20,7 @@ from .risk import assess
 from .rules import calculate
 from .storage import store, validate_file
 from .jobs import dispatch
-from .workflows import current_instrument, detect, flag, instrument_conflicts, institution_profile
+from .workflows import current_instrument, detect, flag, instrument_conflicts, institution_profile, reopen_verification
 
 router = APIRouter(prefix="/api", tags=["Institutions and deposits"])
 
@@ -61,13 +61,15 @@ def requirement(body: schemas.RequirementInput, user=Depends(current_user), db=D
 
 @router.get("/deposits")
 def deposits(q: str = "", status: str = "", bank: str = "", programme: str = "", assigned: str = "", min_amount: float | None = None,
-             max_amount: float | None = None, date_from: str = "", date_to: str = "", risk_level: str = "", sort: Literal["", "risk"] = "",
+             max_amount: float | None = None, date_from: str = "", date_to: str = "", risk_level: str = "", sort: Literal["", "risk"] = "", escalated: bool = False,
              user=Depends(current_user), db=Depends(get_db)):
     query = select(SecurityDeposit).order_by(SecurityDeposit.created_at.desc())
     if user.role == "institution":
         query = query.where(SecurityDeposit.institution_id == user.institution_id)
     if status:
         query = query.where(SecurityDeposit.status == status)
+    if escalated and user.role != "institution":  # Vigilance's queue
+        query = query.where(SecurityDeposit.escalated_at.is_not(None), SecurityDeposit.vigilance_cleared_at.is_(None))
     if assigned == "me":
         query = query.where(SecurityDeposit.assigned_officer_id == user.id)
     results = [deposit_summary(db, d, user) for d in db.scalars(query).all()]
@@ -133,6 +135,7 @@ def update_instrument(deposit_id: str, body: schemas.InstrumentInput, user=Depen
     for key, value in body.model_dump().items():
         setattr(inst, key, value)
     inst.verification_status = "pending"
+    reopen_verification(db, deposit, "Instrument details changed")
     audit(db, user, "submitted_fields_corrected", deposit.id, deposit.institution_id, before, record(inst))
     detect(db, deposit)
     db.commit()
@@ -177,6 +180,8 @@ async def upload(deposit_id: str, background_tasks: BackgroundTasks, file: Uploa
                    category=category, scan_status=scan_status, uploaded_by=user.id)
     db.add(doc)
     db.flush()
+    if category == "instrument":
+        reopen_verification(db, deposit, "New receipt uploaded")
     if reused:
         flag(db, deposit, "reused_document:" + sha, "This document fingerprint also occurs in another submission. An authorised officer must investigate reuse.", "high", source="document_hash", instrument_id=inst.id)
         assess(db, deposit)
@@ -270,6 +275,7 @@ def replace(deposit_id: str, body: schemas.ReplacementInput, user=Depends(curren
     db.flush()
     db.add(Replacement(deposit_id=deposit.id, previous_id=previous.id, replacement_id=replacement.id, reason=body.reason, actor_id=user.id))
     deposit.status = "clarification_required"
+    reopen_verification(db, deposit, "Instrument replaced")
     audit(db, user, "instrument_replaced", deposit.id, deposit.institution_id, before={"instrument_id": previous.id}, after={"instrument_id": replacement.id, "reason": body.reason})
     detect(db, deposit)
     db.commit()

@@ -11,7 +11,8 @@ from .matching import same_reference
 EDITING_TOOLS = ("photoshop", "gimp", "illustrator", "inkscape", "canva", "ilovepdf", "smallpdf", "sejda", "pdfescape",
                  "pdf-xchange", "phantompdf", "foxit pdf editor", "nitro pro", "pdffiller", "dochub", "pdf candy")
 CRITICAL_FIELDS = ("number", "amount", "issue_date", "maturity_date")
-VERSION = 1
+# 2: also records what was examined (structure, compared fields), so officers can see checks that passed.
+VERSION = 2
 
 
 def signal(code, severity, detail):
@@ -37,6 +38,7 @@ def inspect(data, content_type, ocr=True):
         with Image.open(io.BytesIO(data)) as image:
             software = str(image.getexif().get(0x0131, ""))
         report["metadata"] = {"software": software}
+        report["ocr_crosscheck"] = "not_applicable"  # an image has no separate text layer to compare
         if tool := editing_tool(software):
             report["signals"].append(signal("editing_software", "warning", f"Image metadata names editing software ({tool})."))
         return report
@@ -49,6 +51,9 @@ def inspect(data, content_type, ocr=True):
         if created and modified and modified - created > timedelta(minutes=5):
             report["signals"].append(signal("modified_after_creation", "warning",
                                             f"The PDF was modified on {modified:%Y-%m-%d %H:%M}, after its creation on {created:%Y-%m-%d %H:%M}."))
+        first = doc[0]
+        text_layer = len(first.get_text().strip()) >= 25
+        report["structure"] = {"pages": len(doc), "saves": doc.version_count, "linearised": bool(doc.is_fast_webaccess), "text_layer": text_layer}
         # A linearised file legitimately carries two sections.
         allowed = 2 if doc.is_fast_webaccess else 1
         if doc.version_count > allowed:
@@ -61,8 +66,12 @@ def inspect(data, content_type, ocr=True):
             if len(values) > 1:
                 report["signals"].append(signal(f"conflicting_values_{key}", "high",
                                                 f"The document text contains {len(values)} different {key.replace('_', ' ')} values: {', '.join(map(str, values))}."))
-        first = doc[0]
-        if ocr and len(first.get_text().strip()) >= 25:
+        report["text_fields"] = [key for key in CRITICAL_FIELDS if found.get(key)]
+        if not text_layer:
+            report["ocr_crosscheck"] = "not_applicable"  # scanned page: the text was read by OCR in the first place
+        elif not ocr:
+            report["ocr_crosscheck"] = "skipped"
+        else:
             try:
                 visible, _ = structure(ocr_page(first), "tesseract_ocr")
             except Exception:
@@ -70,6 +79,7 @@ def inspect(data, content_type, ocr=True):
             else:
                 report["ocr_crosscheck"] = "completed"
                 page_values = candidates(first.get_text())
+                report["compared_fields"] = [key for key in CRITICAL_FIELDS if key in visible and page_values.get(key)]
                 for key in CRITICAL_FIELDS:
                     hidden = page_values.get(key, ([], False))[0]
                     agrees = any(same_reference(visible[key], h, ocr=True) for h in hidden) if key == "number" and key in visible else visible.get(key) in hidden

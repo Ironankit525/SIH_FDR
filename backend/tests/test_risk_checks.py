@@ -1,8 +1,10 @@
 """Regression tests for the automated review checks that feed the risk engine."""
+import io
 from datetime import date, timedelta
 
 import pymupdf as fitz
 import pytest
+from PIL import Image
 from sqlalchemy import select
 
 from app import forensics
@@ -317,3 +319,20 @@ def test_daily_sweep_flags_newly_matured_instruments(env):
         db.commit()
         monitor(db, today=date.today() + timedelta(days=3))
         assert db.scalar(select(Discrepancy).where(Discrepancy.deposit_id == inst.deposit_id, Discrepancy.code.startswith("matured")))
+
+
+def test_report_records_what_was_examined(tmp_path):
+    lines = ["Bank: TEST BANK", "FDR Number: SHOWN-01", "Amount: INR 3500000.00", "Issue Date: 2026-01-01", "Maturity Date: 2027-01-01"]
+    report = forensics.inspect(text_pdf(lines), "application/pdf")
+    assert report["structure"] == {"pages": 1, "saves": 1, "linearised": False, "text_layer": True}
+    assert report["ocr_crosscheck"] == "completed" and set(report["compared_fields"]) == {"number", "amount", "issue_date", "maturity_date"}
+    assert set(report["text_fields"]) == {"number", "amount", "issue_date", "maturity_date"}
+    assert forensics.inspect(text_pdf(lines, incremental_dir=tmp_path), "application/pdf", ocr=False)["structure"]["saves"] == 2
+    assert forensics.inspect(text_pdf(lines), "application/pdf", ocr=False)["ocr_crosscheck"] == "skipped"
+    scanned = fitz.open()
+    page = scanned.new_page()
+    page.insert_image(page.rect, pixmap=fitz.open(stream=text_pdf(lines), filetype="pdf")[0].get_pixmap())
+    assert forensics.inspect(scanned.tobytes(), "application/pdf")["ocr_crosscheck"] == "not_applicable"
+    image = io.BytesIO()
+    Image.new("RGB", (40, 40), "white").save(image, "PNG")
+    assert forensics.inspect(image.getvalue(), "image/png")["ocr_crosscheck"] == "not_applicable"

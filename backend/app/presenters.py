@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from .models import (Institution, Programme, Instrument, Document, Extraction, FieldCorrection,
                      Discrepancy, VerificationRequest, VerificationEvidence, Replacement, ReleaseRequest, Clearance, AuditLog, User)
-from .workflows import current_instrument, release_blockers, release_reviewers, configuration, DEFAULT_WORKFLOW
+from .workflows import current_instrument, readiness, release_blockers, release_reviewers, configuration, DEFAULT_WORKFLOW
 from . import risk
 from .config import settings
 
@@ -55,8 +55,11 @@ def timeline_for(events, hidden_ids, user):
     return visible
 
 
+HIDDEN_FROM_INSTITUTIONS = ("escalated_at", "vigilance_cleared_at", "vigilance_cleared_by")
+
+
 def deposit_summary(db, deposit, user):
-    result = record(deposit)
+    result = record(deposit, exclude=() if official(user) else HIDDEN_FROM_INSTITUTIONS)
     institution = db.get(Institution, deposit.institution_id)
     programme = db.get(Programme, deposit.programme_id)
     inst = current_instrument(db, deposit.id)
@@ -83,6 +86,13 @@ def deposit_detail(db, deposit, user):
     tasks = [record(i) for i in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id).order_by(Discrepancy.created_at.desc())).all()]
     hidden_ids = {t["id"] for t in tasks if hidden_task(t["code"])}
     result["discrepancies"] = [task_for(t, user) for t in tasks]
+    if official(user):
+        # Which findings are suspicion, what still stands between the case and verification, and whether Vigilance holds it.
+        by_id = {t.id: t for t in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id)).all()}
+        for task in result["discrepancies"]:
+            task["suspicious"] = bool(risk.suspicion_key(db, by_id[task["id"]]))
+        result["readiness"] = readiness(db, deposit)
+        result["escalated"] = risk.is_escalated(deposit)
     result["verifications"] = []
     for request in db.scalars(select(VerificationRequest).where(VerificationRequest.deposit_id == deposit.id).order_by(VerificationRequest.created_at.desc())).all():
         item = record(request)

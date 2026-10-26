@@ -249,12 +249,27 @@ Public routes are `/`, `/information`, `/signin` and `/register`. The authentica
 - Deposit registry, new-deposit form and detailed case tabs.
 - Verification and maturity queues.
 - Evidence comparison, original extraction/correction history and private document preview.
+- Document integrity checks for officials: what each forensic, arithmetic and reuse check examined, and whether it passed or raised a finding.
 - Review tasks, bank verification and release workflow actions.
 - Release requests, institutions and requirement calculation.
 - Notifications, account settings, reports and audit history.
 - Administration for users, rules, workflow, alerts and system monitoring.
+- Management reports (pending verifications, upcoming maturities, missing documents, cases requiring intervention), filtered and paged audit search, case reassignment, and CSV import of existing records with a check before anything is saved.
+- Official bank evidence records the values the bank confirmed, and any difference from the declaration becomes a review task.
+- Risk policy: signal weights, caps and thresholds, an impact preview, proposals approved by a second administrator, and version history (read-only for auditors).
 
 The interface shows actions according to role and case state, while the backend remains authoritative. Receipt screens poll while extraction is queued or processing. Human-corrected values retain the original evidence and do not inherit the parser's confidence score. Matching fields are never presented as proof of authenticity.
+
+### Design language
+
+The interface follows the design language in `SKILL.md`:
+
+- **Shape, depth and type:** generous radii (16px cards, 10px controls, pill badges), layered soft shadows with hairline edges, a translucent heavier sidebar material, large tightly tracked titles, and sentence-case labels. Sizes are in `rem`, so the reader's browser text size is respected.
+- **Colour:** neutral greys for content and one blue accent (`--accent`) reserved for what can be acted on (buttons, links, selection, focus); status colours only where they carry meaning; the DepositFlow wordmark keeps its navy. Colours are role-based tokens at the top of `src/styles.css`, each with a light and dark value, and text meets WCAG AA contrast in both themes. The theme follows the system unless changed under **Account settings → Appearance**; printing always uses the light theme.
+- **Springs, not fixed animations** (`src/lib/spring.ts`): Apple-style damping and response; every animation starts from the current position and velocity, so it can be interrupted and reversed.
+- **Gestures** (`src/components/motion.tsx`, `src/components/ui/dialog.tsx`): on phones, dialogs are bottom sheets and the navigation is a drawer. Both track the finger 1:1, rubber-band at their edges, project a flick's momentum to decide where to settle, and carry the finger's velocity into the spring. The case tabs' indicator springs toward the chosen tab.
+- **Response and feedback:** controls react on press with no tap delay; centred dialogs materialise (blur and scale together) and leave the way they came; touch devices get light haptics on success, error and snap.
+- **Preferences honoured:** reduced motion (cross-fades, no springs or gestures), reduced transparency (solid materials) and more contrast (defined edges, darker secondary text).
 
 In development, Vite proxies `/api` to `127.0.0.1:8000`. The optional container build serves the compiled SPA through Nginx and proxies `/api` to the backend service. The browser does not need database credentials or a secret-bearing frontend environment file.
 

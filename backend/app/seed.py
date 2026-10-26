@@ -163,6 +163,7 @@ def seed(db, save_files=False):
             db.flush()
             db.add(VerificationEvidence(request_id=req.id, source=result["source"], reference="MOCK-RELEASE-006", finding="confirmed", observations=result["observations"], confirmed_fields=result["fields"], simulated=True, verified_on=today, recorded_by=users["officer"].id))
             inst.verification_status = "mock_confirmed"
+            deposit.verified_at, deposit.verified_by = utcnow(), users["officer"].id
             audit(db, users["officer"], "mock_verification_recorded", deposit.id, institution.id, after=result)
             for discrepancy in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id)).all():
                 discrepancy.status, discrepancy.resolution = "resolved", "Fictional demo officer reviewed this task; illustrative applicability accepted for simulation only."
