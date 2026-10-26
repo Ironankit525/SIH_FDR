@@ -14,6 +14,7 @@ from .extraction import structure
 from .audit import audit
 from .workflows import detect, monitor, DEFAULT_WORKFLOW, DEFAULT_ALERTS
 from .bank import MockBankAdapter
+from . import forensics
 
 DEMO_PASSWORD = "DemoFlow2026!"
 
@@ -26,7 +27,8 @@ def receipt_pdf(inst, institution_name):
             "Not a real bank instrument. No financial value.\n\n"
             f"Bank: {inst.bank}\nBranch: {inst.branch}\nFDR Number: {inst.number}\n"
             f"Depositor Name: {inst.depositor_name}\nInstitution: {institution_name}\n"
-            f"Amount: INR {float(inst.amount):.2f}\nIssue Date: {inst.issue_date}\nMaturity Date: {inst.maturity_date}\n\n"
+            f"Amount: INR {float(inst.amount):.2f}\nIssue Date: {inst.issue_date}\nMaturity Date: {inst.maturity_date}\n"
+            + (f"Lien Marked in Favour of: {inst.lien_details}\n" if inst.lien_details else "") + "\n"
             "Security details: Fictional educational institution deposit.\n"
             "This sample is for software workflow testing only.")
     page.insert_textbox(fitz.Rect(55, 70, 540, 730), text, fontsize=12, lineheight=1.7)
@@ -52,6 +54,8 @@ def add_document(db, deposit, inst, user, institution, category="instrument", sa
     db.flush()
     fields, confidences = structure(text, "embedded_pdf_text")
     db.add(Extraction(document_id=document.id, method="embedded_pdf_text", original_text=text, fields=fields, confidences=confidences))
+    if category == "instrument":
+        document.forensics = forensics.inspect(data, "application/pdf", ocr=False)
     audit(db, user, "document_uploaded", deposit.id, deposit.institution_id, after={"filename": document.filename, "fictional_seed": True})
     audit(db, None, "ocr_completed", deposit.id, deposit.institution_id, after={"document_id": document.id, "method": "embedded_pdf_text"})
     if save_files:
@@ -84,6 +88,7 @@ def seed(db, save_files=False):
                 ("institution2", "Rohan Desai", "institution", institutions[1].id, None),
                 ("institution3", "Meera Iyer", "institution", institutions[2].id, None),
                 ("officer", "Arjun Mehta", "verification", None, None),
+                ("officer2", "Sana Qureshi", "verification", None, None),
                 ("clearance", "Priya Sharma", "clearance", None, "PGRC"),
                 ("vigilance", "Vikram Sen", "clearance", None, "Vigilance"),
                 ("authority", "Dr. Kavita Nair", "authority", None, None),
@@ -122,19 +127,19 @@ def seed(db, save_files=False):
         requirement = calculate(db, institution, programme)
         deposit = SecurityDeposit(institution_id=institution.id, programme_id=programme.id, reference=f"DF-{today.year}-{idx + 1:06}",
                                   rule_version_id=version.id, requirement_snapshot=requirement, required_amount=requirement["required_amount"],
-                                  regulatory_end_date=today + timedelta(days=-1 if idx == 5 else 720), renewal_due_date=today + timedelta(days=7) if idx == 3 else None,
+                                  regulatory_end_date=today + timedelta(days=-15 if idx == 5 else 720), renewal_due_date=today + timedelta(days=7) if idx == 3 else None,
                                   status="submitted", submitted_by=owner.id, submitted_at=utcnow() - timedelta(days=idx + 1),
                                   created_at=utcnow() - timedelta(days=idx * 17), assigned_officer_id=users["officer"].id if idx == 5 else None)
         db.add(deposit)
         db.flush()
         inst = Instrument(deposit_id=deposit.id, bank="DEMO NATIONAL BANK", branch="Education Services Branch", number=number,
-                          depositor_name=institution.name, amount=amount, issue_date=today - timedelta(days=3660 if idx == 5 else 180), maturity_date=today + timedelta(days=days), lien_details="Illustrative institutional security")
+                          depositor_name=institution.name, amount=amount, issue_date=today - timedelta(days=3660 if idx == 5 else 180), maturity_date=today + timedelta(days=days), lien_details="AICTE, New Delhi (fictional demo lien)")
         db.add(inst)
         db.flush()
         audit(db, owner, "deposit_submitted", deposit.id, institution.id, after={"reference": deposit.reference, "fictional_seed": True})
         add_document(db, deposit, inst, owner, institution, save_files=save_files)
         if not number.startswith("UNKNOWN"):
-            fields = {"bank": inst.bank, "number": number, "amount": float(amount), "depositor_name": inst.depositor_name, "maturity_date": str(inst.maturity_date)}
+            fields = {"bank": inst.bank, "number": number, "amount": float(amount), "depositor_name": inst.depositor_name, "issue_date": str(inst.issue_date), "maturity_date": str(inst.maturity_date)}
             if number.startswith("AMOUNT"):
                 fields["amount"] = 1500000.0
             if number.startswith("NAME"):
@@ -142,7 +147,8 @@ def seed(db, save_files=False):
             db.add(MockBankRecord(number=number, fields=fields, available=not number.startswith("UNAVAILABLE")))
         if idx == 4:
             previous = Instrument(deposit_id=deposit.id, bank=inst.bank, branch=inst.branch, number="ORIGINAL-005", depositor_name=inst.depositor_name,
-                                  amount=3500000, issue_date=today - timedelta(days=720), maturity_date=today - timedelta(days=5), status="replaced")
+                                  amount=3500000, issue_date=today - timedelta(days=720), maturity_date=today - timedelta(days=5), status="replaced",
+                                  lien_details=inst.lien_details)
             db.add(previous)
             db.flush()
             add_document(db, deposit, previous, owner, institution, save_files=save_files)
@@ -160,6 +166,9 @@ def seed(db, save_files=False):
             audit(db, users["officer"], "mock_verification_recorded", deposit.id, institution.id, after=result)
             for discrepancy in db.scalars(select(Discrepancy).where(Discrepancy.deposit_id == deposit.id)).all():
                 discrepancy.status, discrepancy.resolution = "resolved", "Fictional demo officer reviewed this task; illustrative applicability accepted for simulation only."
+                discrepancy.resolved_by, discrepancy.resolution_kind = users["officer"].id, "officer"
+                if discrepancy.severity == "high":
+                    discrepancy.confirmed_by, discrepancy.resolution_kind = users["officer2"].id, "officer_confirmed"
                 audit(db, users["officer"], "discrepancy_resolved", deposit.id, institution.id, after={"code": discrepancy.code, "notes": discrepancy.resolution})
             for category in DEFAULT_WORKFLOW["required_documents"]:
                 add_document(db, deposit, inst, owner, institution, category, save_files)

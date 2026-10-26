@@ -126,8 +126,13 @@ class ReleaseInput(StrictModel):
     reason: str = Field(min_length=10, max_length=4000)
 
 
+class ResolutionReview(Note):
+    decision: Literal["confirm", "reject"]
+
+
 class Decision(Note):
     decision: Literal["approved", "rejected", "returned"]
+    risk_acknowledged: bool = False
 
 
 class Completion(StrictModel):
@@ -139,6 +144,9 @@ class WorkflowInput(StrictModel):
     required_documents: list[Literal["release_request", "affidavit", "approval_letter"]] = Field(min_length=1)
     allow_mock_for_demo: bool = True
     require_regulatory_end: bool = True
+    verification_max_age_days: int = Field(default=30, ge=1, le=365)
+    coverage_warning_days: int = Field(default=60, ge=0, le=365)
+    require_aicte_lien: bool = True
 
     @field_validator("cells")
     @classmethod
@@ -185,6 +193,25 @@ class RuleInput(StrictModel):
     def dates(self):
         if self.effective_to < self.effective_from:
             raise ValueError("Effective period is invalid")
+        return self
+
+
+class RiskWeightsInput(StrictModel):
+    weights: dict[str, float] = Field(default_factory=dict)
+    category_caps: dict[str, float] = Field(default_factory=dict)
+    thresholds: dict[Literal["medium", "high", "critical"], int]
+    notes: str = Field(min_length=10, max_length=2000)
+
+    @model_validator(mode="after")
+    def valid_policy(self):
+        from .risk import CATEGORIES, SIGNALS
+        if set(self.weights) - set(SIGNALS) or any(not 0 <= v <= 0.95 for v in self.weights.values()):
+            raise ValueError("Weights must name known signals and lie between 0 and 0.95")
+        if set(self.category_caps) - set(CATEGORIES) or any(not 0 < v <= 1 for v in self.category_caps.values()):
+            raise ValueError("Category caps must name known categories and lie between 0 and 1")
+        t = self.thresholds
+        if set(t) != {"medium", "high", "critical"} or not 0 < t["medium"] < t["high"] < t["critical"] < 100:
+            raise ValueError("Thresholds must rise: 0 < medium < high < critical < 100")
         return self
 
 

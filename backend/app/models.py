@@ -1,9 +1,10 @@
 """Normalised persistence shared by PostgreSQL and the lightweight SQLite demo."""
 from datetime import date, datetime, timezone
 from uuid import uuid4
-from sqlalchemy import JSON, Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint, Uuid, event
+from sqlalchemy import true as sa_true, JSON, Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint, Uuid, event
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
+from .matching import normalise_bank, normalise_number, text_fingerprint
 
 
 def utcnow():
@@ -119,6 +120,9 @@ class Instrument(Identity, Base):
     lien_details: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(40), default="active")
     verification_status: Mapped[str] = mapped_column(String(40), default="pending")
+    # Normalised comparison keys (see matching.py), kept in step by the listener below and indexed for duplicate checks.
+    number_key: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    bank_key: Mapped[str | None] = mapped_column(String(150), nullable=True)
     __table_args__ = (UniqueConstraint("bank", "number"), CheckConstraint("amount > 0"), CheckConstraint("maturity_date > issue_date"))
 
 
@@ -140,6 +144,7 @@ class Document(Identity, Base):
     processing_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default='0')
     next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     uploaded_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    forensics: Mapped[dict] = mapped_column(JSON, default=dict, server_default='{}')
 
 
 class Extraction(Identity, Base):
@@ -154,6 +159,7 @@ class Extraction(Identity, Base):
     model_version: Mapped[str | None] = mapped_column(String(100), nullable=True)
     document_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     warnings: Mapped[list] = mapped_column(JSON, default=list, server_default='[]')
+    text_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
 
 class FieldCorrection(Identity, Base):
@@ -180,6 +186,11 @@ class Discrepancy(Identity, Base):
     status: Mapped[str] = mapped_column(String(30), default="open")
     response: Mapped[str] = mapped_column(Text, default="")
     resolution: Mapped[str] = mapped_column(Text, default="")
+    # automatic, officer or officer_confirmed (high severity needs a second officer).
+    resolution_kind: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    resolved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    confirmed_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    condition_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=sa_true())
     __table_args__ = (UniqueConstraint("deposit_id", "code"),)
 
 
@@ -284,6 +295,50 @@ class AuditLog(Identity, Base):
     after: Mapped[dict] = mapped_column(JSON, default=dict)
     previous_hash: Mapped[str] = mapped_column(String(64), default="")
     event_hash: Mapped[str] = mapped_column(String(64))
+
+
+class RiskWeightVersion(Identity, Base):
+    """Policy for the risk score. A different administrator must approve each version."""
+    __tablename__ = "risk_weight_versions"
+    version: Mapped[int] = mapped_column(Integer, unique=True)
+    status: Mapped[str] = mapped_column(String(20), default="proposed")
+    weights: Mapped[dict] = mapped_column(JSON)
+    category_caps: Mapped[dict] = mapped_column(JSON)
+    thresholds: Mapped[dict] = mapped_column(JSON)
+    notes: Mapped[str] = mapped_column(Text)
+    proposed_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    approved_by: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class RiskAssessment(Identity, Base):
+    """Append-only score history. A row is written only when the scored inputs change."""
+    __tablename__ = "risk_assessments"
+    deposit_id: Mapped[str] = mapped_column(ForeignKey("security_deposits.id"), index=True)
+    instrument_id: Mapped[str | None] = mapped_column(ForeignKey("deposit_instruments.id"), nullable=True)
+    score: Mapped[float] = mapped_column(Numeric(4, 1))
+    level: Mapped[str] = mapped_column(String(10), index=True)
+    signals: Mapped[list] = mapped_column(JSON)
+    engine_version: Mapped[str] = mapped_column(String(20))
+    weights_version: Mapped[int] = mapped_column(Integer)
+    inputs_digest: Mapped[str] = mapped_column(String(64))
+    __table_args__ = (CheckConstraint("score >= 0 AND score <= 100"),)
+
+
+@event.listens_for(Instrument, "before_insert")
+@event.listens_for(Instrument, "before_update")
+def instrument_keys(_mapper, _connection, target):
+    target.number_key, target.bank_key = normalise_number(target.number), normalise_bank(target.bank)
+
+
+@event.listens_for(Extraction, "before_insert")
+def extraction_fingerprint(_mapper, _connection, target):
+    target.text_fingerprint = text_fingerprint(target.original_text)
+
+
+@event.listens_for(RiskAssessment, "before_update")
+@event.listens_for(RiskAssessment, "before_delete")
+def protect_assessment(*_):
+    raise ValueError("Risk assessments are append-only")
 
 
 @event.listens_for(AuditLog, "before_update")

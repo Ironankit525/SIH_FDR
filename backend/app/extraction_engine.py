@@ -24,6 +24,9 @@ class ExtractedFields(BaseModel):
     amount: Decimal | None = Field(default=None, gt=0, le=1_000_000_000_000, max_digits=15, decimal_places=2, allow_inf_nan=False)
     issue_date: date | None = None
     maturity_date: date | None = None
+    lien: Text | None = None
+    rate: Decimal | None = Field(default=None, gt=0, lt=100, max_digits=6, decimal_places=3, allow_inf_nan=False)
+    maturity_value: Decimal | None = Field(default=None, gt=0, le=1_000_000_000_000, max_digits=15, decimal_places=2, allow_inf_nan=False)
 
 
 class ModelResponse(BaseModel):

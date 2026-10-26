@@ -14,7 +14,8 @@ This is a Smart India Hackathon prototype, not an official AICTE service or a ce
 | Deposits | Drafts, requirement calculations, instrument details, submission and status tracking |
 | Documents | PDF/PNG/JPEG validation, encrypted storage, authenticated previews and extraction |
 | Evidence review | Separate institution declarations, extracted fields, human corrections and bank findings |
-| Review tasks | Explainable mismatch, shortfall, missing-field, duplicate-fingerprint and maturity flags |
+| Review tasks | Explainable mismatch, shortfall, coverage, lien, depositor, duplicate, reuse, document-integrity, receipt-arithmetic and maturity flags; tasks reopen on new evidence and high-severity resolutions need a second officer |
+| Risk | Explainable 0–100 score with history (officials only), risk-ordered queue, dashboard view, and stricter release safeguards for high and critical cases |
 | Verification | Labelled simulated bank adapter and officer-recorded manual bank evidence |
 | Monitoring | Maturity, validity, regulatory and renewal deadlines; reminders and overdue escalations |
 | Renewals | Linked replacements that preserve the previous instrument and its documents |
@@ -99,6 +100,7 @@ The sign-in page provides shortcuts for fictional demo accounts. The public, loc
 | `institution2@demo.local` | Sahyadri College: demonstrate institution-level isolation |
 | `institution3@demo.local` | Northstar School: demonstrate an unavailable simulated bank response |
 | `officer@demo.local` | Claim cases, scrutinise evidence, verify instruments and resolve review tasks |
+| `officer2@demo.local` | Second verification officer who confirms or rejects high-severity resolutions |
 | `clearance@demo.local` | Record PGRC clearance decisions |
 | `vigilance@demo.local` | Record Vigilance clearance decisions |
 | `authority@demo.local` | Decide release requests and record completion references |
@@ -162,6 +164,9 @@ All application modules are under `backend/app/`.
 | `jobs.py`, `worker.py` | Persistent claims, retries, recovery, local scheduling and optional Celery tasks |
 | `bank.py` | Bank adapter protocol and deterministic fictional verification fixtures |
 | `workflows.py` | Discrepancy detection, release prerequisites, reviewer separation and deadline reminders |
+| `matching.py`, `forensics.py`, `consistency.py` | Normalised names, banks and references; document integrity indicators (metadata, incremental saves, conflicting values, text layer against OCR); receipt arithmetic |
+| `risk.py` | Explainable risk score from review tasks and score-only observations; append-only score history and approved weight versions |
+| `../evaluation/` | Synthetic labelled corpus, end-to-end harness and report for measuring the risk engine (`python -m evaluation`) |
 | `review_routes.py` | Assignment, scrutiny, bank evidence, clearances and release decisions |
 | `admin_routes.py` | Dashboard/report queries, user/rule administration, settings and monitoring |
 | `presenters.py` | API response assembly, evidence details and exclusion of private internal fields |
@@ -255,7 +260,7 @@ In development, Vite proxies `/api` to `127.0.0.1:8000`. The optional container 
 
 ## Configuration and secret handling
 
-The root `.env.example` and `backend/.env.example` templates are included in this repository. Real `.env` files remain ignored. This private development snapshot also includes `backend/.data/local-secrets.json`, containing the local signing and document encryption keys, at the repository owner's request. Repository collaborators and clones can access those keys. Use separate environment-provided keys for deployments; do not put API keys or database passwords in frontend code.
+The root `.env.example` and `backend/.env.example` templates are included in this repository. Real `.env` files remain ignored. The current branch omits `backend/.data/local-secrets.json`; fresh installations generate their own local keys. Previously committed keys remain in older Git history. Use separate environment-provided keys for deployments; do not put API keys or database passwords in frontend code.
 
 For optional native overrides, create your own untracked `backend/.env`. Shell environment variables also work. These are the main settings:
 
@@ -268,14 +273,14 @@ For optional native overrides, create your own untracked `backend/.env`. Shell e
 | `FRONTEND_ORIGIN` | `http://localhost:5173` |
 | `COOKIE_SECURE` | `false` for loopback HTTP; required in production |
 | `REQUIRE_MALWARE_SCAN`, `CLAMAV_HOST` | Optional locally; configure the scanner for production |
-| `EXTRACTION_PROVIDER` | `ocr`; leave unchanged until VLM integration is requested |
+| `EXTRACTION_PROVIDER` | `ocr` by default; use `vlm_http` with the private Colab worker settings |
 | `EXTRACTION_MAX_ATTEMPTS`, `EXTRACTION_LEASE_SECONDS` | `3`, `900` |
 | `SECRET_KEY`, `STORAGE_ENCRYPTION_KEY` | Generated locally in development; explicit private values required in production |
 | `DEMO_PASSWORD` | Optional password override before initial seeding |
 | `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` | Optional private S3/MinIO configuration |
 | `REDIS_URL` | Broker connection for optional Celery mode |
 
-Development runtime files live under `backend/.data/`: the SQLite database, encrypted documents and `local-secrets.json`. Runtime data remains ignored; `local-secrets.json` is an explicitly committed exception in this private snapshot. Backups, other private keys, credentials, dependency folders, builds and test artifacts remain ignored. Preserve the database, encrypted objects **and their encryption key together** in a private backup; the key is required to read existing documents.
+Development runtime files live under `backend/.data/`: the SQLite database, encrypted documents and `local-secrets.json`. Runtime data and `local-secrets.json` remain ignored in the current branch. Backups, other private keys, credentials, dependency folders, builds and test artifacts remain ignored. Preserve the database, encrypted objects **and their encryption key together** in a private backup; the key is required to read existing documents.
 
 ## Optional Docker deployment
 
@@ -324,7 +329,7 @@ npm run test:e2e
 
 An existing compatible Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Browser tests use one worker, create fictional `E2E-*` records and retain ignored screenshots/traces under `frontend/test-results/`.
 
-Latest team-release checks: **67 backend tests, 27 worker/setup tests and 6 frontend tests passed; the TypeScript/production build passed.** The earlier browser and migration checks are recorded in [docs/VERIFICATION.md](docs/VERIFICATION.md); browser tests were not rerun for this release. These are local results, not a claim of a configured GitHub Actions pipeline or measured model accuracy.
+Merge validation: **129 backend tests, 28 worker/setup tests and 6 frontend tests passed; the TypeScript/production build and migration alignment check passed.** The earlier browser checks are recorded in [docs/VERIFICATION.md](docs/VERIFICATION.md); they have not been rerun for this merge. Local software tests do not establish model accuracy.
 
 ## Troubleshooting and maintenance
 
@@ -378,5 +383,6 @@ SIH_FDR/
 - [Six-journey demo walkthrough](docs/DEMO.md)
 - [Verification results](docs/VERIFICATION.md)
 - [Known limitations and remaining integrations](docs/LIMITATIONS.md)
+- [Risk engine evaluation](docs/RISK_EVALUATION.md)
 
 Live bank/AICTE connectivity, production VLM hosting and real-receipt accuracy validation, real email/SMS delivery, SSO/MFA, production deployment hardening and formal regulatory review remain future work. The trained VLM can run through the temporary Colab worker. Existing automated checks assist officers; human decisions and independently obtained evidence remain essential.

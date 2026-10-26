@@ -2,6 +2,7 @@
 from datetime import date
 from typing import Protocol
 from sqlalchemy import select
+from .matching import same_amount, same_bank, same_name, same_text
 from .models import MockBankRecord
 
 
@@ -23,7 +24,9 @@ class MockBankAdapter:
             response["observations"] = "Simulated bank service is unavailable for this fixture. Retry or use authorised manual verification."
         else:
             response["fields"] = record.fields
-            mismatch = [key for key in ("amount", "depositor_name", "bank") if str(record.fields.get(key, "")).strip().casefold() != str(float(instrument.amount) if key == "amount" else getattr(instrument, key)).strip().casefold()]
+            # Dates matter as much as amounts: an extended maturity is a typical alteration.
+            mismatch = [key for key in ("amount", "depositor_name", "bank", "issue_date", "maturity_date") if key in record.fields
+                        and not {"amount": same_amount, "bank": same_bank, "depositor_name": same_name}.get(key, same_text)(record.fields[key], getattr(instrument, key))]
             response["finding"] = "mismatched" if mismatch else "confirmed"
             response["observations"] = "Mismatched fields: " + ", ".join(mismatch) if mismatch else "Submitted fields match the fictional bank fixture."
             if record.fields.get("maturity_date", "9999") <= date.today().isoformat():
