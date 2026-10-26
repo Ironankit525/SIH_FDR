@@ -1,6 +1,6 @@
-# Evaluate and connect the separate Gemma 3 27B model
+# Gemma 3 27B — current model serving and evaluation
 
-Open **[Gemma3_27B_Review_and_Serve.ipynb](Gemma3_27B_Review_and_Serve.ipynb)** in Google Colab. It is self-contained: uploading this one notebook is enough. It loads your existing adapter from `MyDrive/SIH26265_AICTE_VLM_27B_12B/fine_tuned_vlm_lora`; it does not retrain, overwrite it, or use the earlier 8B model.
+Open **[Gemma3_27B_Review_and_Serve.ipynb](Gemma3_27B_Review_and_Serve.ipynb)** in Google Colab. It is self-contained: uploading this one notebook is enough. It loads your existing adapter from `MyDrive/SIH26265_AICTE_VLM_27B_12B/fine_tuned_vlm_lora`; it loads the saved weights for inference without retraining or overwriting the adapter.
 
 **First-time team setup:** follow [VLM_SETUP.md](../../docs/VLM_SETUP.md) for laptop installation, Drive model access, ngrok setup and every notebook cell. The default `RUN_EVALUATION=False` serves the saved model without training images or a holdout benchmark. Code is in Git; trained weights and worker credentials must be obtained separately.
 
