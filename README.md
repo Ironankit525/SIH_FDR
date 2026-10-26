@@ -15,7 +15,9 @@ This is a Smart India Hackathon prototype, not an official AICTE service or a ce
 | Documents | PDF/PNG/JPEG validation, encrypted storage, authenticated previews and extraction |
 | Evidence review | Separate institution declarations, extracted fields, human corrections and bank findings |
 | Review tasks | Explainable mismatch, shortfall, coverage, lien, depositor, duplicate, reuse, document-integrity, receipt-arithmetic and maturity flags; tasks reopen on new evidence and high-severity resolutions need a second officer |
-| Risk | Explainable 0–100 score with history (officials only), risk-ordered queue, dashboard view, and stricter release safeguards for high and critical cases |
+| Risk | Explainable 0–100 **suspicion** score with history (officials only), risk-ordered queue and dashboard view. The score is shown only when something suspicious is found (altered or reused documents, duplicates, evidence contradicting the declaration); a case with nothing suspicious shows "No concerns" and no number |
+| Verification boundary | An officer can mark verification complete only when the bank has confirmed, the receipt is uploaded and checked, every review task is resolved and no escalation remains. Release cannot be requested without it, and the sign-off is withdrawn if the evidence changes |
+| Escalation | A suspicion score of 50 or more escalates the case to the Vigilance cell. The case officer cannot resolve its suspicious findings; only Vigilance can, and only Vigilance can clear the escalation |
 | Verification | Labelled simulated bank adapter and officer-recorded manual bank evidence |
 | Monitoring | Maturity, validity, regulatory and renewal deadlines; reminders and overdue escalations |
 | Renewals | Linked replacements that preserve the previous instrument and its documents |
@@ -121,17 +123,19 @@ Run backend commands inside `backend/`, so the database, private key file and st
 
 ## Demo accounts and roles
 
-The sign-in page provides shortcuts for fictional demo accounts. The public, local-demo password is **`DemoFlow2026!`**. This is a fixture password, not a private deployment credential. Set `DEMO_PASSWORD` before the first seed to choose another value; reseeding does not reset existing accounts. If changed, enter the selected password manually instead of relying on the demo shortcut.
+**There are two sign-in doors.** The sign-in page has an **Institute** and an **Admin** toggle: institutions use the Institute Portal, and every AICTE official uses the AICTE Admin Command portal. Each door admits only its own accounts. Inside the Admin portal, a demo-only **Acting as** menu in the header signs you in as another official (second administrator, verification officers, PGRC, Vigilance, authority, auditor), so one presenter can walk a case through every stage. These remain separate accounts on the server, so maker-checker rules still hold: a second officer confirms high-severity resolutions, a second administrator approves rule changes, and only Vigilance clears escalations. The menu appears only when the backend reports demo mode.
+
+The sign-in page provides one-click shortcuts for the fictional demo accounts. The public, local-demo password is **`DemoFlow2026!`**. This is a fixture password, not a private deployment credential. Set `DEMO_PASSWORD` before the first seed to choose another value; reseeding does not reset existing accounts. If changed, enter the selected password manually instead of relying on the demo shortcut.
 
 | Account | Purpose |
 | --- | --- |
 | `institution@demo.local` | Meridian Institute: create deposits, upload documents, answer review queries and request release |
 | `institution2@demo.local` | Sahyadri College: demonstrate institution-level isolation |
 | `institution3@demo.local` | Northstar School: demonstrate an unavailable simulated bank response |
-| `officer@demo.local` | Claim cases, scrutinise evidence, verify instruments and resolve review tasks |
+| `officer@demo.local` | Claim cases, scrutinise evidence, verify instruments, resolve review tasks and mark verification complete once every requirement is met |
 | `officer2@demo.local` | Second verification officer who confirms or rejects high-severity resolutions |
 | `clearance@demo.local` | Record PGRC clearance decisions |
-| `vigilance@demo.local` | Record Vigilance clearance decisions |
+| `vigilance@demo.local` | Record Vigilance clearance decisions; resolve suspicious findings on escalated cases and clear escalations |
 | `authority@demo.local` | Decide release requests and record completion references |
 | `admin@demo.local` | Manage accounts, configuration, rule proposals and monitoring |
 | `admin2@demo.local` | Provide the separate administrator needed to approve a rule change |
@@ -146,12 +150,13 @@ The seed includes three institutions, nine deposit obligations and ten instrumen
 1. **Institution:** select a programme, review the configured requirement, create a draft and upload the FDR receipt.
 2. **Extraction:** the backend reads the document and stores original text, fields and confidence. The institution can record a reasoned correction without replacing the original extraction.
 3. **Verification officer:** claim the case, compare the independent evidence sources, request clarification and resolve review tasks with reasons.
-4. **Bank evidence:** run a clearly labelled simulated check or record authorised manual bank confirmation with a supporting document.
-5. **Monitoring/renewal:** track the distinct deadlines and link any replacement instrument to the original.
-6. **Release:** the institution submits the configured supporting records, including a release request, affidavit and approval letter in the demo workflow. PGRC and Vigilance record their clearance decisions.
-7. **Approving authority:** review all blockers and record approval, return or rejection. A prior reviewer cannot provide the final release decision. Once authorised, record the external completion/NOC reference.
+4. **Bank evidence:** run a clearly labelled simulated check or record authorised manual bank confirmation with a supporting document. Until the bank answers, the case simply reads "Bank has not confirmed yet"; nothing is scored for waiting.
+5. **Verification complete:** the assigned officer works through the verification checklist (bank confirmed, receipt checked, tasks resolved, no uncleared escalation) and signs the case off. If a suspicion score reaches 50 the case is escalated to Vigilance first, and the officer cannot proceed until Vigilance resolves the suspicious findings and clears it.
+6. **Monitoring/renewal:** track the distinct deadlines and link any replacement instrument to the original.
+7. **Release:** the institution can request release only after verification is complete, then submits the configured supporting records, including a release request, affidavit and approval letter in the demo workflow. PGRC and Vigilance record their clearance decisions.
+8. **Approving authority:** review all blockers and record approval, return or rejection. A prior reviewer cannot provide the final release decision. Once authorised, record the external completion/NOC reference.
 
-A risk flag prompts human review. It does not declare fraud or automatically authorise release. Bank maturity alone does not establish release eligibility.
+A risk flag prompts human review. It does not declare fraud or automatically authorise release. Missing confirmation or paperwork is a requirement that blocks verification, not a score. Because an official can also be wrong or corrupt, no single officer can clear a suspicious case. Bank maturity alone does not establish release eligibility.
 
 ## Backend architecture
 
@@ -194,7 +199,7 @@ All application modules are under `backend/app/`.
 | `bank.py` | Bank adapter protocol and deterministic fictional verification fixtures |
 | `workflows.py` | Discrepancy detection, release prerequisites, reviewer separation and deadline reminders |
 | `matching.py`, `forensics.py`, `consistency.py` | Normalised names, banks and references; document integrity indicators (metadata, incremental saves, conflicting values, text layer against OCR); receipt arithmetic |
-| `risk.py` | Explainable risk score from review tasks and score-only observations; append-only score history and approved weight versions |
+| `risk.py` | Suspicion-only risk score (engine 2.0.0) from review tasks and score-only observations; escalation to Vigilance at the high threshold; append-only score history and approved weight versions |
 | `../evaluation/` | Synthetic labelled corpus, end-to-end harness and report for measuring the risk engine (`python -m evaluation`) |
 | `review_routes.py` | Assignment, scrutiny, bank evidence, clearances and release decisions |
 | `admin_routes.py` | Dashboard/report queries, user/rule administration, settings and monitoring |
@@ -274,9 +279,11 @@ flowchart TD
 
 Public routes are `/`, `/information`, `/signin` and `/register`. The authenticated workspace starts at `/app` and includes:
 
+- Two portals with their own sidebars and a shared header (portal badge, search, theme switcher, notification drawer, sign-out). Institute: dashboard, new deposit and calculator, my deposits, renewals and releases. Admin: command dashboard, verification queue, Vigilance and escalations, release clearances and approvals, institutions and registry, reports and audit trail, rules and risk policy, system monitor.
 - Dashboard with live database-derived indicators and charts.
 - Deposit registry, new-deposit form and detailed case tabs.
-- Verification and maturity queues.
+- Verification and maturity queues, plus an Escalated cases queue for the Vigilance cell.
+- Case verification checklist, "Mark verification complete", escalation banner and Vigilance resolve and clear actions.
 - Evidence comparison, original extraction/correction history and private document preview.
 - Document integrity checks for officials: what each forensic, arithmetic and reuse check examined, and whether it passed or raised a finding.
 - Review tasks, bank verification and release workflow actions.
@@ -317,7 +324,8 @@ For optional native overrides, create your own untracked `backend/.env`. Shell e
 | `FRONTEND_ORIGIN` | `http://localhost:5173` |
 | `COOKIE_SECURE` | `false` for loopback HTTP; required in production |
 | `REQUIRE_MALWARE_SCAN`, `CLAMAV_HOST` | Optional locally; configure the scanner for production |
-| `EXTRACTION_PROVIDER` | `ocr` by default; use `vlm_http` with the private Colab worker settings |
+| `EXTRACTION_PROVIDER` | `cascade` by default for instrument receipts: PDF text layer, then Tesseract, then the Colab VLM only when both fall short of the required fields and a worker is configured. `ocr` and `vlm_http` force a single provider. Supporting documents always use local extraction |
+| `EXTRACTION_MIN_CONFIDENCE` | Parser confidence (0–1, default 0.5) every core field needs for a cascade stage to stop there |
 | `EXTRACTION_MAX_ATTEMPTS`, `EXTRACTION_LEASE_SECONDS` | `3`, `900` |
 | `SECRET_KEY`, `STORAGE_ENCRYPTION_KEY` | Generated locally in development; explicit private values required in production |
 | `DEMO_PASSWORD` | Optional password override before initial seeding |
@@ -373,7 +381,7 @@ npm run test:e2e
 
 An existing compatible Chromium executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Browser tests use one worker, create fictional `E2E-*` records and retain ignored screenshots/traces under `frontend/test-results/`.
 
-Team-release validation: **149 backend tests and 31 worker/setup tests passed in an isolated source copy without the active database or credentials.** Fresh database/receipt preparation also passed twice without duplicating data. The merged frontend previously passed **16 tests and its TypeScript/production build** and is unchanged by the VLM setup work. Migration checks passed. Browser tests and the revised notebook on a live GPU were not rerun for this release; local software tests do not establish model accuracy. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for earlier checks.
+Team-release validation: **149 backend tests and 31 worker/setup tests passed in an isolated source copy without the active database or credentials.** After the verification boundary was added, **149 backend tests and 16 frontend tests passed** on the merged code (2026-10-26); the 5 browser tests passed on the branch before it was merged with the VLM work and were not re-run since. Fresh database/receipt preparation also passed twice without duplicating data. The merged frontend previously passed **16 tests and its TypeScript/production build** and is unchanged by the VLM setup work. Migration checks passed. Browser tests and the revised notebook on a live GPU were not rerun for this release; local software tests do not establish model accuracy. See [docs/VERIFICATION.md](docs/VERIFICATION.md) for earlier checks.
 
 ## Troubleshooting and maintenance
 
