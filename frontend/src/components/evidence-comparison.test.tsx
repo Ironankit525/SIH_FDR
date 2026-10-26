@@ -35,11 +35,11 @@ describe('independent evidence display', () => {
     expect(screen.queryByRole('button', { name: 'Record correction' })).not.toBeInTheDocument()
   })
 
-  it('marks verification complete only after the officer signs it off, not on a bank finding alone', () => {
+  it('marks Verified only after the officer signs it off, not on a bank finding alone', () => {
     const { unmount } = render(<CaseProgress deposit={fixture()} role="authority"/> )
-    expect(within(screen.getByText('Verification complete').closest('li')!).getByText('Pending')).toBeInTheDocument()
+    expect(within(screen.getByText('Verified').closest('li')!).getByText('Pending')).toBeInTheDocument()
     unmount()
     render(<CaseProgress deposit={{ ...fixture(), verified_at: '2026-01-02' }} role="authority"/> )
-    expect(within(screen.getByText('Verification complete').closest('li')!).getByText('Complete')).toBeInTheDocument()
+    expect(within(screen.getByText('Verified').closest('li')!).getByText('Complete')).toBeInTheDocument()
   })
 })

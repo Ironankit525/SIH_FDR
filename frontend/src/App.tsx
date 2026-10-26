@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { Routes, Route, Navigate, Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, LayoutDashboard, Files, ClipboardCheck, CalendarClock, CircleCheckBig, Building, ChartNoAxesCombined, ScrollText, Bell, Settings, Users, SlidersHorizontal, GitBranch, ShieldCheck, LogOut, Menu, X, ChevronsUpDown, ArrowRight, LifeBuoy, Calculator, Gauge, FileUp, ShieldAlert } from 'lucide-react'
-import { api, post, type User } from './lib/api'
+import { Routes, Route, Navigate, Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { Building2, ArrowRight, ShieldCheck, Settings, X } from 'lucide-react'
+import { api, type User } from './lib/api'
+import { navigationFor, linkActive } from './lib/nav'
+import { PORTALS, portalOf } from './lib/portal'
 import { label } from './lib/utils'
-import { Button } from './components/ui/button'
 import { Loading } from './components/common'
 import { useDrawerGesture } from './components/motion'
+import { GlobalSearch, MenuButton, NotificationDrawer, PortalBadge, RoleSwitcher, SectionTabs, ThemeSwitcher, UserMenu } from './components/shell'
 import { Landing, SignIn, Register, Information } from './pages/public'
 import { Dashboard, Deposits, Institutions, Requirement, Notifications, SettingsPage, Reports, AuditPage } from './pages/overview'
 import { DepositForm, CaseDetail } from './pages/case'
@@ -20,26 +22,35 @@ export const useUser = () => useContext(UserContext)!
 export function Brand({ light = false }: { light?: boolean }) { return <Link to="/" className={`brand ${light ? 'brand-light' : ''}`}><span className="brand-mark"><Building2 size={23}/></span><span>Deposit<span className="brand-flow">Flow</span><small>AICTE · Regulation Bureau</small></span></Link> }
 
 // Breadcrumb names for pages that are not in the navigation menu.
-const PAGE_TITLES: Record<string, string> = { '/app/settings': 'Account settings', '/app/risk-evaluation': 'Evaluation results', '/app/requirement': 'Requirement calculator', '/app/notifications': 'Notifications' }
+const PAGE_TITLES: Record<string, string> = { '/app/settings': 'Account settings', '/app/notifications': 'Notifications', '/app/deposits': 'Deposits', '/app/requirement': 'Requirement calculator', '/app/risk-evaluation': 'Evaluation results' }
 
 function Shell() {
   const userQuery = useQuery<User>({ queryKey: ['me'], queryFn: () => api('/auth/me'), retry: false })
-  const qc = useQueryClient(); const navigate = useNavigate(); const location = useLocation(); const [mobile, setMobile] = useState(false); const [logoutError, setLogoutError] = useState(''); const [scrolled, setScrolled] = useState(false)
+  const location = useLocation(); const [mobile, setMobile] = useState(false); const [logoutError, setLogoutError] = useState(''); const [scrolled, setScrolled] = useState(false)
   const drawerRef = useRef<HTMLElement>(null); const scrimRef = useRef<HTMLDivElement>(null)
   useDrawerGesture(drawerRef, scrimRef, mobile, setMobile, !!userQuery.data)
   // The top bar's soft edge shows only once content is underneath it.
   useEffect(() => { const onScroll = () => setScrolled(window.scrollY > 4); onScroll(); window.addEventListener('scroll', onScroll, { passive: true }); return () => window.removeEventListener('scroll', onScroll) }, [])
-  const notifications = useQuery({ queryKey: ['notifications'], queryFn: () => api<any[]>('/notifications'), enabled: !!userQuery.data })
   if (userQuery.isPending) return <Loading/>
   if (!userQuery.data) return <Navigate to="/signin" replace/>
-  const user = userQuery.data; const institution = user.role === 'institution'; const admin = user.role === 'admin'
-  const navigation = [
-    { title: 'Workspace', links: [{ path: '/app', name: 'Overview', icon: LayoutDashboard, end: true }, { path: '/app/deposits', name: institution ? 'My deposits' : 'Deposit registry', icon: Files }, ...(!institution ? [{ path: '/app/verification', name: 'Verification queue', icon: ClipboardCheck }] : []), ...(user.clearance_cell === 'Vigilance' ? [{ path: '/app/escalations', name: 'Escalated cases', icon: ShieldAlert }] : []), { path: '/app/maturity', name: 'Maturity & renewals', icon: CalendarClock }, { path: '/app/releases', name: 'Release requests', icon: CircleCheckBig }] },
-    { title: institution ? 'Institution' : 'Insights & records', links: [{ path: '/app/institutions', name: institution ? 'Institution profile' : 'Institution directory', icon: Building }, ...(institution ? [{ path: '/app/requirement', name: 'Requirement calculator', icon: Calculator }] : []), { path: '/app/reports', name: 'Analytics & reports', icon: ChartNoAxesCombined }, ...(!institution ? [{ path: '/app/audit', name: 'Audit trail', icon: ScrollText }] : []), ...(user.role === 'auditor' ? [{ path: '/app/admin/risk', name: 'Risk policy', icon: Gauge }] : []), { path: '/app/notifications', name: 'Notifications', icon: Bell }] },
-    ...(admin ? [{ title: 'Administration', links: [{ path: '/app/admin/users', name: 'Users & access', icon: Users }, { path: '/app/admin/rules', name: 'Rule configuration', icon: SlidersHorizontal }, { path: '/app/admin/workflows', name: 'Workflow settings', icon: GitBranch }, { path: '/app/admin/alerts', name: 'Alert configuration', icon: Bell }, { path: '/app/admin/system', name: 'System monitoring', icon: ShieldCheck }, { path: '/app/admin/risk', name: 'Risk policy', icon: Gauge }, { path: '/app/admin/import', name: 'Import records', icon: FileUp }] }] : []),
-  ]
-  const current = navigation.flatMap(n => n.links).find(n => n.path === location.pathname)?.name || (location.pathname.endsWith('/new') ? 'New deposit' : PAGE_TITLES[location.pathname] ?? 'Case workspace')
-  return <UserContext.Provider value={user}><div className="app-shell"><div ref={scrimRef} className={`mobile-scrim ${mobile ? 'visible' : ''}`} onClick={() => setMobile(false)}/><aside ref={drawerRef} className={`sidebar ${mobile ? 'is-open' : ''}`}><div className="sidebar-brand"><Brand/><button className="icon-button mobile-only" aria-label="Close navigation" onClick={() => setMobile(false)}><X/></button></div><div className="workspace-card"><span className="workspace-icon"><Building size={19}/></span><div><strong>{institution ? 'Institution workspace' : 'AICTE workspace'}</strong><small>{label(user.role)} access</small></div><ChevronsUpDown size={14}/></div><nav>{navigation.map(group => <div className="nav-group" key={group.title}><div className="nav-label">{group.title}</div>{group.links.map(link => <NavLink to={link.path} end={'end' in link ? link.end : false} key={link.path} onClick={() => setMobile(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><link.icon size={18}/>{link.name}{link.path === '/app/notifications' && !!notifications.data?.filter(n => !n.read).length && <span className="nav-count">{notifications.data.filter(n => !n.read).length}</span>}</NavLink>)}</div>)}</nav><div className="sidebar-bottom"><div className="help-card"><ShieldCheck size={22}/><strong>Every action, accounted for.</strong><p>Secure records. Clear responsibilities. Complete histories.</p><Link to="/information">Portal guide <ArrowRight size={14}/></Link></div><NavLink to="/app/settings" className="nav-link"><Settings size={18}/>Account settings</NavLink><div className="sidebar-footer"><span className="status-dot"/> SIH 2026 · Prototype v1.0</div></div></aside><div className="main-shell"><header className={`topbar${scrolled ? ' is-scrolled' : ''}`}><div className="breadcrumb"><button className="icon-button mobile-only" aria-label="Open navigation" onClick={() => setMobile(true)}><Menu/></button><span>Workspace</span><span>/</span><strong>{current}</strong></div><div className="topbar-actions"><span className="environment-label">Fictional demo</span><Link to="/app/notifications" aria-label="View notifications" className="notification-button"><Bell size={19}/>{!!notifications.data?.some(n => !n.read) && <i/>}</Link><div className="topbar-divider"/><div className="avatar">{user.name.split(' ').slice(0, 2).map(x => x[0]).join('')}</div><div className="user-label"><strong>{user.name}</strong><span>{label(user.role)}{user.clearance_cell ? ` · ${user.clearance_cell}` : ''}</span></div><button className="icon-button" aria-label="Sign out" onClick={async () => { try { await post('/auth/logout'); qc.clear(); navigate('/signin') } catch (e) { setLogoutError((e as Error).message) } }}><LogOut size={17}/></button></div></header><main className="page-content">{logoutError && <div role="alert" className="notice error">{logoutError}</div>}<Outlet/></main><footer className="page-footer"><span>DepositFlow · Security Deposit & FDR Management</span><span><ShieldCheck size={13}/> Fictional records · No financial transactions</span></footer></div></div></UserContext.Provider>
+  const user = userQuery.data; const portal = portalOf(user.role)
+  const navigation = navigationFor(user); const links = navigation.flatMap(group => group.links)
+  const active = links.find(link => linkActive(link, location.pathname))
+  const current = active?.name ?? PAGE_TITLES[location.pathname] ?? 'Case workspace'
+  return <UserContext.Provider value={user}><div className="app-shell" data-portal={portal}><div ref={scrimRef} className={`mobile-scrim ${mobile ? 'visible' : ''}`} onClick={() => setMobile(false)}/>
+    <aside ref={drawerRef} className={`sidebar ${mobile ? 'is-open' : ''}`}>
+      <div className="sidebar-brand"><Brand/><button className="icon-button mobile-only" aria-label="Close navigation" onClick={() => setMobile(false)}><X/></button></div>
+      <div className="workspace-card"><span className="workspace-icon"><Building2 size={19}/></span><div><strong>{PORTALS[portal].name}</strong><small>{portal === 'admin' ? `${label(user.role)}${user.clearance_cell ? ` · ${user.clearance_cell}` : ''}` : user.name}</small></div></div>
+      <nav>{navigation.map(group => <div className="nav-group" key={group.title}><div className="nav-label">{group.title}</div>{group.links.map(link => <NavLink to={link.path} end={link.end ?? false} key={link.path} onClick={() => setMobile(false)} className={`nav-link ${link === active ? 'active' : ''}`}><link.icon size={18}/>{link.name}</NavLink>)}</div>)}</nav>
+      <div className="sidebar-bottom"><div className="help-card"><ShieldCheck size={22}/><strong>Every action, accounted for.</strong><p>Secure records. Clear responsibilities. Complete histories.</p><Link to="/information">Portal guide <ArrowRight size={14}/></Link></div><NavLink to="/app/settings" className="nav-link"><Settings size={18}/>Settings</NavLink><div className="sidebar-footer"><span className="status-dot"/> SIH 2026 · Prototype v1.0</div></div>
+    </aside>
+    <div className="main-shell"><header className={`topbar${scrolled ? ' is-scrolled' : ''}`}>
+      <div className="breadcrumb"><MenuButton onOpen={() => setMobile(true)}/><PortalBadge user={user}/><span>/</span><strong>{current}</strong></div>
+      <GlobalSearch/>
+      <div className="topbar-actions"><RoleSwitcher user={user}/><ThemeSwitcher/><NotificationDrawer/><div className="topbar-divider"/><UserMenu user={user} onError={setLogoutError}/></div>
+    </header>
+    <main className="page-content">{logoutError && <div role="alert" className="notice error">{logoutError}</div>}<SectionTabs user={user}/><Outlet/></main>
+    <footer className="page-footer"><span>DepositFlow · Security Deposit & FDR Management</span><span><ShieldCheck size={13}/> Fictional demo · No financial transactions</span></footer></div></div></UserContext.Provider>
 }
 
 export default function App() { return <Routes><Route path="/" element={<Landing/>}/><Route path="/information" element={<Information/>}/><Route path="/signin" element={<SignIn/>}/><Route path="/register" element={<Register/>}/><Route path="/app" element={<Shell/>}><Route index element={<Dashboard/>}/><Route path="deposits" element={<Deposits/>}/><Route path="deposits/new" element={<DepositForm/>}/><Route path="deposits/:id" element={<CaseDetail/>}/><Route path="verification" element={<Deposits mode="verification"/>}/><Route path="escalations" element={<Deposits mode="escalations"/>}/><Route path="maturity" element={<Deposits mode="maturity"/>}/><Route path="releases" element={<ReleaseQueue/>}/><Route path="institutions" element={<Institutions/>}/><Route path="requirement" element={<Requirement/>}/><Route path="notifications" element={<Notifications/>}/><Route path="settings" element={<SettingsPage/>}/><Route path="reports" element={<Reports/>}/><Route path="audit" element={<AuditPage/>}/><Route path="admin/risk" element={<RiskPolicy/>}/><Route path="admin/import" element={<ImportRecords/>}/><Route path="risk-evaluation" element={<RiskEvaluation/>}/><Route path="admin/:section" element={<AdminPage/>}/></Route><Route path="*" element={<div className="empty"><h1>Page not found</h1><Link to="/app">Return to your workspace</Link></div>}/></Routes> }
