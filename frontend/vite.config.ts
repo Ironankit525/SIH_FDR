@@ -7,5 +7,5 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: { port: 5173, strictPort: true, proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true } } },
   build: { rollupOptions: { output: { manualChunks: { charts: ['recharts'], forms: ['react-hook-form', 'zod', '@hookform/resolvers'], query: ['@tanstack/react-query'] } } } },
-  test: { environment: 'jsdom', setupFiles: ['./src/test-setup.ts'], include: ['src/**/*.test.tsx'], pool: 'forks', maxWorkers: 1 },
+  test: { environment: 'jsdom', setupFiles: ['./src/test-setup.ts'], include: ['src/**/*.test.{ts,tsx}'], pool: 'forks', maxWorkers: 1 },
 })

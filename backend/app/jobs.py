@@ -77,12 +77,12 @@ def _process_document(document_id):
         doc.processing_token = None
         if failure is None:
             if not db.scalar(select(Extraction.id).where(Extraction.document_id == doc.id)):
-                db.add(Extraction(document_id=doc.id, document_sha256=digest, **result.model_dump()))
+                db.add(Extraction(document_id=doc.id, document_sha256=digest, **result.model_dump(exclude={'stages'})))
             doc.processing_status, doc.processing_error, doc.forensics = 'completed', None, report
             audit(db, None, 'ocr_completed', deposit.id, deposit.institution_id,
                   after={'document_id': doc.id, 'method': result.method, 'provider': result.provider,
                          'model_name': result.model_name, 'model_version': result.model_version,
-                         'document_sha256': digest, 'fields': list(result.fields)})
+                         'document_sha256': digest, 'fields': list(result.fields), 'stages': result.stages})
             if doc.category == "instrument":
                 detect(db, deposit)
         else:

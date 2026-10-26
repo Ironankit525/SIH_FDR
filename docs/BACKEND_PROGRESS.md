@@ -4,7 +4,7 @@ The portal keeps its existing SQL database. Local development uses SQLite withou
 
 ## VLM later
 
-`EXTRACTION_PROVIDER=ocr` is the default. Existing PDF text extraction and Tesseract continue to work without a model server. No trained VLM is connected or downloaded. The optional extraction-provider interface can be adapted and tested against the trained model when integration is requested later.
+`EXTRACTION_PROVIDER=cascade` is the default for instrument receipts: the PDF text layer, then Tesseract, then the VLM worker only when both fall short of the core fields (bank, number, amount, issue and maturity dates) and a worker is configured. Without a worker the best partial result is kept. `ocr` forces local extraction only. Existing PDF text extraction and Tesseract continue to work without a model server. No trained VLM is connected or downloaded. The optional extraction-provider interface can be adapted and tested against the trained model when integration is requested later.
 
 ## Implemented safeguards
 

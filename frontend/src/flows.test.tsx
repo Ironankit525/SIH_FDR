@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
@@ -23,6 +23,26 @@ describe('critical interface flows', () => {
     await user.click(screen.getByRole('button', { name: /sign in to workspace/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect')
     expect(screen.getByLabelText('Email address')).toHaveValue('user@example.org')
+  })
+
+  it('turns away an official who signs in through the Institute door, and signs them out', async () => {
+    vi.mocked(post).mockResolvedValueOnce({ id: 'official', role: 'verification', name: 'Officer' }).mockResolvedValueOnce({})
+    mount(<SignIn/>); const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Email address'), 'officer@demo.local')
+    await user.type(screen.getByLabelText('Password'), 'DemoFlow2026!')
+    await user.click(screen.getByRole('button', { name: /sign in to workspace/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('belongs to the Admin portal')
+    expect(vi.mocked(post)).toHaveBeenCalledWith('/auth/logout')
+  })
+
+  it('offers exactly two portals and fills the matching demo account', async () => {
+    mount(<SignIn/>); const user = userEvent.setup()
+    expect(within(screen.getByRole('group', { name: 'Portal' })).getAllByRole('button').map(b => b.textContent)).toEqual(['Institute', 'Admin'])
+    await user.click(screen.getByRole('button', { name: 'Use the demo institute account' }))
+    expect(screen.getByLabelText('Email address')).toHaveValue('institution@demo.local')
+    await user.click(screen.getByRole('button', { name: 'Admin' }))
+    await user.click(screen.getByRole('button', { name: 'Use the demo admin account' }))
+    expect(screen.getByLabelText('Email address')).toHaveValue('admin@demo.local')
   })
 
   it('blocks a deposit whose bank maturity precedes its issue date', async () => {
