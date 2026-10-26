@@ -28,6 +28,22 @@ def extract_text(data, content_type):
     return text[:200000], method
 
 
+def pdf_text_layer(data):
+    """The PDF's own selectable text, with no OCR. Empty for a scan."""
+    with fitz.open(stream=data, filetype="pdf") as doc:
+        return "\n".join(page.get_text() for page in doc).strip()[:200000]
+
+
+def ocr_text(data, content_type):
+    """Tesseract over the image, or over every rendered page of a PDF, ignoring any text layer."""
+    if content_type == "application/pdf":
+        with fitz.open(stream=data, filetype="pdf") as doc:
+            text = "\n".join(ocr_page(page) for page in doc)
+    else:
+        text = pytesseract.image_to_string(Image.open(io.BytesIO(data)), timeout=30)
+    return text.strip()[:200000]
+
+
 def ocr_page(page):
     if page.rect.width * page.rect.height * 1.7 ** 2 > 20_000_000:
         raise ValueError("Page dimensions exceed OCR safety limit")

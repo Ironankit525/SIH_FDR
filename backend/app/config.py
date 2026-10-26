@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:5173"
     demo_password: str = ""
     max_upload_bytes: int = 10 * 1024 * 1024
-    extraction_provider: Literal['ocr', 'vlm_http', 'vlm_local'] = 'ocr'
+    extraction_provider: Literal['cascade', 'ocr', 'vlm_http', 'vlm_local'] = 'cascade'
+    # A stage's result is accepted only when every core field is present at or above this parser confidence.
+    extraction_min_confidence: float = Field(default=0.5, ge=0, le=1)
     vlm_endpoint: str = ''
     vlm_api_key: SecretStr = SecretStr('')
     vlm_model: str = ''
