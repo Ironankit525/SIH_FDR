@@ -70,7 +70,7 @@ class ObjectStore:
     def s3(self):
         import boto3
         return boto3.client("s3", endpoint_url=settings.s3_endpoint, aws_access_key_id=settings.s3_access_key,
-                            aws_secret_access_key=settings.s3_secret_key, region_name="us-east-1")
+                            aws_secret_access_key=settings.s3_secret_key, region_name=settings.s3_region)
 
     def put(self, data):
         key = str(uuid4()) + ".encrypted"
