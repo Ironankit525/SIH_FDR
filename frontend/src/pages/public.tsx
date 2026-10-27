@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   ShieldAlert,
   ScrollText,
+  LockKeyhole,
 } from 'lucide-react'
 import { Brand } from '@/App'
 import { Button } from '@/components/ui/button'
@@ -267,91 +268,197 @@ export function SignIn() {
   })
   const choose = (next: Portal) => { setParams({ portal: next }, { replace: true }); form.reset({ email: '', password: '' }); mutation.reset() }
   const Copy = PORTAL_COPY[portal]
+
   return (
     <div className="auth-page">
+      {/* Left Column: Sanity-inspired infographic animation & story */}
       <aside className="auth-story">
-        <Brand light/>
-        <div>
-          <div className="eyebrow">A clearer path to compliance</div>
-          <h1>Good governance<br/>starts with<br/><em>clear records.</em></h1>
-          <p>One place to manage security deposits, verify supporting evidence and move decisions forward.</p>
-          <div className="auth-proof"><ShieldCheck/><span>Purpose-built for accountable<br/>institutional workflows.</span></div>
-        </div>
-        <small>SIH26265 · Smart Automation · Hackathon prototype</small>
-      </aside>
-      <main className="auth-main">
-        <Link className="back-link" to="/">← Back to portal home</Link>
-        <div className="auth-form">
-          <div className="auth-icon"><Copy.icon size={27}/></div>
-          <h1>Welcome to DepositFlow</h1>
-          <p>Choose your portal, then sign in.</p>
-          <div className="portal-toggle" role="group" aria-label="Portal">
-            {(Object.keys(PORTALS) as Portal[]).map(key => (
-              <button
-                key={key}
-                type="button"
-                aria-label={`${PORTALS[key].short} portal`}
-                aria-pressed={portal === key}
-                className={portal === key ? 'active' : ''}
-                onClick={() => choose(key)}
-              >
-                {PORTALS[key].short}
-              </button>
-            ))}
+        <InfographicBackground />
+
+        <div className="auth-story-content">
+          <header className="auth-story-header">
+            <Brand light />
+          </header>
+
+          <div className="auth-story-body">
+            <div className="landing-badge">
+              <span className="landing-badge-radar">
+                <span className="landing-radar-ping" />
+                <span className="landing-radar-dot" />
+              </span>
+              <Sparkles size={14} className="landing-badge-sparkle" />
+              <span>Smart India Hackathon 2026 · Unified Access</span>
+            </div>
+
+            <h1 className="auth-story-headline">
+              Good governance<br />
+              starts with<br />
+              <span className="landing-headline-gradient">clear records.</span>
+            </h1>
+
+            <p className="auth-story-subtext">
+              A connected workspace for institutional security deposits. From the first submission to final authorization, keep documents, deadlines, and decisions in step.
+            </p>
+
+            <div className="landing-trust-strip">
+              <div className="landing-trust-item">
+                <ShieldCheck size={16} className="text-emerald-400" />
+                <span>Role-based access</span>
+              </div>
+              <span className="landing-trust-dot text-rose-500">•</span>
+              <div className="landing-trust-item">
+                <span>Traceable decisions</span>
+              </div>
+              <span className="landing-trust-dot text-indigo-400">•</span>
+              <div className="landing-trust-item">
+                <span>Private documents</span>
+              </div>
+            </div>
           </div>
-          <p className="portal-blurb"><strong>{PORTALS[portal].name}.</strong> {Copy.blurb}</p>
-          <form className="form-stack" onSubmit={form.handleSubmit(data => mutation.mutate(data))}>
-            <label className="field">
-              Email address
-              <input autoComplete="username" type="email" placeholder={portal === 'admin' ? 'official@aicte.gov.in' : 'you@institution.edu.in'} {...form.register('email')}/>
-              {form.formState.errors.email && <small className="field-error">{form.formState.errors.email.message}</small>}
-            </label>
-            <label className="field">
-              Password
-              <input autoComplete="current-password" type="password" placeholder="Enter your password" {...form.register('password')}/>
-              {form.formState.errors.password && <small className="field-error">{form.formState.errors.password.message}</small>}
-            </label>
-            {mutation.error && <ErrorState error={mutation.error}/>}
-            <Button disabled={mutation.isPending}>{mutation.isPending ? 'Signing in…' : 'Sign in to workspace'}<ArrowRight size={17}/></Button>
-          </form>
-          <div className="demo-login">
-            <strong>Explore the fictional demo</strong>
-            <p>{portal === 'admin' ? 'Signs in as the portal administrator; the header then lets you act as any other official.' : `Signs in as ${PORTALS.institute.demoLabel}.`}</p>
-            <Button type="button" variant="outline" onClick={() => { form.setValue('email', PORTALS[portal].demoEmail); form.setValue('password', DEMO_PASSWORD) }}>
-              Use the demo {PORTALS[portal].short.toLowerCase()} account
-            </Button>
-            <div className="demo-roles">
-              {[
-                ['institution', 'Institution'],
-                ['officer', 'Verification'],
-                ['clearance', 'Clearance: PGRC'],
-                ['vigilance', 'Clearance: Vigilance'],
-                ['authority', 'Authority'],
-                ['admin', 'Admin'],
-                ['auditor', 'Auditor'],
-                ['bank', 'Bank Officer']
-              ].map(([email, title]) => (
+
+          <footer className="auth-story-footer">
+            SIH26265 prototype · Built for the AICTE problem statement. All demonstration institutions and bank records are fictional.
+          </footer>
+        </div>
+      </aside>
+
+      {/* Right Column: Sleek dark sign in workspace */}
+      <main className="auth-main">
+        <div className="auth-main-grid" aria-hidden="true" />
+
+        <div className="auth-main-wrapper">
+          <Link className="auth-back-link" to="/">
+            ← Back to portal home
+          </Link>
+
+          <div className="auth-form-card">
+            <div className="auth-form-header">
+              <div className="auth-form-icon">
+                <Copy.icon size={22} />
+              </div>
+              <h1 className="auth-form-title">Welcome to DepositFlow</h1>
+              <p className="auth-form-subtitle">Choose your portal, then sign in.</p>
+            </div>
+
+            <div className="portal-toggle" role="group" aria-label="Portal">
+              {(Object.keys(PORTALS) as Portal[]).map(key => (
                 <button
-                  key={email}
+                  key={key}
                   type="button"
-                  onClick={() => {
-                    const targetPortal: Portal = email === 'institution' ? 'institute' : 'admin'
-                    if (portal !== targetPortal) {
-                      choose(targetPortal)
-                    }
-                    form.setValue('email', `${email}@demo.local`)
-                    form.setValue('password', 'DemoFlow2026!')
-                  }}
+                  aria-label={`${PORTALS[key].short} portal`}
+                  aria-pressed={portal === key}
+                  className={portal === key ? 'active' : ''}
+                  onClick={() => choose(key)}
                 >
-                  {title}
+                  {PORTALS[key].short}
                 </button>
               ))}
             </div>
-            <small>Local demo credentials only. If the seed password was changed, enter your configured password.</small>
+
+            <p className="portal-blurb">
+              <strong>{PORTALS[portal].name}.</strong> {Copy.blurb}
+            </p>
+
+            <form className="form-stack" onSubmit={form.handleSubmit(data => mutation.mutate(data))}>
+              <label className="field">
+                Email address
+                <input
+                  autoComplete="username"
+                  type="email"
+                  placeholder={portal === 'admin' ? 'official@aicte.gov.in' : 'you@institution.edu.in'}
+                  {...form.register('email')}
+                />
+                {form.formState.errors.email && (
+                  <small className="field-error">{form.formState.errors.email.message}</small>
+                )}
+              </label>
+
+              <label className="field">
+                Password
+                <input
+                  autoComplete="current-password"
+                  type="password"
+                  placeholder="Enter your password"
+                  {...form.register('password')}
+                />
+                {form.formState.errors.password && (
+                  <small className="field-error">{form.formState.errors.password.message}</small>
+                )}
+              </label>
+
+              {mutation.error && <ErrorState error={mutation.error} />}
+
+              <button
+                type="submit"
+                className="auth-submit-btn"
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? 'Signing in…' : 'Sign in to workspace'}
+                <ArrowRight size={17} />
+              </button>
+            </form>
+
+            <div className="demo-login">
+              <strong>Explore the fictional demo</strong>
+              <p>
+                {portal === 'admin'
+                  ? 'Signs in as the portal administrator; the header then lets you act as any other official.'
+                  : `Signs in as ${PORTALS.institute.demoLabel}.`}
+              </p>
+
+              <button
+                type="button"
+                className="demo-btn-single"
+                onClick={() => {
+                  form.setValue('email', PORTALS[portal].demoEmail)
+                  form.setValue('password', DEMO_PASSWORD)
+                }}
+              >
+                Use the demo {PORTALS[portal].short.toLowerCase()} account
+              </button>
+
+              <div className="demo-roles">
+                {[
+                  ['institution', 'Institution'],
+                  ['officer', 'Verification'],
+                  ['clearance', 'Clearance: PGRC'],
+                  ['vigilance', 'Clearance: Vigilance'],
+                  ['authority', 'Authority'],
+                  ['admin', 'Admin'],
+                  ['auditor', 'Auditor'],
+                  ['bank', 'Bank Officer']
+                ].map(([email, title]) => (
+                  <button
+                    key={email}
+                    type="button"
+                    onClick={() => {
+                      const targetPortal: Portal = email === 'institution' ? 'institute' : 'admin'
+                      if (portal !== targetPortal) {
+                        choose(targetPortal)
+                      }
+                      form.setValue('email', `${email}@demo.local`)
+                      form.setValue('password', 'DemoFlow2026!')
+                    }}
+                  >
+                    {title}
+                  </button>
+                ))}
+              </div>
+              <small>Local demo credentials only. If the seed password was changed, enter your configured password.</small>
+            </div>
+
+            {portal === 'institute' && (
+              <p className="auth-register-note">
+                New institution? <Link to="/register">Register an institution</Link>
+              </p>
+            )}
           </div>
-          {portal === 'institute' && <p className="auth-register">New institution? <Link to="/register">Register an institution</Link></p>}
+
+          <footer className="auth-footer">
+            <ShieldCheck size={14} className="text-emerald-400" />
+            <span>Your access is limited to your authorised role.</span>
+          </footer>
         </div>
-        <footer><ShieldCheck size={14}/> Your access is limited to your authorised role.</footer>
       </main>
     </div>
   )
@@ -359,44 +466,276 @@ export function SignIn() {
 
 export function Register() {
   const [success, setSuccess] = useState(false)
-  const mutation = useMutation({ mutationFn: (data: any) => post('/auth/register', data), onSuccess: () => setSuccess(true) })
+  const [registeredData, setRegisteredData] = useState<{ name: string; email: string } | null>(null)
+  const mutation = useMutation({
+    mutationFn: (data: any) => post('/auth/register', data),
+    onSuccess: (_, variables: any) => {
+      setRegisteredData({
+        name: variables.name,
+        email: variables.contact_email
+      })
+      setSuccess(true)
+    }
+  })
+
   return (
-    <div className="public-page">
-      <PublicNav/>
-      <div className="narrow-page">
-        <h1>Register a demo institution</h1>
-        <Notice>This creates a fictional institution for prototype evaluation. Official onboarding requires AICTE authorisation.</Notice>
-        {success ? (
-          <div className="success-panel">
-            <CheckCircle2/>
-            <h2>Institution created</h2>
-            <Button asChild><Link to="/signin">Continue to sign in</Link></Button>
+    <div className="auth-page">
+      {/* Left Column: Showcase story with live Infographic Background */}
+      <aside className="auth-story">
+        <InfographicBackground />
+
+        <div className="auth-story-content">
+          <header className="auth-story-header">
+            <Brand light />
+          </header>
+
+          <div className="auth-story-body">
+            <div className="landing-badge">
+              <span className="landing-badge-radar">
+                <span className="landing-radar-ping" />
+                <span className="landing-radar-dot" />
+              </span>
+              <Sparkles size={14} className="landing-badge-sparkle" />
+              <span>Smart India Hackathon 2026 · Onboarding</span>
+            </div>
+
+            <h1 className="auth-story-headline">
+              Empowering<br />
+              institutions with<br />
+              <span className="landing-headline-gradient">verifiable trust.</span>
+            </h1>
+
+            <p className="auth-story-subtext">
+              Register a demo institution workspace to submit security deposit instruments, inspect OCR evidence extraction, and track statutory reviews.
+            </p>
+
+            <div className="landing-trust-strip">
+              <div className="landing-trust-item">
+                <ShieldCheck size={16} className="text-emerald-400" />
+                <span>Verified records</span>
+              </div>
+              <span className="landing-trust-dot text-rose-500">•</span>
+              <div className="landing-trust-item">
+                <span>Automated checks</span>
+              </div>
+              <span className="landing-trust-dot text-indigo-400">•</span>
+              <div className="landing-trust-item">
+                <span>Private evidence</span>
+              </div>
+            </div>
           </div>
-        ) : (
-          <form className="panel form-stack padded" onSubmit={e => { e.preventDefault(); const data = Object.fromEntries(new FormData(e.currentTarget)); mutation.mutate({ ...data, approval_year: Number(data.approval_year) }) }}>
-            {[
-              ['name', 'Institution name'],
-              ['administrator_name', 'Administrator name'],
-              ['contact_email', 'Email address', 'email'],
-              ['state', 'State'],
-              ['address', 'Address'],
-              ['approval_year', 'Approval year', 'number'],
-              ['password', 'Password (at least 12 characters)', 'password']
-            ].map(([name, title, type]) => (
-              <label className="field" key={name}>
-                {title}
-                <input required name={name} type={type || 'text'} minLength={name === 'password' ? 12 : undefined} defaultValue={name === 'approval_year' ? new Date().getFullYear() : undefined}/>
-              </label>
-            ))}
-            <label className="field">Ownership<select name="ownership"><option value="private">Private</option><option value="government">Government</option><option value="government_aided">Government aided</option></select></label>
-            <label className="field">Land arrangement<select name="land_arrangement"><option value="owned">Owned</option><option value="private_lease">Private lease</option></select></label>
-            <label className="field">Programme<select name="programme"><option>Engineering and Technology</option><option>Management</option><option>Computer Applications</option></select></label>
-            <label className="field">Level<select name="level"><option value="undergraduate">Undergraduate</option><option value="postgraduate">Postgraduate</option><option value="diploma">Diploma</option></select></label>
-            {mutation.error && <ErrorState error={mutation.error}/>}
-            <Button disabled={mutation.isPending}>Create demo institution</Button>
-          </form>
-        )}
-      </div>
+
+          <footer className="auth-story-footer">
+            SIH26265 prototype · Built for the AICTE problem statement. All demo institutions are simulated locally for testing.
+          </footer>
+        </div>
+      </aside>
+
+      {/* Right Column: Sleek Registration Form */}
+      <main className="auth-main">
+        <div className="auth-main-grid" aria-hidden="true" />
+
+        <div className="auth-main-wrapper wide">
+          <Link className="auth-back-link" to="/signin">
+            ← Back to sign in
+          </Link>
+
+          <div className="auth-form-card">
+            {success ? (
+              <div className="auth-success-card">
+                <div className="auth-success-icon">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h2 className="auth-success-title">Institution registered</h2>
+                <p className="auth-success-desc">
+                  <strong>{registeredData?.name || 'Your demo institution'}</strong> has been created.
+                  You can now sign in using your registered administrator credentials (<code>{registeredData?.email}</code>).
+                </p>
+                <Link to="/signin" className="auth-submit-btn" style={{ textDecoration: 'none' }}>
+                  Continue to sign in
+                  <ArrowRight size={17} />
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div className="auth-form-header">
+                  <div className="auth-form-icon">
+                    <Building2 size={22} />
+                  </div>
+                  <h1 className="auth-form-title">Register demo institution</h1>
+                  <p className="auth-form-subtitle">Create an institution workspace for regulatory prototype evaluation.</p>
+                </div>
+
+                <div className="auth-notice">
+                  <AlertCircle size={18} />
+                  <div>
+                    <strong>Prototype evaluation workspace:</strong> This self-registration registers a fictional institution for demonstration. Official AICTE onboarding requires statutory approval.
+                  </div>
+                </div>
+
+                <form
+                  className="form-stack"
+                  onSubmit={e => {
+                    e.preventDefault()
+                    const formData = Object.fromEntries(new FormData(e.currentTarget))
+                    mutation.mutate({
+                      ...formData,
+                      approval_year: Number(formData.approval_year)
+                    })
+                  }}
+                >
+                  <div className="auth-form-section-title">Institution Details</div>
+
+                  <div className="auth-grid-2">
+                    <label className="field">
+                      Institution name
+                      <input
+                        required
+                        name="name"
+                        type="text"
+                        placeholder="e.g. Apex Institute of Technology"
+                      />
+                    </label>
+
+                    <label className="field">
+                      Approval year
+                      <input
+                        required
+                        name="approval_year"
+                        type="number"
+                        defaultValue={new Date().getFullYear()}
+                        min={1950}
+                        max={2100}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="auth-grid-2">
+                    <label className="field">
+                      State / UT
+                      <input
+                        required
+                        name="state"
+                        type="text"
+                        placeholder="e.g. Maharashtra"
+                      />
+                    </label>
+
+                    <label className="field">
+                      Campus address
+                      <input
+                        required
+                        name="address"
+                        type="text"
+                        placeholder="City, District, PIN code"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="auth-grid-2">
+                    <label className="field">
+                      Ownership type
+                      <select name="ownership" defaultValue="private">
+                        <option value="private">Private</option>
+                        <option value="government">Government</option>
+                        <option value="government_aided">Government aided</option>
+                      </select>
+                    </label>
+
+                    <label className="field">
+                      Land arrangement
+                      <select name="land_arrangement" defaultValue="owned">
+                        <option value="owned">Owned</option>
+                        <option value="private_lease">Private lease</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="auth-form-section-title">Academic Programme</div>
+
+                  <div className="auth-grid-2">
+                    <label className="field">
+                      Initial programme
+                      <select name="programme" defaultValue="Engineering and Technology">
+                        <option value="Engineering and Technology">Engineering and Technology</option>
+                        <option value="Management">Management</option>
+                        <option value="Computer Applications">Computer Applications</option>
+                      </select>
+                    </label>
+
+                    <label className="field">
+                      Programme level
+                      <select name="level" defaultValue="undergraduate">
+                        <option value="undergraduate">Undergraduate</option>
+                        <option value="postgraduate">Postgraduate</option>
+                        <option value="diploma">Diploma</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="auth-form-section-title">Administrator Account</div>
+
+                  <div className="auth-grid-2">
+                    <label className="field">
+                      Administrator name
+                      <input
+                        required
+                        name="administrator_name"
+                        type="text"
+                        placeholder="Dr. Full Name"
+                      />
+                    </label>
+
+                    <label className="field">
+                      Contact email
+                      <input
+                        required
+                        name="contact_email"
+                        type="email"
+                        placeholder="admin@institution.edu.in"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="field">
+                    Account password
+                    <input
+                      required
+                      name="password"
+                      type="password"
+                      minLength={12}
+                      placeholder="At least 12 characters"
+                    />
+                    <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '2px' }}>
+                      Must be at least 12 characters long.
+                    </small>
+                  </label>
+
+                  {mutation.error && <ErrorState error={mutation.error} />}
+
+                  <button
+                    type="submit"
+                    className="auth-submit-btn"
+                    disabled={mutation.isPending}
+                  >
+                    {mutation.isPending ? 'Creating demo institution…' : 'Create demo institution'}
+                    <ArrowRight size={17} />
+                  </button>
+                </form>
+
+                <p className="auth-register-note">
+                  Already have an account? <Link to="/signin">Sign in to workspace</Link>
+                </p>
+              </>
+            )}
+          </div>
+
+          <footer className="auth-footer">
+            <ShieldCheck size={14} className="text-emerald-400" />
+            <span>Prototype environment · Demo data stored locally</span>
+          </footer>
+        </div>
+      </main>
     </div>
   )
 }
