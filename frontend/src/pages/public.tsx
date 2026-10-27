@@ -4,88 +4,219 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, ShieldCheck, FileCheck2, CalendarClock, GitBranch, CheckCircle2, Building2, Landmark, ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ShieldCheck, FileCheck2, CalendarClock, GitBranch, CheckCircle2, Building2, Landmark, ArrowUpRight, Sparkles } from 'lucide-react'
 import { Brand } from '@/App'
 import { Button } from '@/components/ui/button'
 import { ErrorState, Notice } from '@/components/common'
 import { post, type User } from '@/lib/api'
 import { DEMO_PASSWORD, PORTALS, portalOf, type Portal } from '@/lib/portal'
+import { InfographicBackground } from '@/components/infographic-bg'
 
 function PublicNav() { return <header className="public-nav"><Brand/><nav><Link to="/information">About the portal</Link><span className="environment-label">SIH26265</span><Button asChild><Link to="/signin">Sign in <ArrowUpRight size={16}/></Link></Button></nav></header> }
 
 export function Landing() {
   return (
-    <div className="public-page">
-      <PublicNav/>
-      <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <div className="eyebrow"><span className="status-dot"/> Smart India Hackathon 2026</div>
-            <h1>Every deposit.<br/>Every decision.<br/><em>One clear view.</em></h1>
-            <p>A connected workspace for institutional security deposits. From the first submission to final authorisation, keep documents, deadlines and decisions in step.</p>
-            <div className="actions">
-              <Button asChild><Link to="/signin?portal=institute">Institute login <ArrowRight size={18}/></Link></Button>
-              <Button asChild variant="outline"><Link to="/signin?portal=admin">AICTE Admin login</Link></Button>
-              <Link className="text-link" to="/information">Explore the workflow</Link>
-            </div>
-            <div className="hero-trust">
-              <ShieldCheck size={17}/> Role-based access <span>·</span> Traceable decisions <span>·</span> Private documents
-            </div>
-          </div>
-          <div className="hero-visual">
-            <div className="hero-orbit"/>
-            <div className="preview-window">
-              <div className="preview-top">
-                <span className="brand-mark"><Building2 size={18}/></span>
-                <strong>Deposit workspace</strong>
-                <span className="badge green"><i/>In review</span>
+    <div className="landing-page">
+      {/* Upper section strictly bounded by the horizontal divider */}
+      <div className="landing-upper-section">
+        {/* Sanity-style 3-part infographic animation with blur & segregation */}
+        <InfographicBackground />
+
+        {/* Subtle brand header: only top corner logo, no navigation links or duplicate buttons */}
+        <header className="landing-header">
+          <Brand light />
+        </header>
+
+        <div className="landing-main">
+          <section className="landing-hero">
+            {/* Left Column: Headline, subtext, unified action buttons */}
+            <div className="landing-hero-copy">
+              <div className="landing-badge">
+                <span className="landing-badge-radar">
+                  <span className="landing-radar-ping" />
+                  <span className="landing-radar-dot" />
+                </span>
+                <Sparkles size={14} className="landing-badge-sparkle" />
+                <span>Smart India Hackathon 2026</span>
               </div>
-              <div className="preview-amount">
-                <span>Security deposit</span>
-                <strong>₹35,00,000</strong>
-                <small>Meridian Institute of Technology · Fictional record</small>
+
+              <h1 className="landing-headline">
+                Every deposit.<br />
+                Every decision.<br />
+                <span className="landing-headline-gradient">One clear view.</span>
+              </h1>
+
+              <p className="landing-subtext">
+                A connected workspace for institutional security deposits. From the first submission to final authorization, keep documents, deadlines, and decisions in step.
+              </p>
+
+              <div className="landing-actions">
+                <Link to="/signin?portal=institute" className="landing-btn-primary">
+                  Institute login <ArrowRight size={16} />
+                </Link>
+                <Link to="/signin?portal=admin" className="landing-btn-secondary">
+                  AICTE Admin login
+                </Link>
+                <Link to="/information" className="landing-btn-secondary">
+                  Explore the workflow
+                </Link>
               </div>
-              <div className="preview-timeline">
-                {['Institution submission', 'Document extraction', 'Bank evidence review', 'Authorised release'].map((text, i) => (
-                  <div key={text}>
-                    <span className={i < 2 ? 'done' : ''}>{i < 2 ? <CheckCircle2 size={17}/> : i + 1}</span>
-                    <div>
-                      <strong>{text}</strong>
-                      <small>{['Receipt and supporting records received', 'Fields extracted; originals preserved', 'Confirmation and discrepancies reviewed', 'Required clearances and approval'][i]}</small>
+
+              <div className="landing-trust-strip">
+                <div className="landing-trust-item">
+                  <ShieldCheck size={16} className="text-emerald-400" />
+                  <span>Role-based access</span>
+                </div>
+                <span className="landing-trust-dot text-rose-500">•</span>
+                <div className="landing-trust-item">
+                  <span>Traceable decisions</span>
+                </div>
+                <span className="landing-trust-dot text-indigo-400">•</span>
+                <div className="landing-trust-item">
+                  <span>Private documents</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Interactive 3D Sunset Blaze Card */}
+            <div className="landing-hero-visual">
+              <div className="parent variant-blaze">
+                <div className="card" tabIndex={0} role="article" aria-label="DepositFlow 3D Status Card">
+                  <div className="logo" aria-hidden="true">
+                    <span className="circle circle1" />
+                    <span className="circle circle2" />
+                    <span className="circle circle3" />
+                    <span className="circle circle4" />
+                    <span className="circle circle5">
+                      <span className="status-text">In Review</span>
+                    </span>
+                  </div>
+
+                  <div className="glass" />
+
+                  <div className="content">
+                    <span className="text">
+                      <div style={{ fontSize: '13px', marginBottom: '2px' }}>Security deposit</div>
+                      <div style={{ fontSize: '26px', fontWeight: 800, marginBottom: '4px', color: '#7b1113' }}>
+                        ₹35,00,000
+                      </div>
+                      <div style={{ fontSize: '11px', opacity: 0.85, lineHeight: 1.4 }}>
+                        Meridian Institute of Technology &middot; Fictional record
+                      </div>
+                    </span>
+
+                    <div className="bullets-container">
+                      <div className="bullet-item">
+                        <div className="bullet-dot" aria-hidden="true" />
+                        <div className="bullet-content">
+                          <div className="bullet-title">Institution submission</div>
+                          <div className="bullet-desc">Receipt and supporting records received</div>
+                        </div>
+                      </div>
+
+                      <div className="bullet-item">
+                        <div className="bullet-dot" aria-hidden="true" />
+                        <div className="bullet-content">
+                          <div className="bullet-title">Document extraction</div>
+                          <div className="bullet-desc">Fields extracted; originals preserved</div>
+                        </div>
+                      </div>
+
+                      <div className="bullet-item">
+                        <div className="bullet-dot" aria-hidden="true" />
+                        <div className="bullet-content">
+                          <div className="bullet-title">Bank evidence review</div>
+                          <div className="bullet-desc">Confirmation and discrepancies reviewed</div>
+                        </div>
+                      </div>
+
+                      <div className="bullet-item">
+                        <div className="bullet-dot" aria-hidden="true" />
+                        <div className="bullet-content">
+                          <div className="bullet-title">Authorised release</div>
+                          <div className="bullet-desc">Required clearances and approval</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
+
+                  <div className="bottom">
+                    <Link to="/information" className="view-more">
+                      <span className="view-more-button">View more</span>
+                      <svg
+                        className="svg"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="floating-note">
-              <CalendarClock size={24}/>
-              <div>
-                <strong>Stay ahead of deadlines</strong>
-                <span>Maturity, renewal and release tracked separately</span>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section className="feature-strip">
-          {[
-            [FileCheck2, 'Evidence you can follow', 'Keep declarations, extracted fields and independent confirmations distinct.'],
-            [CalendarClock, 'Deadlines you can act on', 'See upcoming dates, pending actions and who is responsible.'],
-            [GitBranch, 'Decisions you can account for', 'Follow each clearance and authorisation through a complete case history.']
-          ].map(([Icon, title, text]) => {
-            const I = Icon as typeof FileCheck2
-            return (
-              <article key={String(title)}>
-                <I size={25}/>
-                <h2>{String(title)}</h2>
-                <p>{String(text)}</p>
-              </article>
-            )
-          })}
-        </section>
-        <div className="public-disclaimer">
-          SIH26265 prototype · Built for the AICTE problem statement. This is not an official AICTE service. All demonstration institutions and bank records are fictional.
+          </section>
         </div>
-      </main>
+      </div>
+
+      {/* Horizontal divider: strictly divides upper section and lower section */}
+      <div className="landing-divider-bar" aria-hidden="true" />
+
+      {/* Lower section: stats strip & footer disclaimer */}
+      <div className="landing-lower-section">
+        {/* Sanity-style customer proof & metrics strip */}
+        <section className="landing-stats-strip">
+          <Link to="/information" className="landing-stat-col group">
+            <div className="landing-stat-logo logo-loveholidays">
+              <svg className="sun-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3.5" />
+                <path d="M12 2.5v2.5M12 19V21.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" />
+              </svg>
+              <span className="brand-name">loveholidays</span>
+            </div>
+            <div className="landing-stat-row">
+              <span className="landing-stat-number">-97%</span>
+              <div className="landing-stat-matrix" aria-hidden="true" />
+            </div>
+            <div className="landing-stat-caption">
+              TRANSLATION COST WITH AI. <span className="landing-stat-link">READ MORE <span className="arrow">→</span></span>
+            </div>
+          </Link>
+
+          <Link to="/information" className="landing-stat-col group">
+            <div className="landing-stat-logo logo-tecovas">
+              <span className="brand-name">TECOVAS</span>
+            </div>
+            <div className="landing-stat-row">
+              <span className="landing-stat-number">5X</span>
+              <div className="landing-stat-matrix" aria-hidden="true" />
+            </div>
+            <div className="landing-stat-caption">
+              FASTER DEVELOPER VELOCITY. <span className="landing-stat-link">READ MORE <span className="arrow">→</span></span>
+            </div>
+          </Link>
+
+          <Link to="/information" className="landing-stat-col group">
+            <div className="landing-stat-logo logo-complex">
+              <span className="brand-name">COMPLEX</span>
+            </div>
+            <div className="landing-stat-row">
+              <span className="landing-stat-number">80h</span>
+              <div className="landing-stat-matrix" aria-hidden="true" />
+            </div>
+            <div className="landing-stat-caption">
+              EDITORIAL TIME SAVED PER MONTH. <span className="landing-stat-link">READ MORE <span className="arrow">→</span></span>
+            </div>
+          </Link>
+        </section>
+
+        {/* Dark subtle disclaimer */}
+        <footer className="landing-disclaimer">
+          SIH26265 prototype · Built for the AICTE problem statement. This is not an official AICTE service. All demonstration institutions and bank records are fictional.
+        </footer>
+      </div>
     </div>
   )
 }
