@@ -1,0 +1,50 @@
+# Fictional demo only. Create a PostgreSQL database and a private S3 bucket first.
+# No database, disk or GPU is purchased by this blueprint.
+services:
+  - type: web
+    name: depositflow-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    buildFilter:
+      paths:
+        - backend/**
+        - render.yaml
+    dockerCommand: python start_render.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: development
+      - key: SEED_DEMO
+        value: "true"
+      - key: DEMO_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: STORAGE_ENCRYPTION_KEY
+        sync: false
+      - key: STORAGE_BACKEND
+        value: s3
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_BUCKET
+        value: depositflow-private
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: REQUIRE_MALWARE_SCAN
+        value: "false"
+      - key: JOB_MODE
+        value: local
+      - key: EXTRACTION_PROVIDER
+        value: ocr
