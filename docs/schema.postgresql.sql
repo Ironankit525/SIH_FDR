@@ -587,5 +587,11 @@ ALTER TABLE security_deposits ADD CONSTRAINT fk_deposit_vigilance_cleared_by FOR
 
 UPDATE alembic_version SET version_num='verification_gate' WHERE alembic_version.version_num = 'comparison_keys';
 
+-- Running upgrade verification_gate -> cascade_evidence
+
+ALTER TABLE document_extractions ADD COLUMN evidence JSON DEFAULT '{}' NOT NULL;
+
+UPDATE alembic_version SET version_num='cascade_evidence' WHERE alembic_version.version_num = 'verification_gate';
+
 COMMIT;
 

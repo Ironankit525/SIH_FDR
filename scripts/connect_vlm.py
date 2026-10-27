@@ -59,6 +59,10 @@ def save_config(config, destination):
     existing = dotenv_values(destination, interpolate=False) if destination.exists() else {}
     if existing.get('ENVIRONMENT', 'development') != 'development' or os.environ.get('ENVIRONMENT', 'development') != 'development':
         raise ValueError('This helper configures development environments only.')
+    # Refreshing a worker key must not bypass an already-selected PDF/OCR cascade.
+    config = dict(config)
+    if existing.get('EXTRACTION_PROVIDER') == 'cascade':
+        config['EXTRACTION_PROVIDER'] = 'cascade'
     lines = [line for line in original.splitlines()
              if not re.match(r'^\s*(?:export\s+)?(' + '|'.join(KEYS) + r')\s*=', line)]
     def quote(value):

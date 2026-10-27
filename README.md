@@ -194,7 +194,7 @@ All application modules are under `backend/app/`.
 | `rules.py` | Effective-dated requirement rules, exemptions, multipliers and calculation snapshots |
 | `storage.py` | Upload validation, optional ClamAV scanning, Fernet encryption and local/S3 storage |
 | `extraction.py` | PDF text extraction, Tesseract fallback and heuristic structured-field parsing |
-| `extraction_engine.py` | OCR/local/HTTP extraction providers, strict VLM response validation and connection-error handling |
+| `extraction_engine.py` | PDF → OCR → VLM cascade, strict VLM response validation, preserved source evidence, completeness checks and extraction disagreements |
 | `jobs.py`, `worker.py` | Persistent claims, retries, recovery, local scheduling and optional Celery tasks |
 | `bank.py` | Bank adapter protocol and deterministic fictional verification fixtures |
 | `workflows.py` | Discrepancy detection, release prerequisites, reviewer separation and deadline reminders |

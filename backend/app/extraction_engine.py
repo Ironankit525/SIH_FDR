@@ -12,7 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 
 from .config import settings
 from .consistency import maturity_problem
-from .extraction import extract_text, ocr_text, pdf_text_layer, structure
+from .extraction import candidates, extract_text, ocr_text, pdf_text_layer, structure
+from .matching import same_amount, same_bank, same_name, same_text
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ class ExtractionResult(BaseModel):
     model_name: str | None = None
     model_version: str | None = None
     warnings: list[str] = Field(default_factory=list)
+    evidence: dict = Field(default_factory=dict)
     # Which stages ran and why the cascade moved on. Kept in the audit trail, not in the extraction row.
     stages: list[dict] = Field(default_factory=list)
 
@@ -166,12 +168,36 @@ def _from_text(text, method, provider):
     return ExtractionResult(method=method, provider=provider, original_text=text, fields=fields, confidences=confidences)
 
 
-def _finish(result, stages):
+def _finish(result, stages, sources=None):
     notes = [f"{s['stage']}: {s['outcome']}" + (f" ({'; '.join(s['reasons'])})" if s.get('reasons') else '')
              for s in stages if s['outcome'] not in ('accepted', 'not_applicable')]
     if notes:
         result.warnings = [*result.warnings, 'Extraction moved past earlier stages. ' + ' | '.join(notes)]
     result.stages = stages
+    snapshots, values = [], {}
+    for source in sources or [result]:
+        snapshot = {'provider': source.provider, 'method': source.method,
+                    'fields': dict(source.fields), 'confidences': dict(source.confidences),
+                    'original_text': source.original_text}
+        alternatives = ({key: options[0] for key, options in candidates(source.original_text).items()}
+                        if not source.provider.startswith('vlm') else {})
+        snapshot['candidates'] = alternatives
+        snapshots.append(snapshot)
+        for field, value in source.fields.items():
+            for candidate in alternatives.get(field, [value]):
+                values.setdefault(field, []).append({'source': source.provider, 'value': candidate})
+    conflicts = []
+    for field, observations in values.items():
+        compare = {'amount': same_amount, 'maturity_value': same_amount, 'rate': same_amount,
+                   'bank': same_bank, 'depositor_name': same_name}.get(field, same_text)
+        if any(not compare(observations[0]['value'], item['value']) for item in observations[1:]):
+            conflicts.append({'field': field, 'observations': observations})
+    # Models need not provide confidence scores. Missing fields and disagreements
+    # still require review; model confidence is not evidence of authenticity.
+    reasons = shortfall(result.fields, result.confidences if not result.provider.startswith('vlm') else
+                        {key: 1 for key in result.fields})
+    result.evidence = {'status': 'conflict' if conflicts else 'incomplete' if reasons else 'complete',
+                       'reasons': reasons, 'sources': snapshots, 'conflicts': conflicts, 'stages': stages}
     return result
 
 
@@ -180,7 +206,7 @@ def cascade_extract(data, content_type):
 
     The forensic text-layer-versus-OCR check reads the original file itself (see jobs.py), so falling back
     to OCR never discards the evidence it needs. Model output stays evidence, never bank approval."""
-    stages, partials = [], []
+    stages, partials, sources = [], [], []
 
     def attempt(stage, read):
         try:
@@ -188,6 +214,7 @@ def cascade_extract(data, content_type):
         except Exception:
             stages.append({'stage': stage, 'outcome': 'failed'})
             return None
+        sources.append(result)
         reasons = shortfall(result.fields, result.confidences)
         stages.append({'stage': stage, 'outcome': 'insufficient' if reasons else 'accepted', 'reasons': reasons,
                        'fields': sorted(result.fields), 'text_chars': len(result.original_text)})
@@ -204,7 +231,7 @@ def cascade_extract(data, content_type):
         if len(layer) >= MIN_TEXT_LAYER:
             done = attempt('pdf_text', lambda: _from_text(layer, 'embedded_pdf_text', 'pdf_text'))
             if done:
-                return _finish(done, stages)
+                return _finish(done, stages, sources)
         else:
             stages.append({'stage': 'pdf_text', 'outcome': 'no_text_layer', 'text_chars': len(layer)})
     else:
@@ -217,7 +244,7 @@ def cascade_extract(data, content_type):
         return _from_text(text, 'tesseract_ocr', 'ocr')
     done = attempt('ocr', read_ocr)
     if done:
-        return _finish(done, stages)
+        return _finish(done, stages, sources)
 
     best = max(partials, key=_quality, default=None)
     if not vlm_configured():
@@ -225,7 +252,7 @@ def cascade_extract(data, content_type):
         log.info('Extraction cascade stopped before the VLM: no worker is configured')
         if best is None:
             raise ExtractionFailure('Document extraction failed. Check readability and the configured extraction service, or request manual review.')
-        return _finish(best, stages)
+        return _finish(best, stages, sources)
 
     try:
         model = http_extract(data, content_type)
@@ -235,13 +262,14 @@ def cascade_extract(data, content_type):
         stages.append({'stage': 'vlm_http', 'outcome': 'failed', 'reasons': [str(failure)]})
         if best is None:
             raise
-        return _finish(best, stages)
+        return _finish(best, stages, sources)
+    sources.append(model)
     stages.append({'stage': 'vlm_http', 'outcome': 'accepted', 'fields': sorted(model.fields)})
     if best is not None and _quality(best)[0] > _quality(model)[0]:
         stages[-1]['outcome'] = 'insufficient'
         stages[-1]['reasons'] = ['returned fewer core fields than the earlier stage']
-        return _finish(best, stages)
-    return _finish(model, stages)
+        return _finish(best, stages, sources)
+    return _finish(model, stages, sources)
 
 
 def extract_document(data, content_type, *, provider=None):
@@ -251,9 +279,9 @@ def extract_document(data, content_type, *, provider=None):
     if provider == 'ocr':
         text, method = extract_text(data, content_type)
         fields, confidences = structure(text, method)
-        return ExtractionResult(method=method, provider='ocr', original_text=text, fields=fields, confidences=confidences)
+        return _finish(ExtractionResult(method=method, provider='ocr', original_text=text, fields=fields, confidences=confidences), [])
     if provider == 'vlm_http':
-        return http_extract(data, content_type)
+        return _finish(http_extract(data, content_type), [])
     if provider == 'vlm_local':
         module, separator, name = settings.vlm_local_callable.partition(':')
         if not separator or not module or not name or not settings.vlm_model:
@@ -264,5 +292,5 @@ def extract_document(data, content_type, *, provider=None):
             payload = infer(data, content_type)
         except Exception:
             raise ExtractionFailure('Local VLM inference failed. Check the model installation and inference function.') from None
-        return validate_model_result(payload, 'vlm_local')
+        return _finish(validate_model_result(payload, 'vlm_local'), [])
     raise ExtractionFailure('The extraction provider is not supported.')

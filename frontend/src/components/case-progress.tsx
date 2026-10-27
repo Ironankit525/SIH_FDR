@@ -6,7 +6,9 @@ export function CaseProgress({ deposit, role }: { deposit: Row; role: string }) 
   const pendingDocuments = deposit.documents.filter((doc: Row) => doc.instrument_id === deposit.instrument.id && ['queued', 'processing'].includes(doc.processing_status))
   const release = deposit.release
   const receipts = deposit.documents.filter((doc: Row) => doc.instrument_id === deposit.instrument.id && doc.category === 'instrument')
-  const extracted = receipts.length > 0 && pendingDocuments.length === 0 && receipts.some((doc: Row) => doc.processing_status === 'completed')
+  const latestReceipt = receipts.at(-1)
+  const extracted = pendingDocuments.length === 0 && latestReceipt?.processing_status === 'completed'
+    && (!latestReceipt.extraction?.evidence?.status || latestReceipt.extraction.evidence.status === 'complete')
   const bankConfirmed = deposit.instrument.verification_status === 'officially_confirmed' || (deposit.mock_verification_permitted && deposit.instrument.verification_status === 'mock_confirmed')
   const steps = [
     { name: 'Submitted', done: !!deposit.submitted_at },

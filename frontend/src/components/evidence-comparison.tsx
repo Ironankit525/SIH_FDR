@@ -1,6 +1,7 @@
 import type { Row } from '@/lib/api'
 import { label, money } from '@/lib/utils'
 import { Badge, Notice, Panel } from './common'
+import { ExtractionEvidence } from './extraction-evidence'
 
 const fields = ['bank', 'number', 'depositor_name', 'amount', 'issue_date', 'maturity_date']
 const present = (value: unknown) => value !== undefined && value !== null && value !== ''
@@ -36,6 +37,7 @@ export function EvidenceComparison({ deposit, canCorrect, onCorrect }: {
         <span>{isModel ? [extraction.model_name, extraction.model_version].filter(Boolean).join(' · ') : label(extraction.method)}</span>
         <small>Original values are preserved when a correction is recorded.</small>
       </div>}
+      <ExtractionEvidence evidence={extraction?.evidence}/>
       {extraction?.warnings?.map((warning: string, index: number) => <Notice key={index}>{warning}</Notice>)}
       <div className="table-scroll"><table className="comparison-table">
         <thead><tr><th>Field</th><th>Institution submitted</th><th>Document extraction</th><th>{evidence?.simulated ? 'SIMULATED bank evidence' : 'Bank evidence'}</th><th>Comparison</th></tr></thead>

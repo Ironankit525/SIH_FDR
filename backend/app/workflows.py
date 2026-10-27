@@ -54,7 +54,7 @@ DETECTOR_CODES = {"missing_document", "amount_shortfall", "rule_review", "mature
                   "depositor_not_institution", "lien_not_aicte", "lien_document_conflict", "duplicate_reference",
                   "duplicate_number_other_bank", "extracted_number_elsewhere", "reused_text", "maturity_value_inconsistent",
                   "bank_confirmed_mismatch"}
-DETECTOR_PREFIXES = ("extraction_missing_", "mismatch_", "forensic_")
+DETECTOR_PREFIXES = ("extraction_missing_", "extraction_conflict_", "extraction_incomplete", "mismatch_", "forensic_")
 
 
 def detector_owned(code):
@@ -142,6 +142,18 @@ def detect(db, deposit):
         extraction = db.scalar(select(Extraction).where(Extraction.document_id == doc.id))
         if not extraction:
             continue
+        evidence = extraction.evidence or {}
+        for conflict in evidence.get('conflicts', []):
+            field = conflict['field']
+            detail = '; '.join(f"{item['source']}: {item['value']}" for item in conflict['observations'])
+            raise_flag(f"extraction_conflict_{field}:{doc.id}",
+                       f"Extraction sources disagree on {field.replace('_', ' ')} ({detail}). This is not proof of document fraud.",
+                       'high', [field], 'extraction_comparison',
+                       'Compare the original receipt and each extraction source; record the reviewed value and resolve this task with a reason.')
+        if evidence.get('reasons'):
+            raise_flag(f"extraction_incomplete:{doc.id}",
+                       'Automatic extraction needs review: ' + '; '.join(evidence['reasons']),
+                       source='extraction_quality', next_step='Review the original receipt and record any missing or uncertain fields.')
         fields = corrected_fields(db, extraction)
         for key in ("bank", "number", "depositor_name", "amount", "issue_date", "maturity_date"):
             if key not in fields:

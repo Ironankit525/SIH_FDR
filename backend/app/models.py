@@ -166,6 +166,7 @@ class Extraction(Identity, Base):
     model_version: Mapped[str | None] = mapped_column(String(100), nullable=True)
     document_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     warnings: Mapped[list] = mapped_column(JSON, default=list, server_default='[]')
+    evidence: Mapped[dict] = mapped_column(JSON, default=dict, server_default='{}')
     text_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
 

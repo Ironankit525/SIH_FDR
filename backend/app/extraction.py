@@ -58,17 +58,51 @@ SEP = r"(?:\s*:\s*|\s+-\s*|\s*-\s+)"
 # Each field has a specific label and, where useful, a weaker fallback label.
 PATTERNS = {
     "bank": (r"(?:Bank(?: Name)?)" + SEP + r"([^\n]+)", None),
-    "number": (r"(?:FDR(?: Number| No\.?)?|Instrument (?:Number|No\.?))" + SEP + r"([A-Za-z0-9/_-]+)",
+    "number": (r"(?:FD(?:R)?(?: Number| No\.?)?|Instrument (?:Number|No\.?))" + SEP + r"([A-Za-z0-9/_-]+)",
                r"Reference" + SEP + r"([A-Za-z0-9/_-]+)"),
     "depositor_name": (r"Depositor(?: Name)?" + SEP + r"([^\n]+)", r"Institution(?: Name)?" + SEP + r"([^\n]+)"),
     # Maturity and interest amounts are different figures from the principal.
-    "amount": (r"(?<!Maturity )(?<!Interest )(?:Deposit Amount|Principal(?: Amount)?|Amount)" + SEP + r"(?:INR|Rs\.?|₹)?\s*([\d,]+(?:\.\d{1,2})?)", None),
-    "issue_date": (r"(?:Issue Date|Date of Deposit)" + SEP + r"([\d/.-]+)", None),
+    "amount": (r"(?<!Maturity )(?<!Interest )(?:Deposit Amount|Principal(?: Amount| Amt)?|Amount)" + SEP + r"(?:INR|Rs\.?|₹)?[ \t|]*([\d,]+(?:\.\d{1,2})?)(?![\w.,])", None),
+    "issue_date": (r"(?:Issue Date|Date of Issue|Date of Deposit)" + SEP + r"([\d/.-]+)", None),
     "maturity_date": (r"(?:Maturity Date|Date of Maturity)" + SEP + r"([\d/.-]+)", None),
     "rate": (r"(?:Rate of Interest|Interest Rate|ROI)" + SEP + r"([\d.]+)\s*%", None),
     "maturity_value": (r"Maturity (?:Value|Amount)" + SEP + r"(?:INR|Rs\.?|₹)?\s*([\d,]+(?:\.\d{1,2})?)", None),
     "lien": (r"(?:Lien(?: Marked)?(?: (?:in )?Favou?r of)?|Pledged (?:to|in favou?r of))" + SEP + r"([^\n]+)", None),
 }
+
+
+def rupee_words(raw):
+    """Conservative whole-rupee grammar; never turn arbitrary prose into an amount."""
+    text = raw.strip().lower().replace('-', ' ')
+    text = re.sub(r'^(?:inr|rupees|rs\.?)\s+', '', text)
+    text = re.sub(r'\s+(?:rupees\s+)?only\.?$', '', text)
+    units = dict(zip(('one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen').split(), range(1, 20)))
+    units.update(dict(zip('twenty thirty forty fifty sixty seventy eighty ninety'.split(), range(20, 100, 10))))
+    scales = {'thousand': 1000, 'lakh': 100000, 'lakhs': 100000, 'crore': 10000000, 'crores': 10000000}
+    total = group = 0
+    previous_scale = float('inf')
+    previous_unit = None
+    used_hundred = False
+    for word in text.split():
+        if word == 'and' and (total or group):
+            continue
+        if word in units:
+            n = units[word]
+            if previous_unit is not None and not (previous_unit >= 20 and previous_unit % 10 == 0 and n < 10):
+                return None
+            group += n
+            previous_unit = n
+        elif word == 'hundred' and 0 < group < 10 and not used_hundred:
+            group *= 100
+            previous_unit = None
+            used_hundred = True
+        elif word in scales and group and scales[word] < previous_scale:
+            total += group * scales[word]
+            previous_scale = scales[word]
+            group, previous_unit, used_hundred = 0, None, False
+        else:
+            return None
+    return float(total + group) if total + group > 0 else None
 
 
 def parse_value(key, raw):
@@ -97,12 +131,26 @@ def candidates(text):
                 continue
             values = []
             for match in re.finditer(pattern, text, re.I):
+                if key == 'amount':
+                    prefix = text[text.rfind('\n', 0, match.start()) + 1:match.start()]
+                    if re.search(r'\b(?:maturity|interest)\s*$', prefix, re.I):
+                        continue
                 value = parse_value(key, match.group(1))
                 if value is not None and value not in values:
                     values.append(value)
             if values:
                 found[key] = (values, is_fallback)
                 break
+    # Explicit principal labels only. Preserve a second, conflicting value instead
+    # of silently preferring digits over words (or vice versa).
+    words = r'^(?:Deposit Amount|Principal(?: Amount| Amt)?|Amount in words)'+ SEP + r'([^\n]+)$'
+    for match in re.finditer(words, text, re.I | re.M):
+        value = rupee_words(match.group(1))
+        if value is not None:
+            values, fallback = found.get('amount', ([], False))
+            if value not in values:
+                values.append(value)
+            found['amount'] = (values, fallback)
     return found
 
 
