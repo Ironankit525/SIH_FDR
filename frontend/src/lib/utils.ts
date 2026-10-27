@@ -7,6 +7,9 @@ export const label = (value: string = '') => value.replaceAll('_', ' ').replace(
 // Until the bank answers there is nothing to judge: say so plainly instead of implying a problem.
 const VERIFICATION_TEXT: Record<string, string> = {
   pending: 'Bank has not confirmed yet', mock_pending: 'Mock · bank has not confirmed yet', officially_confirmed: 'Confirmed by the bank',
+  bank_verified: 'Verified by issuing bank', bank_rejected: 'Rejected by issuing bank', bank_info_requested: 'Bank requested clarification',
+  sent: 'Forwarded to bank', under_verification: 'Under bank verification', verified: 'Verified', rejected: 'Rejected',
+  additional_info_required: 'Additional info required',
   mock_confirmed: 'Mock confirmed', mismatched: 'Bank reports a mismatch', inconclusive: 'Bank answer inconclusive', mock_inconclusive: 'Mock · inconclusive',
 }
 export const verificationLabel = (value: string = 'pending') => VERIFICATION_TEXT[value] ?? label(value)

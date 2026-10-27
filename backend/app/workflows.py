@@ -234,7 +234,7 @@ def release_blockers(db, deposit, release):
     # neutral because institutions read these blockers.
     assessment = latest_risk(db, deposit.id)
     level = assessment.level if assessment else "low"
-    valid_verification = ["officially_confirmed"]
+    valid_verification = ["officially_confirmed", "bank_verified"]
     mock_permitted = workflow.get("allow_mock_for_demo") and settings.environment != "production"
     if mock_permitted and level not in ("high", "critical"):
         valid_verification.append("mock_confirmed")
@@ -295,7 +295,7 @@ def readiness(db, deposit):
     from .risk import is_escalated, latest as latest_risk
     workflow = configuration(db, "workflow", DEFAULT_WORKFLOW)
     inst = current_instrument(db, deposit.id)
-    accepted = ["officially_confirmed"] + (["mock_confirmed"] if workflow.get("allow_mock_for_demo") and settings.environment != "production" else [])
+    accepted = ["officially_confirmed", "bank_verified"] + (["mock_confirmed"] if workflow.get("allow_mock_for_demo") and settings.environment != "production" else [])
     confirmed = bool(inst and inst.verification_status in accepted)
     receipts = db.scalars(select(Document).where(Document.instrument_id == inst.id, Document.category == "instrument")).all() if inst else []
     checked = bool(receipts) and all(d.processing_status == "completed" for d in receipts)

@@ -97,6 +97,11 @@ def deposit_detail(db, deposit, user):
     for request in db.scalars(select(VerificationRequest).where(VerificationRequest.deposit_id == deposit.id).order_by(VerificationRequest.created_at.desc())).all():
         item = record(request)
         item["evidence"] = record(db.scalar(select(VerificationEvidence).where(VerificationEvidence.request_id == request.id)))
+        req_user = db.get(User, request.requested_by) if request.requested_by else None
+        item["requested_by_name"] = req_user.name if req_user else None
+        if getattr(request, "bank_user_id", None):
+            bank_user = db.get(User, request.bank_user_id)
+            item["bank_user_name"] = bank_user.name if bank_user else None
         result["verifications"].append(item)
     result["replacements"] = [record(i) for i in db.scalars(select(Replacement).where(Replacement.deposit_id == deposit.id)).all()]
     release = db.scalar(select(ReleaseRequest).where(ReleaseRequest.deposit_id == deposit.id))

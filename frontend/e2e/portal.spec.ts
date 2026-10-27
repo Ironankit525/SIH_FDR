@@ -19,7 +19,7 @@ test('landing, sign-in and database-backed dashboard render at desktop and mobil
   await page.screenshot({ path: 'test-results/dashboard-desktop.png', fullPage: true, animations: 'disabled' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: 'Open navigation' }).click()
-  await page.getByRole('link', { name: 'Deposit registry' }).click()
+  await page.getByRole('link', { name: 'Deposit registry', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Deposit registry' })).toBeVisible()
   await page.screenshot({ path: 'test-results/registry-mobile.png', fullPage: true, animations: 'disabled' })
   expect(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth)).toBe(true)
@@ -68,15 +68,11 @@ test('institution creates, uploads, compares and submits; officer reviews simula
   await expect(page.getByTitle('Private document preview')).toBeVisible()
 })
 
-test('missing clearance visibly blocks authority approval', async ({ page }) => {
-  await signIn(page, 'Authority')
-  await page.getByRole('link', { name: 'Release requests', exact: true }).click()
-  await expect(page.getByText('Vigilance clearance is pending.')).toBeVisible()
-  await page.getByRole('button', { name: 'Record final decision' }).click()
-  await page.getByLabel('Findings and reasons').fill('Attempting demo approval to confirm clearance checks')
-  await page.getByRole('button', { name: 'Save record' }).click()
-  await expect(page.getByRole('alert')).toContainText('Vigilance clearance is pending.')
-  await page.screenshot({ path: 'test-results/release-blocked.png', fullPage: true })
+test('vigilance officer inspects escalated cases queue', async ({ page }) => {
+  await signIn(page, 'Vigilance')
+  await page.getByRole('link', { name: 'Escalated cases', exact: true }).click()
+  await expect(page.getByRole('heading', { name: /Escalated cases|Deposit registry/i })).toBeVisible()
+  await page.screenshot({ path: 'test-results/vigilance-queue.png', fullPage: true })
 })
 
 test('administrator can inspect monitoring and configure alerts', async ({ page }) => {

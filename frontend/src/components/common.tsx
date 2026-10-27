@@ -8,7 +8,7 @@ import { haptic } from '@/lib/feedback'
 import type { Row } from '@/lib/api'
 
 export function Badge({ value, children }: { value: string; children?: ReactNode }) {
-  const color = /officially_confirmed|approved|completed|resolved|active|authorised|^verified$/.test(value) ? 'green' : /mock/.test(value) ? 'purple' : /failed|high|rejected|overdue|mismatched/.test(value) ? 'red' : /pending|warning|clarification|review|queued|matured|proposed/.test(value) ? 'amber' : 'blue'
+  const color = /officially_confirmed|bank_verified|approved|completed|resolved|active|authorised|^verified$/.test(value) ? 'green' : /mock/.test(value) ? 'purple' : /failed|high|rejected|bank_rejected|overdue|mismatched/.test(value) ? 'red' : /pending|warning|clarification|review|queued|matured|proposed|sent|under_verification|additional_info_required|bank_info_requested/.test(value) ? 'amber' : 'blue'
   return <span className={`badge ${color}`}><i/>{children || label(value)}</span>
 }
 // The level is always written out, so the dot's colour never carries the meaning alone.
@@ -21,7 +21,25 @@ export function RiskBadge({ risk }: { risk?: Row | null }) {
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: string; title: string; description?: string; actions?: ReactNode }) { return <div className="page-heading"><div>{eyebrow && <div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{description && <p>{description}</p>}</div>{actions && <div className="actions">{actions}</div>}</div> }
 export function Panel({ title, subtitle, actions, children, className = '' }: { title?: string; subtitle?: string; actions?: ReactNode; children: ReactNode; className?: string }) { return <section className={`panel ${className}`}>{title && <div className="panel-heading"><div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>{actions}</div>}{children}</section> }
 export function Loading() { return <div className="loading"><Loader2 className="spin" size={24}/> Loading portal records…</div> }
-export function ErrorState({ error, retry }: { error: unknown; retry?: () => void }) { return <div role="alert" className="notice error"><AlertTriangle size={20}/><div><strong>Unable to complete this request</strong><p>{error instanceof Error ? error.message : 'An unexpected error occurred.'}</p>{retry && <Button variant="outline" onClick={retry}>Try again</Button>}</div></div> }
+export function ErrorState({ error, retry }: { error: unknown; retry?: () => void }) {
+  const message = error instanceof Error ? error.message : 'An unexpected error occurred.'
+  const blockers = (error as any)?.blockers
+  return (
+    <div role="alert" className="notice error">
+      <AlertTriangle size={20}/>
+      <div>
+        <strong>Unable to complete this request</strong>
+        <p>{message}</p>
+        {Array.isArray(blockers) && blockers.length > 0 && (
+          <ul className="error-blockers" style={{ marginTop: '0.5rem', paddingLeft: '1.25rem' }}>
+            {blockers.map((b: string, i: number) => <li key={i}>{b}</li>)}
+          </ul>
+        )}
+        {retry && <Button variant="outline" onClick={retry}>Try again</Button>}
+      </div>
+    </div>
+  )
+}
 export function Empty({ title = 'No records to show', message = 'Records will appear here when an action is recorded.', action }: { title?: string; message?: string; action?: ReactNode }) { return <div className="empty"><Inbox size={32}/><h3>{title}</h3><p>{message}</p>{action}</div> }
 export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?: string }) { return <div className={`notice ${tone}`}><AlertTriangle size={18}/><div>{children}</div></div> }
 export function Stat({ title, value, detail, icon, accent = '' }: { title: string; value: ReactNode; detail: string; icon: ReactNode; accent?: string }) { return <div className={`stat-card ${accent}`}><div className="stat-top"><span>{title}</span><span className="stat-icon">{icon}</span></div><div className="stat-value">{value}</div><div className="stat-detail"><span className="status-dot"/>{detail}</div></div> }

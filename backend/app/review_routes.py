@@ -264,6 +264,40 @@ def manual_request(deposit_id: str, body: schemas.VerificationInput, user=Depend
     return record(request)
 
 
+@router.post("/deposits/{deposit_id}/verification/forward-to-bank", status_code=201)
+def forward_to_bank(deposit_id: str, body: schemas.ForwardToBankInput, user=Depends(current_user), db=Depends(get_db)):
+    deposit = assigned_review(db, user, deposit_id)
+    inst = current_instrument(db, deposit.id)
+    # Check if a pending or active request already exists for this bank
+    existing = db.scalar(
+        select(VerificationRequest.id).where(
+            VerificationRequest.deposit_id == deposit.id,
+            VerificationRequest.instrument_id == inst.id,
+            VerificationRequest.bank_name == body.bank_name,
+            VerificationRequest.status.in_(["pending", "sent", "under_verification"])
+        )
+    )
+    if existing:
+        raise HTTPException(409, f"A verification request has already been forwarded to {body.bank_name} and is currently awaiting review.")
+    
+    request = VerificationRequest(
+        deposit_id=deposit.id,
+        instrument_id=inst.id,
+        channel="bank_portal",
+        requested_by=user.id,
+        status="sent",
+        bank_name=body.bank_name,
+        officer_notes=body.notes
+    )
+    db.add(request)
+    audit(
+        db, user, "verification_forwarded_to_bank", deposit.id, deposit.institution_id,
+        after={"bank_name": body.bank_name, "notes": body.notes, "instrument_number": inst.number}
+    )
+    db.commit()
+    return deposit_detail(db, deposit, user)
+
+
 @router.post("/verifications/{request_id}/evidence")
 def manual_evidence(request_id: str, body: schemas.EvidenceInput, user=Depends(current_user), db=Depends(get_db)):
     request = db.get(VerificationRequest, request_id)

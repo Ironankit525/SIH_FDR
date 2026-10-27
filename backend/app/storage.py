@@ -22,11 +22,18 @@ def validate_file(data, filename):
     try:
         if data.startswith(b"%PDF-") and suffix == ".pdf":
             with fitz.open(stream=data, filetype="pdf") as doc:
-                if doc.is_encrypted or not 1 <= len(doc) <= 15 or doc.embfile_count():
-                    raise ValueError("Encrypted PDFs, attachments or more than 15 pages are not supported")
+                if doc.is_encrypted or not 1 <= len(doc) <= 15:
+                    raise ValueError("Encrypted PDFs or PDFs with more than 15 pages are not supported")
+                if doc.embfile_count():
+                    for name in doc.embfile_names():
+                        if name in ("Content Credentials", "c2pa") or name.lower().endswith(".c2pa"):
+                            continue
+                        ext = Path(name).suffix.lower()
+                        if ext in (".exe", ".js", ".vbs", ".bat", ".cmd", ".scr", ".sh", ".py", ".bin", ".msi", ".jar") or not ext:
+                            raise ValueError("Active or executable attachments are not permitted")
                 for xref in range(1, doc.xref_length()):
                     obj = doc.xref_object(xref)
-                    if any(term in obj for term in ("/JavaScript", "/JS", "/Launch", "/RichMedia", "/EmbeddedFile")):
+                    if any(term in obj for term in ("/JavaScript", "/JS", "/Launch", "/RichMedia")):
                         raise ValueError("Active PDF content is not permitted")
             mime = "application/pdf"
         elif suffix in (".png", ".jpg", ".jpeg"):
