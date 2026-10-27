@@ -2,6 +2,8 @@
 
 Start `python3 scripts/dev.py` and open http://localhost:5173. Every account uses the configured demo password (default `DemoFlow2026!`). Use the sign-out icon to switch roles. The seed is idempotent; reset instructions are in README.
 
+Tabs in one browser profile share a login. Signing in as another account or signing out locks older tabs and clears their cached account data; select **Reopen workspace** to load the current session. Save your draft before switching accounts because unsaved edits are discarded. For simultaneous institution and officer testing, use separate browser profiles or different browsers.
+
 ## 1. Correct submission
 
 1. Sign in as `institution@demo.local`; open `DF-<year>-000001` / `MATCH-001`.
