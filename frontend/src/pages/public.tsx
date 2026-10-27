@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -14,7 +14,6 @@ import {
   Building2,
   Landmark,
   ArrowUpRight,
-  Sparkles,
   Scale,
   UploadCloud,
   UserCheck,
@@ -31,8 +30,9 @@ import { ErrorState, Notice } from '@/components/common'
 import { post, type User } from '@/lib/api'
 import { DEMO_PASSWORD, PORTALS, portalOf, type Portal } from '@/lib/portal'
 import { InfographicBackground } from '@/components/infographic-bg'
+import { DashboardSkeleton } from '@/components/dashboard-skeleton'
 
-function PublicNav() { return <header className="public-nav"><Brand/><nav><Link to="/information">About the portal</Link><span className="environment-label">SIH26265</span><Button asChild><Link to="/signin">Sign in <ArrowUpRight size={16}/></Link></Button></nav></header> }
+function PublicNav() { return <header className="public-nav"><Brand/><nav><Link to="/information">About the portal</Link><Button asChild><Link to="/signin">Sign in <ArrowUpRight size={16}/></Link></Button></nav></header> }
 
 export function Landing() {
   return (
@@ -51,14 +51,6 @@ export function Landing() {
           <section className="landing-hero">
             {/* Left Column: Headline, subtext, unified action buttons */}
             <div className="landing-hero-copy">
-              <div className="landing-badge">
-                <span className="landing-badge-radar">
-                  <span className="landing-radar-ping" />
-                  <span className="landing-radar-dot" />
-                </span>
-                <Sparkles size={14} className="landing-badge-sparkle" />
-                <span>Smart India Hackathon 2026</span>
-              </div>
 
               <h1 className="landing-headline">
                 Every deposit.<br />
@@ -76,9 +68,6 @@ export function Landing() {
                 </Link>
                 <Link to="/signin?portal=admin" className="landing-btn-secondary">
                   AICTE Admin login
-                </Link>
-                <Link to="/information" className="landing-btn-secondary">
-                  Explore the workflow
                 </Link>
               </div>
 
@@ -162,7 +151,7 @@ export function Landing() {
 
                   <div className="bottom">
                     <Link to="/information" className="view-more">
-                      <span className="view-more-button">View more</span>
+                      <span className="view-more-button">Workflow</span>
                       <svg
                         className="svg"
                         xmlns="http://www.w3.org/2000/svg"
@@ -170,7 +159,7 @@ export function Landing() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="m6 9 6 6 6-6" />
+                        <path d="m9 18 6-6-6-6" />
                       </svg>
                     </Link>
                   </div>
@@ -253,9 +242,19 @@ export function SignIn() {
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
   const portal: Portal = params.get('portal') === 'admin' ? 'admin' : 'institute'
-  const form = useForm<Login>({ resolver: zodResolver(loginSchema), defaultValues: { email: '', password: '' } })
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const form = useForm<Login>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: PORTALS[portal].demoEmail, password: DEMO_PASSWORD },
+  })
+
+  useEffect(() => {
+    form.reset({ email: PORTALS[portal].demoEmail, password: DEMO_PASSWORD })
+  }, [portal, form])
+
   const mutation = useMutation({
     mutationFn: async (data: Login) => {
+      setIsSigningIn(true)
       const user = await post<User>('/auth/login', data)
       // Each door admits only its own accounts, so an official never lands in the Institute workspace or the reverse.
       if (portalOf(user.role) !== portal) {
@@ -264,10 +263,31 @@ export function SignIn() {
       }
       return user
     },
-    onSuccess: user => { qc.clear(); qc.setQueryData(['me'], user); navigate('/app') },
+    onSuccess: async user => {
+      qc.clear()
+      qc.setQueryData(['me'], user)
+      // Allow brief moment for smooth skeleton preloader visibility and fade
+      await new Promise(r => setTimeout(r, 700))
+      navigate('/app')
+    },
+    onError: () => {
+      setIsSigningIn(false)
+    },
   })
-  const choose = (next: Portal) => { setParams({ portal: next }, { replace: true }); form.reset({ email: '', password: '' }); mutation.reset() }
+  const choose = (next: Portal) => {
+    setParams({ portal: next }, { replace: true })
+    form.reset({ email: PORTALS[next].demoEmail, password: DEMO_PASSWORD })
+    mutation.reset()
+  }
   const Copy = PORTAL_COPY[portal]
+
+  if (isSigningIn) {
+    return (
+      <div className="dashboard-skeleton-overlay">
+        <DashboardSkeleton portal={portal} />
+      </div>
+    )
+  }
 
   return (
     <div className="auth-page">
@@ -281,14 +301,6 @@ export function SignIn() {
           </header>
 
           <div className="auth-story-body">
-            <div className="landing-badge">
-              <span className="landing-badge-radar">
-                <span className="landing-radar-ping" />
-                <span className="landing-radar-dot" />
-              </span>
-              <Sparkles size={14} className="landing-badge-sparkle" />
-              <span>Smart India Hackathon 2026 · Unified Access</span>
-            </div>
 
             <h1 className="auth-story-headline">
               Good governance<br />
@@ -398,54 +410,6 @@ export function SignIn() {
               </button>
             </form>
 
-            <div className="demo-login">
-              <strong>Explore the fictional demo</strong>
-              <p>
-                {portal === 'admin'
-                  ? 'Signs in as the portal administrator; the header then lets you act as any other official.'
-                  : `Signs in as ${PORTALS.institute.demoLabel}.`}
-              </p>
-
-              <button
-                type="button"
-                className="demo-btn-single"
-                onClick={() => {
-                  form.setValue('email', PORTALS[portal].demoEmail)
-                  form.setValue('password', DEMO_PASSWORD)
-                }}
-              >
-                Use the demo {PORTALS[portal].short.toLowerCase()} account
-              </button>
-
-              <div className="demo-roles">
-                {[
-                  ['institution', 'Institution'],
-                  ['officer', 'Verification'],
-                  ['clearance', 'Clearance: PGRC'],
-                  ['vigilance', 'Clearance: Vigilance'],
-                  ['authority', 'Authority'],
-                  ['admin', 'Admin'],
-                  ['auditor', 'Auditor'],
-                  ['bank', 'Bank Officer']
-                ].map(([email, title]) => (
-                  <button
-                    key={email}
-                    type="button"
-                    onClick={() => {
-                      const targetPortal: Portal = email === 'institution' ? 'institute' : 'admin'
-                      if (portal !== targetPortal) {
-                        choose(targetPortal)
-                      }
-                      form.setValue('email', `${email}@demo.local`)
-                      form.setValue('password', 'DemoFlow2026!')
-                    }}
-                  >
-                    {title}
-                  </button>
-                ))}
-              </div>
-              <small>Local demo credentials only. If the seed password was changed, enter your configured password.</small>
-            </div>
 
             {portal === 'institute' && (
               <p className="auth-register-note">
@@ -490,14 +454,6 @@ export function Register() {
           </header>
 
           <div className="auth-story-body">
-            <div className="landing-badge">
-              <span className="landing-badge-radar">
-                <span className="landing-radar-ping" />
-                <span className="landing-radar-dot" />
-              </span>
-              <Sparkles size={14} className="landing-badge-sparkle" />
-              <span>Smart India Hackathon 2026 · Onboarding</span>
-            </div>
 
             <h1 className="auth-story-headline">
               Empowering<br />
@@ -813,10 +769,6 @@ export function Information() {
               <ArrowLeft size={16} />
               <span>Back to home</span>
             </Link>
-            <span className="landing-badge-radar-inline">
-              <span className="landing-radar-dot" />
-              <span>SIH26265</span>
-            </span>
             <Link to="/signin" className="landing-btn-primary info-nav-btn">
               <span>Sign in</span>
               <ArrowUpRight size={15} />
@@ -830,14 +782,6 @@ export function Information() {
         <InfographicBackground />
 
         <div className="info-hero-content">
-          <div className="landing-badge">
-            <span className="landing-badge-radar">
-              <span className="landing-radar-ping" />
-              <span className="landing-radar-dot" />
-            </span>
-            <Sparkles size={14} className="landing-badge-sparkle" />
-            <span>Smart India Hackathon 2026 · Architectural Guide</span>
-          </div>
 
           <h1 className="info-hero-headline">
             A complete view of<br />

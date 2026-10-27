@@ -1,14 +1,15 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { Routes, Route, Navigate, Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Building2, ArrowRight, ShieldCheck, Settings, X } from 'lucide-react'
-import { api, type User } from './lib/api'
+import { Routes, Route, Navigate, Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Building2, ArrowRight, ShieldCheck, LogOut, X } from 'lucide-react'
+import { api, post, type User } from './lib/api'
 import { navigationFor, linkActive } from './lib/nav'
 import { PORTALS, portalOf } from './lib/portal'
 import { label } from './lib/utils'
 import { Loading } from './components/common'
+import { DashboardSkeleton } from './components/dashboard-skeleton'
 import { useDrawerGesture } from './components/motion'
-import { GlobalSearch, MenuButton, NotificationDrawer, PortalBadge, RoleSwitcher, SectionTabs, ThemeSwitcher, UserMenu } from './components/shell'
+import { GlobalSearch, MenuButton, NotificationDrawer, PortalBadge, RoleSwitcher, SectionTabs, UserMenu } from './components/shell'
 import { Landing, SignIn, Register, Information } from './pages/public'
 import { Dashboard, Deposits, Institutions, Requirement, Notifications, SettingsPage, Reports, AuditPage } from './pages/overview'
 import { DepositForm, CaseDetail } from './pages/case'
@@ -46,12 +47,26 @@ function AppIndex() {
 
 function Shell() {
   const userQuery = useQuery<User>({ queryKey: ['me'], queryFn: () => api('/auth/me'), retry: false })
+  const qc = useQueryClient()
+  const navigate = useNavigate()
   const location = useLocation(); const [mobile, setMobile] = useState(false); const [logoutError, setLogoutError] = useState(''); const [scrolled, setScrolled] = useState(false)
   const drawerRef = useRef<HTMLElement>(null); const scrimRef = useRef<HTMLDivElement>(null)
   useDrawerGesture(drawerRef, scrimRef, mobile, setMobile, !!userQuery.data)
   // The top bar's soft edge shows only once content is underneath it.
   useEffect(() => { const onScroll = () => setScrolled(window.scrollY > 4); onScroll(); window.addEventListener('scroll', onScroll, { passive: true }); return () => window.removeEventListener('scroll', onScroll) }, [])
-  if (userQuery.isPending) return <Loading/>
+
+  const handleLogout = async () => {
+    try {
+      setMobile(false)
+      await post('/auth/logout')
+      qc.clear()
+      navigate('/signin')
+    } catch (e) {
+      setLogoutError((e as Error).message)
+    }
+  }
+
+  if (userQuery.isPending) return <DashboardSkeleton portal="institute"/>
   if (!userQuery.data) return <Navigate to="/signin" replace/>
   const user = userQuery.data; const portal = portalOf(user.role)
   const navigation = navigationFor(user); const links = navigation.flatMap(group => group.links)
@@ -92,7 +107,15 @@ function Shell() {
               <p>Secure records. Clear responsibilities. Complete histories.</p>
               <Link to="/information">Portal guide <ArrowRight size={14}/></Link>
             </div>
-            <NavLink to="/app/settings" className="nav-link"><Settings size={18}/>Settings</NavLink>
+            <button
+              type="button"
+              className="nav-link sidebar-logout-btn"
+              aria-label="Sign out"
+              onClick={handleLogout}
+            >
+              <LogOut size={18}/>
+              <span>Sign out</span>
+            </button>
             <div className="sidebar-footer"><span className="status-dot"/> SIH 2026 · Prototype v1.0</div>
           </div>
         </aside>
@@ -107,7 +130,6 @@ function Shell() {
             <GlobalSearch/>
             <div className="topbar-actions">
               <RoleSwitcher user={user}/>
-              <ThemeSwitcher/>
               <NotificationDrawer/>
               <div className="topbar-divider"/>
               <UserMenu user={user} onError={setLogoutError}/>

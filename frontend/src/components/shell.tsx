@@ -74,13 +74,17 @@ export function RoleSwitcher({ user }: { user: User }) {
   </label>
 }
 
-export function UserMenu({ user, onError }: { user: User; onError: (message: string) => void }) {
-  const qc = useQueryClient(); const navigate = useNavigate()
+export function UserMenu({ user }: { user: User; onError?: (message: string) => void }) {
   const initials = user.name.split(' ').slice(0, 2).map(part => part[0]).join('')
-  return <>
-    <Link to="/app/settings" className="user-chip" title="Account settings"><span className="avatar">{initials}</span><span className="user-label"><strong>{user.name}</strong><span>{label(user.role)}{user.clearance_cell ? ` · ${user.clearance_cell}` : ''}</span></span></Link>
-    <button className="icon-button" aria-label="Sign out" onClick={async () => { try { await post('/auth/logout'); qc.clear(); navigate('/signin') } catch (e) { onError((e as Error).message) } }}><LogOut size={17}/></button>
-  </>
+  return (
+    <Link to="/app/settings" className="user-chip" title="Account settings" aria-label={`Account settings for ${user.name}`}>
+      <span className="avatar">{initials}</span>
+      <span className="user-label">
+        <strong>{user.name}</strong>
+        <span>{label(user.role)}{user.clearance_cell ? ` · ${user.clearance_cell}` : ''}</span>
+      </span>
+    </Link>
+  )
 }
 
 export function MenuButton({ onOpen }: { onOpen: () => void }) {
