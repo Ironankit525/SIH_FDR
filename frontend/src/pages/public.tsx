@@ -4,7 +4,26 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, ShieldCheck, FileCheck2, CalendarClock, GitBranch, CheckCircle2, Building2, Landmark, ArrowUpRight, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  ShieldCheck,
+  FileCheck2,
+  CalendarClock,
+  GitBranch,
+  CheckCircle2,
+  Building2,
+  Landmark,
+  ArrowUpRight,
+  Sparkles,
+  Scale,
+  UploadCloud,
+  UserCheck,
+  AlertCircle,
+  Layers,
+  ArrowLeft,
+  ShieldAlert,
+  ScrollText,
+} from 'lucide-react'
 import { Brand } from '@/App'
 import { Button } from '@/components/ui/button'
 import { ErrorState, Notice } from '@/components/common'
@@ -383,28 +402,240 @@ export function Register() {
 }
 
 export function Information() {
+  const steps = [
+    {
+      num: '01',
+      title: 'Establish the requirement',
+      description:
+        'An institution selects its programme. The versioned rule engine automatically calculates the configured amount, applies exemptions, and flags conditions requiring manual regulatory review.',
+      icon: Scale,
+      tags: ['Versioned rule engine', 'Dynamic amount calculation', 'Exemption verification']
+    },
+    {
+      num: '02',
+      title: 'Submit and preserve evidence',
+      description:
+        'Create a draft case, upload the FDR or bank receipt, inspect automated OCR extracted fields, and record reasoned corrections. Original documents and extraction results remain permanently preserved in immutable storage.',
+      icon: UploadCloud,
+      tags: ['Tamper-proof storage', 'Automated OCR extraction', 'Audited corrections']
+    },
+    {
+      num: '03',
+      title: 'Officer verification and evaluation',
+      description:
+        'A verification officer claims the submission, compares supporting evidence against instrument records, records findings, and evaluates algorithmic risk scoring. Discrepancies require reasoned review before progression.',
+      icon: UserCheck,
+      tags: ['Verification queue', 'Risk evaluation', 'Discrepancy review']
+    },
+    {
+      num: '04',
+      title: 'Vigilance escalations',
+      description:
+        'When suspicious signals or discrepancy limits are breached, cases automatically escalate to the dedicated Vigilance cell. Normal review halts until Vigilance evaluates findings and clears the escalation.',
+      icon: ShieldAlert,
+      tags: ['Suspicion threshold gating', 'Vigilance review', 'Formal clearance']
+    },
+    {
+      num: '05',
+      title: 'Admin configuration and audit trail',
+      description:
+        'Administrators manage versioned rule configurations, workflow parameters, and user permissions. Independent auditors inspect the append-only event ledger with cryptographic record verification.',
+      icon: ScrollText,
+      tags: ['Versioned rule engine', 'Immutable audit ledger', 'System administration']
+    }
+  ]
+
+  const pillars = [
+    {
+      icon: ShieldCheck,
+      title: 'Four Dedicated Role Domains',
+      desc: 'Focused separation of concerns strictly isolated between Educational Institutions, Verification Officers, the Vigilance Escalation Cell, and System Administrators/Auditors.'
+    },
+    {
+      icon: FileCheck2,
+      title: 'Auditable Evidence Trail',
+      desc: 'Every file upload, OCR parse, discrepancy override, and timestamped sign-off is permanently recorded in an append-only audit ledger.'
+    },
+    {
+      icon: GitBranch,
+      title: 'Automated Escalation Governance',
+      desc: 'Built-in threshold safeguards automatically intercept suspicious submissions and route them directly to the Vigilance cell for reasoned evaluation.'
+    }
+  ]
+
   return (
-    <div className="public-page">
-      <PublicNav/>
-      <main className="narrow-page">
-        <div className="eyebrow">Portal guide</div>
-        <h1>A complete view of each deposit</h1>
-        <p className="lead">DepositFlow brings institution submissions, document evidence and authorised decisions into one traceable workflow.</p>
-        <Notice>This is a hackathon prototype, not an official government portal. Seeded rules are illustrative and mock bank responses are explicitly simulated.</Notice>
-        {[
-          ['1. Establish the requirement', 'An institution selects its programme. The versioned rule engine explains the configured amount, exemptions and any need for manual review.'],
-          ['2. Submit and preserve evidence', 'Create a draft, upload a receipt, inspect extracted fields and record corrections. Original documents and extraction results remain available.'],
-          ['3. Review and verify', 'A verification officer claims the case, compares the evidence and records simulated bank results or authorised manual confirmation. Automated discrepancies require reasoned review.'],
-          ['4. Monitor and renew', 'Track bank maturity, regulatory security periods and renewal action dates separately. A replacement links to the previous instrument and its documents.'],
-          ['5. Request and authorise release', 'Submit supporting records and obtain every configured clearance. The approving authority records the decision and completion reference. The portal never transfers money.']
-        ].map(([title, text]) => (
-          <section className="guide-step" key={title}>
-            <h2>{title}</h2>
-            <p>{text}</p>
-          </section>
-        ))}
-        <Button asChild><Link to="/signin">Open your workspace <ArrowRight size={16}/></Link></Button>
+    <div className="info-page">
+      {/* Top Header / Nav */}
+      <header className="info-header">
+        <div className="info-header-inner">
+          <Brand light />
+          <nav className="info-header-nav">
+            <Link to="/" className="info-back-link">
+              <ArrowLeft size={16} />
+              <span>Back to home</span>
+            </Link>
+            <span className="landing-badge-radar-inline">
+              <span className="landing-radar-dot" />
+              <span>SIH26265</span>
+            </span>
+            <Link to="/signin" className="landing-btn-primary info-nav-btn">
+              <span>Sign in</span>
+              <ArrowUpRight size={15} />
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero Section with Live Infographic Background */}
+      <div className="info-hero-section">
+        <InfographicBackground />
+
+        <div className="info-hero-content">
+          <div className="landing-badge">
+            <span className="landing-badge-radar">
+              <span className="landing-radar-ping" />
+              <span className="landing-radar-dot" />
+            </span>
+            <Sparkles size={14} className="landing-badge-sparkle" />
+            <span>Smart India Hackathon 2026 · Architectural Guide</span>
+          </div>
+
+          <h1 className="info-hero-headline">
+            A complete view of<br />
+            <span className="landing-headline-gradient">each deposit.</span>
+          </h1>
+
+          <p className="info-hero-subtext">
+            DepositFlow brings institution submissions, document evidence, and authorised decisions into one traceable, end-to-end regulatory workflow.
+          </p>
+
+          <div className="info-notice-card">
+            <div className="info-notice-icon">
+              <AlertCircle size={20} />
+            </div>
+            <div className="info-notice-body">
+              <strong>Hackathon Prototype Evaluation</strong>
+              <p>
+                Built for the AICTE problem statement. Seeded rules are illustrative and mock bank responses are explicitly simulated. The platform orchestrates verification and authorizations without processing direct financial fund transfers.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content: Workflow Steps & Architecture */}
+      <main className="info-main-content">
+        <div className="info-container">
+          <div className="info-section-header">
+            <div className="info-section-eyebrow">
+              <Layers size={15} />
+              <span>END-TO-END WORKFLOW</span>
+            </div>
+            <h2 className="info-section-title">Five steps from submission to authorization</h2>
+            <p className="info-section-desc">
+              How institutional deposits progress through rule evaluation, evidence capture, bank confirmation, and release clearance.
+            </p>
+          </div>
+
+          {/* 5 Step Cards */}
+          <div className="info-steps-grid">
+            {steps.map(step => {
+              const Icon = step.icon
+              return (
+                <div key={step.num} className="info-step-card">
+                  <div className="info-step-header">
+                    <span className="info-step-num">{step.num}</span>
+                    <div className="info-step-icon-wrap">
+                      <Icon size={20} />
+                    </div>
+                  </div>
+                  <h3 className="info-step-title">{step.title}</h3>
+                  <p className="info-step-text">{step.description}</p>
+                  <div className="info-step-tags">
+                    {step.tags.map(tag => (
+                      <span key={tag} className="info-step-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Three Core Guarantees */}
+          <div className="info-pillars-section">
+            <div className="info-section-header">
+              <div className="info-section-eyebrow">
+                <ShieldCheck size={15} />
+                <span>ARCHITECTURAL GUARANTEES</span>
+              </div>
+              <h2 className="info-section-title">Built on verifiable governance</h2>
+            </div>
+
+            <div className="info-pillars-grid">
+              {pillars.map((pillar, i) => {
+                const Icon = pillar.icon
+                return (
+                  <div key={i} className="info-pillar-card">
+                    <div className="info-pillar-icon">
+                      <Icon size={22} />
+                    </div>
+                    <h3 className="info-pillar-title">{pillar.title}</h3>
+                    <p className="info-pillar-desc">{pillar.desc}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Bottom Call-To-Action Banner */}
+          <div className="info-cta-card">
+            <div className="info-cta-glow" aria-hidden="true" />
+            <div className="info-cta-content">
+              <h2 className="info-cta-title">Ready to explore the workspace?</h2>
+              <p className="info-cta-desc">
+                Sign in to experience the live prototype with fictional demonstration accounts across all portals and roles.
+              </p>
+              <div className="info-cta-actions">
+                <Link to="/signin?portal=institute" className="landing-btn-primary">
+                  <span>Institute portal</span>
+                  <ArrowRight size={17} />
+                </Link>
+                <Link to="/signin?portal=admin" className="landing-btn-secondary">
+                  <span>AICTE Admin command</span>
+                </Link>
+                <Link to="/" className="landing-btn-secondary">
+                  <span>Return to portal home</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="info-footer">
+        <div className="info-footer-inner">
+          <div className="landing-trust-strip">
+            <div className="landing-trust-item">
+              <ShieldCheck size={16} className="text-emerald-400" />
+              <span>Role-based access</span>
+            </div>
+            <span className="landing-trust-dot text-rose-500">•</span>
+            <div className="landing-trust-item">
+              <span>Traceable decisions</span>
+            </div>
+            <span className="landing-trust-dot text-indigo-400">•</span>
+            <div className="landing-trust-item">
+              <span>Private documents</span>
+            </div>
+          </div>
+          <p className="info-footer-disclaimer">
+            SIH26265 prototype · Built for the AICTE problem statement. All demonstration institutions and bank records are fictional.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
