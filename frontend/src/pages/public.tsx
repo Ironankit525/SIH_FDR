@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -245,16 +245,11 @@ export function SignIn() {
   const [isSigningIn, setIsSigningIn] = useState(false)
   const form = useForm<Login>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: PORTALS[portal].demoEmail, password: DEMO_PASSWORD },
+    defaultValues: { email: '', password: '' },
   })
-
-  useEffect(() => {
-    form.reset({ email: PORTALS[portal].demoEmail, password: DEMO_PASSWORD })
-  }, [portal, form])
 
   const mutation = useMutation({
     mutationFn: async (data: Login) => {
-      setIsSigningIn(true)
       const user = await post<User>('/auth/login', data)
       // Each door admits only its own accounts, so an official never lands in the Institute workspace or the reverse.
       if (portalOf(user.role) !== portal) {
@@ -264,19 +259,16 @@ export function SignIn() {
       return user
     },
     onSuccess: async user => {
+      setIsSigningIn(true)
       qc.clear()
       qc.setQueryData(['me'], user)
       // Allow brief moment for smooth skeleton preloader visibility and fade
       await new Promise(r => setTimeout(r, 700))
       navigate('/app')
     },
-    onError: () => {
-      setIsSigningIn(false)
-    },
   })
   const choose = (next: Portal) => {
     setParams({ portal: next }, { replace: true })
-    form.reset({ email: PORTALS[next].demoEmail, password: DEMO_PASSWORD })
     mutation.reset()
   }
   const Copy = PORTAL_COPY[portal]
@@ -410,6 +402,49 @@ export function SignIn() {
               </button>
             </form>
 
+            <div className="demo-shortcuts" style={{ marginTop: '1.25rem' }}>
+              <Button
+                type="button"
+                variant="outline"
+                style={{ width: '100%', marginBottom: '0.75rem' }}
+                onClick={() => {
+                  form.setValue('email', PORTALS[portal].demoEmail)
+                  form.setValue('password', DEMO_PASSWORD || 'DemoFlow2026!')
+                }}
+              >
+                Use the demo {PORTALS[portal].short.toLowerCase()} account
+              </Button>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '0.5rem' }}>
+                All demo roles
+              </div>
+              <div className="demo-roles" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
+                {[
+                  ['institution', 'Institution'],
+                  ['officer', 'Verification'],
+                  ['clearance', 'Clearance: PGRC'],
+                  ['vigilance', 'Clearance: Vigilance'],
+                  ['authority', 'Authority'],
+                  ['admin', 'Admin'],
+                  ['auditor', 'Auditor'],
+                  ['bank', 'Bank Officer']
+                ].map(([emailKey, title]) => (
+                  <button
+                    key={emailKey}
+                    type="button"
+                    className="demo-role-btn"
+                    onClick={() => {
+                      const targetPortal: Portal = emailKey === 'institution' ? 'institute' : 'admin'
+                      setParams({ portal: targetPortal }, { replace: true })
+                      form.setValue('email', `${emailKey}@demo.local`)
+                      form.setValue('password', DEMO_PASSWORD || 'DemoFlow2026!')
+                      mutation.reset()
+                    }}
+                  >
+                    {title}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {portal === 'institute' && (
               <p className="auth-register-note">
