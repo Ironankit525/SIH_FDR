@@ -2,7 +2,7 @@
 
 This guide reproduces the setup used by this project: **Gemma 3 27B runs on a Colab GPU; FastAPI, React, SQLite and document storage run on each teammate's laptop.** ngrok connects the laptop backend to Colab over HTTPS. You do not need a GPU or model weights on the laptop.
 
-The supported serving path loads the existing trained Gemma adapter. It does not train a new model. The earlier Qwen 8B notebook in `training/` is a separate experiment and is not part of these instructions.
+Use the notebook in `training/gemma3_27b/` to load the existing trained **Gemma 3 27B adapter** from Drive. No new model training is required.
 
 ## Choose who runs Colab
 

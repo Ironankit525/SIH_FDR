@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = 'bank_role_workflow'
-down_revision = 'verification_gate'
+down_revision = 'cascade_evidence'
 branch_labels = None
 depends_on = None
 

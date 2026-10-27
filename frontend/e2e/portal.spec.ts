@@ -1,12 +1,6 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import path from 'node:path'
-
-async function signIn(page: Page, role: string) {
-  await page.goto('/signin')
-  await page.getByRole('button', { name: role, exact: true }).click()
-  await page.getByRole('button', { name: 'Sign in to workspace' }).click()
-  await expect(page.getByRole('heading', { name: /overview/i })).toBeVisible()
-}
+import { signIn } from './helpers'
 
 test('landing, sign-in and database-backed dashboard render at desktop and mobile sizes', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message))
@@ -19,8 +13,8 @@ test('landing, sign-in and database-backed dashboard render at desktop and mobil
   await page.screenshot({ path: 'test-results/dashboard-desktop.png', fullPage: true, animations: 'disabled' })
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: 'Open navigation' }).click()
-  await page.getByRole('link', { name: 'Deposit registry', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Deposit registry' })).toBeVisible()
+  await page.getByRole('link', { name: 'Verification Queue' }).click()
+  await expect(page.getByRole('heading', { name: 'Verification queue' })).toBeVisible()
   await page.screenshot({ path: 'test-results/registry-mobile.png', fullPage: true, animations: 'disabled' })
   expect(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth)).toBe(true)
   expect(errors).toEqual([])
@@ -28,7 +22,7 @@ test('landing, sign-in and database-backed dashboard render at desktop and mobil
 
 test('institution creates, uploads, compares and submits; officer reviews simulated unknown reference', async ({ page }) => {
   await signIn(page, 'Institution')
-  await page.getByRole('link', { name: 'New deposit', exact: true }).click()
+  await page.getByRole('link', { name: 'New Deposit & Calculator' }).click()
   await page.getByRole('combobox', { name: 'Programme', exact: true }).selectOption({ label: 'Engineering and Technology · Undergraduate' })
   await page.getByLabel('Bank name', { exact: true }).fill('Demo National Bank')
   await page.getByLabel('Branch', { exact: true }).fill('Education Services Branch')
@@ -47,7 +41,7 @@ test('institution creates, uploads, compares and submits; officer reviews simula
   await expect(page.getByRole('columnheader', { name: 'Institution submitted' })).toBeVisible()
   await page.getByRole('button', { name: 'Submit for review' }).click()
   await expect(page.getByText('Action recorded successfully.')).toBeVisible()
-  await page.getByRole('tab', { name: /^Review tasks/ }).click()
+  await page.getByRole('tab', { name: /^Queries/ }).click()
   await expect(page.getByRole('heading', { name: /Submitted INR 1,500,000 is below/ })).toBeVisible()
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
   await signIn(page, 'Verification')
@@ -70,14 +64,25 @@ test('institution creates, uploads, compares and submits; officer reviews simula
 
 test('vigilance officer inspects escalated cases queue', async ({ page }) => {
   await signIn(page, 'Vigilance')
-  await page.getByRole('link', { name: 'Escalated cases', exact: true }).click()
+  await page.getByRole('link', { name: /Vigilance|Escalated/i }).click()
   await expect(page.getByRole('heading', { name: /Escalated cases|Deposit registry/i })).toBeVisible()
   await page.screenshot({ path: 'test-results/vigilance-queue.png', fullPage: true })
 })
 
+test('missing clearance visibly blocks authority approval', async ({ page }) => {
+  await signIn(page, 'Authority')
+  await page.getByRole('link', { name: 'Release Clearances & Approvals' }).click()
+  await expect(page.getByText('Vigilance clearance is pending.')).toBeVisible()
+  await page.getByRole('button', { name: 'Record final decision' }).click()
+  await page.getByLabel('Findings and reasons').fill('Attempting demo approval to confirm clearance checks')
+  await page.getByRole('button', { name: 'Save record' }).click()
+  await expect(page.getByRole('alert')).toContainText('Vigilance clearance is pending.')
+  await page.screenshot({ path: 'test-results/release-blocked.png', fullPage: true })
+})
+
 test('administrator can inspect monitoring and configure alerts', async ({ page }) => {
   await signIn(page, 'Admin')
-  await page.getByRole('link', { name: 'System monitoring', exact: true }).click()
+  await page.getByRole('link', { name: 'System Monitor' }).click()
   await expect(page.getByText('SQLite (lightweight)', { exact: true })).toBeVisible()
   await expect(page.getByText(/chain intact/)).toBeVisible()
   await page.getByRole('link', { name: 'Alert configuration', exact: true }).click()
@@ -93,6 +98,7 @@ test('officials import records, reassign work, inspect integrity and risk, and s
     + `DEMO-INST-001,Engineering and Technology,undergraduate,Canara Bank,Main,${number},Meridian Institute of Technology,3500000,${later(-30)},${later(700)},AICTE New Delhi,${later(600)}\n`
     + `NO-SUCH-CODE,Engineering and Technology,undergraduate,Canara Bank,Main,${number}-X,Unknown,3500000,${later(-30)},${later(700)},,\n`
   await signIn(page, 'Admin')
+  await page.getByRole('link', { name: 'System Monitor' }).click()
   await page.getByRole('link', { name: 'Import records' }).click()
   await page.getByLabel('Choose CSV').setInputFiles({ name: 'legacy.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
   await page.getByRole('button', { name: 'Check file' }).click()
@@ -100,11 +106,12 @@ test('officials import records, reassign work, inspect integrity and risk, and s
   await page.getByRole('button', { name: 'Import 1 record' }).click()
   await expect(page.getByText(/Imported 1 record/)).toBeVisible()
 
+  await page.getByRole('link', { name: 'Institutions & Registry' }).click()
   await page.getByRole('link', { name: 'Deposit registry' }).click()
   await expect(page.getByRole('heading', { name: 'Deposit registry' })).toBeVisible()
-  await page.getByLabel('Search deposits').fill(number)  // the imported record is in the registry
+  await page.locator('.table-toolbar').getByLabel('Search deposits').fill(number)  // the imported record is in the registry
   await expect(page.getByRole('link', { name: /^DF-/ })).toHaveCount(1)
-  await page.getByLabel('Search deposits').fill('MATCH-001')
+  await page.locator('.table-toolbar').getByLabel('Search deposits').fill('MATCH-001')
   await expect(page.getByRole('link', { name: /^DF-/ })).toHaveCount(1)
   await page.getByRole('link', { name: /^DF-/ }).first().click()
   await page.getByRole('button', { name: 'Reassign' }).click()
@@ -129,11 +136,12 @@ test('officials import records, reassign work, inspect integrity and risk, and s
 
   await signIn(page, 'Auditor')
   const reference = (await page.goto(caseUrl).then(() => page.getByRole('heading', { level: 1 }).textContent()))!.trim()
-  await page.getByRole('link', { name: 'Audit trail' }).click()
+  await page.getByRole('link', { name: 'Reports & Audit Trail' }).click()
+  await page.getByRole('link', { name: 'Audit trail', exact: true }).click()
   await page.getByLabel('Record or case reference').fill(reference)
   await page.getByRole('button', { name: 'Search' }).click()
   await expect(page.getByRole('cell', { name: 'Officer Reassigned' }).first()).toBeVisible()
-  await page.getByRole('link', { name: 'Analytics & reports' }).click()
+  await page.getByRole('link', { name: 'Management reports' }).click()
   await expect(page.getByText('Cases requiring intervention')).toBeVisible()
   await page.screenshot({ path: 'test-results/reports-desktop.png', fullPage: true, animations: 'disabled' })
 })

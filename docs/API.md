@@ -33,3 +33,11 @@ Deposit filters include `q`, `status`, `bank`, `programme`, `assigned=me`, `min_
 Common response codes: `401` unauthenticated, `403` unauthorised role/CSRF/origin, `404` inaccessible or missing record, `409` workflow/uniqueness conflict, `422` validation failure, `429` rate limit, `503` required scanner or rate-limiter unavailable. Release `409` responses include a `detail.blockers` list explaining missing prerequisites.
 
 The mock adapter always returns `simulated: true` and `source: SIMULATED / MOCK BANK DATA`. Production disables the mock endpoint. Manual evidence requires a valid manual request, a bank-confirmation document from the same case, source/reference, verification date, finding and observations.
+
+### Cascade extraction evidence
+
+New extraction results include `evidence` with `status` (`complete`, `incomplete`, or `conflict`), `reasons`, `stages`, `sources`, and `conflicts`. Each source preserves its provider, parsed fields, candidate values, confidences and original text. The existing `fields` object remains the selected provider's result; it is not silently merged with or overwritten by another source. Disagreements create separate `extraction_conflict_<field>` review tasks even when the institution's declaration agrees with the selected result.
+
+`documents.processing_status=completed` means the job finished. The UI uses extraction quality to show **Incomplete extraction** or **Conflicting extraction** and keeps the extraction milestone pending. `evidence.status=complete` only means the selected result meets the configured completeness checks and no cross-source conflict was found; it is not an authenticity verdict. Historical extractions have empty evidence because old OCR/VLM values cannot be reconstructed reliably.
+
+Apply the `cascade_evidence` migration before starting the updated backend (`python -m alembic upgrade head` from `backend/`; the lightweight dev launcher does this automatically). No Colab worker change is required. Supporting documents retain their existing processing flow.

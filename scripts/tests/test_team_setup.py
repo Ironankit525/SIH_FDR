@@ -38,6 +38,17 @@ def test_import_only_worker_fields_and_preserve_other_settings(tmp_path, monkeyp
         assert destination.stat().st_mode & 0o777 == 0o600
 
 
+def test_refresh_worker_credentials_preserves_cascade(tmp_path, monkeypatch, configuration):
+    monkeypatch.delenv('ENVIRONMENT', raising=False)
+    destination = tmp_path / '.env'
+    destination.write_text('EXTRACTION_PROVIDER=cascade\nVLM_API_KEY=old-test-key\n')
+    connect.save_config(configuration, destination)
+    saved = dotenv_values(destination)
+    assert saved['EXTRACTION_PROVIDER'] == 'cascade'
+    assert saved['VLM_API_KEY'] == configuration['VLM_API_KEY']
+    assert configuration['EXTRACTION_PROVIDER'] == 'vlm_http'
+
+
 @pytest.mark.parametrize('status,headers', [(401, {}), (404, {'ngrok-error-code': 'ERR_NGROK_3200'})])
 def test_failed_health_check_preserves_settings_and_hides_response(tmp_path, monkeypatch, capsys, configuration, status, headers):
     for key in connect.KEYS:
