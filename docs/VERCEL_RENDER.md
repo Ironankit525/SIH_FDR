@@ -68,13 +68,13 @@ Import the GitHub repository, granting access to this repository only if desired
 | Build command | `npm run build` |
 | Output directory | `dist` |
 | Production branch | The published branch with these deployment files |
-| Environment variable | `BACKEND_ORIGIN=https://YOUR-RENDER-HOST` |
+| Environment variables | None. The backend address is written in `frontend/vercel.json` |
 
-`BACKEND_ORIGIN` is only the origin: do not append `/api`, include a password, or use localhost. Configure it before deploying. `frontend/vercel.mjs` rejects a missing or malformed origin instead of silently deploying broken API routes.
+Before deploying, open `frontend/vercel.json` and set the first rewrite's `destination` to your Render address followed by `/api/:path*`, for example `https://YOUR-RENDER-HOST/api/:path*`. Use the origin only: no password and not localhost. The address is written into the file because Vercel dropped rewrite destinations that were built from an environment variable (the import failed with "`rewrites[0]` missing required property `destination`").
 
 The Vercel config proxies `/api/:path*` to the backend's `/api/:path*`. Non-API page routes fall back to `index.html`. Browser calls and cookies remain on the frontend origin. Do not add database, S3 or encryption credentials to Vercel or any `VITE_*` variable. No frontend secrets are needed.
 
-The config uses Vercel's supported JavaScript configuration format; do not create a competing `vercel.json`. Redeploy after changing `BACKEND_ORIGIN`.
+Keep this as the project's only Vercel config file; a second one (for example `vercel.ts`) would compete with it. Commit and push to redeploy after changing the address.
 
 ## 5. Verify from the deployed website
 
@@ -95,6 +95,6 @@ The config uses Vercel's supported JavaScript configuration format; do not creat
 - Missing database tables: inspect startup migration logs. Do not run the local reset script against the hosted database.
 - Login rejected: enter the chosen hosted password manually; reseeding does not change passwords.
 - Upload/preview failure: check bucket privacy/name, S3 endpoint/region/credentials and the unchanged encryption key. Do not make the bucket public to fix it.
-- Vercel configuration error: set `BACKEND_ORIGIN` in the correct deployment environment and redeploy.
+- Vercel configuration error: check that `frontend/vercel.json` is valid JSON and its first rewrite points to your Render HTTPS origin, then push to redeploy.
 
-Reference documentation: [Render Blueprints](https://render.com/docs/blueprint-spec), [Render Free limits](https://render.com/docs/free), [Vercel programmatic configuration](https://vercel.com/docs/project-configuration/vercel-ts), [Supabase PostgreSQL connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [Supabase S3 authentication](https://supabase.com/docs/guides/storage/s3/authentication).
+Reference documentation: [Render Blueprints](https://render.com/docs/blueprint-spec), [Render Free limits](https://render.com/docs/free), [Vercel project configuration](https://vercel.com/docs/project-configuration/vercel-json), [Supabase PostgreSQL connections](https://supabase.com/docs/guides/database/connecting-to-postgres), [Supabase S3 authentication](https://supabase.com/docs/guides/storage/s3/authentication).
