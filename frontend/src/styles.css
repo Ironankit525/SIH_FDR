@@ -729,11 +729,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 .chart-legend i { background: var(--accent); }
 /* The wordmark keeps DepositFlow's navy: brand identity, like an app icon. */
-:root { --brand-ink: #173958; --brand-flow: #2f6fbf; }
-@media screen and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --brand-ink: #e6edf6; --brand-flow: #6fa8e8; } }
-@media screen { :root[data-theme="dark"] { --brand-ink: #e6edf6; --brand-flow: #6fa8e8; } }
+:root { --brand-ink: #ffffff; --brand-flow: #FF5B37; }
+:root[data-theme="light"] { --brand-ink: #0f172a; --brand-flow: #FF5B37; }
 .brand { color: var(--brand-ink); } .brand-flow { color: var(--brand-flow); }
-.brand-light { color: #fff; } .brand-light .brand-flow { color: #a9c8ee; }
+.brand-light { color: #fff; } .brand-light .brand-flow { color: #FF5B37; }
 
 /* Verification boundary: the checklist an officer must satisfy, and the escalation that only Vigilance can clear. */
 .risk-badge.none i { background: var(--line-neutral-91); }
@@ -1233,27 +1232,53 @@ body:has(.landing-page) #root {
   align-items: center;
 }
 
-.landing-header .brand {
-  color: #ffffff;
-  font-size: 1.35rem;
+.landing-header .brand,
+.auth-story-header .brand,
+.info-header .brand {
+  color: #ffffff !important;
+  font-size: 1.28rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.028em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
 }
 
-.landing-header .brand-mark {
-  background: rgba(30, 41, 59, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 16px rgba(0, 0, 0, 0.5);
-  color: #ffffff;
+.landing-header .brand-mark,
+.auth-story-header .brand-mark,
+.info-header .brand-mark,
+.brand-light .brand-mark {
+  background: linear-gradient(135deg, #F03E2F, #FF5B37) !important;
+  color: #ffffff !important;
+  border-radius: 9px !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 4px 14px rgba(240, 62, 47, 0.38) !important;
+  border: none !important;
 }
 
-.landing-header .brand-flow {
-  color: #94a3b8;
+.landing-header .brand-flow,
+.auth-story-header .brand-flow,
+.info-header .brand-flow,
+.brand-light .brand-flow {
+  color: #FF5B37 !important;
 }
 
-.landing-header small {
-  color: #64748b;
-  font-weight: 500;
+.landing-header small,
+.auth-story-header small,
+.info-header small,
+.brand-light small {
+  color: #94a3b8 !important;
+  font-size: 0.6875rem !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 500 !important;
+  margin-top: 2px !important;
+  display: block !important;
 }
 
 .landing-main {
@@ -2675,17 +2700,17 @@ body:has(.auth-page) #root {
 }
 
 .auth-form-icon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
-  background: #151b26;
-  border: 1px solid rgba(255, 62, 0, 0.35);
-  box-shadow: 0 0 16px rgba(255, 62, 0, 0.18);
-  color: #FF3E00;
+  background: linear-gradient(135deg, #F03E2F, #FF5B37);
+  border: none;
+  box-shadow: 0 4px 16px rgba(240, 62, 47, 0.4);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.15rem;
 }
 
 .auth-form-title {
