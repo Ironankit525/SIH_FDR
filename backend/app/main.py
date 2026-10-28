@@ -61,6 +61,15 @@ async def conflict(request, exc):
 async def invalid_identifier(request, exc):
     return JSONResponse(status_code=422, content={"detail": "Invalid record identifier or field value"})
 
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "message": "AICTE DepositFlow API is running",
+        "status": "ok",
+        "version": "1.0.0",
+        "documentation": "/docs",
+        "health_check": "/api/health"
+    }
 
 @app.get("/api/health", tags=["Health"])
 def health():
