@@ -105,6 +105,11 @@ class VerificationInput(StrictModel):
     channel: Literal["approved_bank_correspondence", "authorised_bank_portal", "branch_confirmation"]
 
 
+class ForwardToBankInput(StrictModel):
+    bank_name: str = Field(min_length=2, max_length=150)
+    notes: str | None = Field(default=None, max_length=2000)
+
+
 class ConfirmedFields(StrictModel):
     """What the bank itself stated, so it can be compared with the declaration rather than taken on trust."""
     bank: str | None = Field(default=None, max_length=150)
@@ -113,6 +118,18 @@ class ConfirmedFields(StrictModel):
     amount: float | None = Field(default=None, gt=0, le=1_000_000_000_000, allow_inf_nan=False)
     issue_date: date | None = None
     maturity_date: date | None = None
+
+
+class BankDecisionInput(StrictModel):
+    decision: Literal["verified", "rejected", "additional_info_required"]
+    remarks: str = Field(min_length=5, max_length=4000)
+    confirmed_fields: ConfirmedFields | None = None
+
+    @model_validator(mode="after")
+    def validate_remarks_by_decision(self):
+        if self.decision in ("rejected", "additional_info_required") and len(self.remarks.strip()) < 10:
+            raise ValueError(f"Please provide an explanation of at least 10 characters when selecting {self.decision.replace('_', ' ')}.")
+        return self
 
 
 class EvidenceInput(StrictModel):
@@ -246,9 +263,10 @@ class UserInput(StrictModel):
     email: str = Field(pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$", max_length=200)
     name: str = Field(min_length=2, max_length=120)
     password: str = Field(min_length=12, max_length=128)
-    role: Literal["institution", "verification", "clearance", "authority", "admin", "auditor"]
+    role: Literal["institution", "verification", "clearance", "authority", "admin", "auditor", "bank"]
     institution_id: str | None = None
     clearance_cell: str | None = None
+    bank_name: str | None = None
 
 
 class PasswordInput(StrictModel):

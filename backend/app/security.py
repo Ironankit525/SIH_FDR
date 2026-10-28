@@ -78,6 +78,14 @@ def get_deposit(db, user, deposit_id, lock=False):
         deposit = None
     if not deposit:
         raise HTTPException(404, "Deposit not found")
+    if user.role == "bank":
+        from .matching import normalise_bank
+        from .models import VerificationRequest
+        user_bank_key = normalise_bank(user.bank_name or "")
+        reqs = db.scalars(select(VerificationRequest).where(VerificationRequest.deposit_id == deposit.id)).all()
+        has_access = any(normalise_bank(r.bank_name or "") == user_bank_key for r in reqs if r.bank_name)
+        if not has_access:
+            raise HTTPException(404, "Deposit not found")
     return deposit
 
 

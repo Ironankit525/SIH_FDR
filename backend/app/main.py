@@ -9,6 +9,7 @@ from .auth_routes import router as auth
 from .deposit_routes import router as deposits
 from .review_routes import router as reviews
 from .admin_routes import router as admin
+from .bank_routes import router as bank_router
 
 
 @asynccontextmanager
@@ -80,3 +81,4 @@ app.include_router(auth)
 app.include_router(deposits)
 app.include_router(reviews)
 app.include_router(admin)
+app.include_router(bank_router)

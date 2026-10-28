@@ -62,6 +62,13 @@ test('institution creates, uploads, compares and submits; officer reviews simula
   await expect(page.getByTitle('Private document preview')).toBeVisible()
 })
 
+test('vigilance officer inspects escalated cases queue', async ({ page }) => {
+  await signIn(page, 'Vigilance')
+  await page.getByRole('link', { name: /Vigilance|Escalated/i }).click()
+  await expect(page.getByRole('heading', { name: /Escalated cases|Deposit registry/i })).toBeVisible()
+  await page.screenshot({ path: 'test-results/vigilance-queue.png', fullPage: true })
+})
+
 test('missing clearance visibly blocks authority approval', async ({ page }) => {
   await signIn(page, 'Authority')
   await page.getByRole('link', { name: 'Release Clearances & Approvals' }).click()

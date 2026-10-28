@@ -23,4 +23,5 @@ export const OFFICIAL_DEMOS = [
   { email: 'vigilance@demo.local', label: 'Vigilance cell', note: 'Clears escalated cases' },
   { email: 'authority@demo.local', label: 'Approving authority', note: 'Final release decision' },
   { email: 'auditor@demo.local', label: 'Auditor', note: 'Read-only oversight' },
+  { email: 'bank@demo.local', label: 'Bank officer', note: 'Direct bank verification gateway' },
 ] as const

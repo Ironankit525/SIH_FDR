@@ -18,7 +18,9 @@ describe('critical interface flows', () => {
   it('shows server authentication failure without navigating or hiding the form', async () => {
     vi.mocked(post).mockRejectedValueOnce(new Error('Email or password is incorrect'))
     mount(<SignIn/>); const user = userEvent.setup()
+    await user.clear(screen.getByLabelText('Email address'))
     await user.type(screen.getByLabelText('Email address'), 'user@example.org')
+    await user.clear(screen.getByLabelText('Password'))
     await user.type(screen.getByLabelText('Password'), 'wrong-password')
     await user.click(screen.getByRole('button', { name: /sign in to workspace/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect')
@@ -28,8 +30,8 @@ describe('critical interface flows', () => {
   it('turns away an official who signs in through the Institute door, and signs them out', async () => {
     vi.mocked(post).mockResolvedValueOnce({ id: 'official', role: 'verification', name: 'Officer' }).mockResolvedValueOnce({})
     mount(<SignIn/>); const user = userEvent.setup()
+    await user.clear(screen.getByLabelText('Email address'))
     await user.type(screen.getByLabelText('Email address'), 'officer@demo.local')
-    await user.type(screen.getByLabelText('Password'), 'DemoFlow2026!')
     await user.click(screen.getByRole('button', { name: /sign in to workspace/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('belongs to the Admin portal')
     expect(vi.mocked(post)).toHaveBeenCalledWith('/auth/logout')
@@ -38,11 +40,11 @@ describe('critical interface flows', () => {
   it('offers exactly two portals and fills the matching demo account', async () => {
     mount(<SignIn/>); const user = userEvent.setup()
     expect(within(screen.getByRole('group', { name: 'Portal' })).getAllByRole('button').map(b => b.textContent)).toEqual(['Institute', 'Admin'])
-    await user.click(screen.getByRole('button', { name: 'Use the demo institute account' }))
     expect(screen.getByLabelText('Email address')).toHaveValue('institution@demo.local')
-    await user.click(screen.getByRole('button', { name: 'Admin' }))
-    await user.click(screen.getByRole('button', { name: 'Use the demo admin account' }))
+    expect(screen.getByLabelText('Password')).toHaveValue('DemoFlow2026!')
+    await user.click(screen.getByRole('button', { name: /Admin/i }))
     expect(screen.getByLabelText('Email address')).toHaveValue('admin@demo.local')
+    expect(screen.getByLabelText('Password')).toHaveValue('DemoFlow2026!')
   })
 
   it('blocks a deposit whose bank maturity precedes its issue date', async () => {

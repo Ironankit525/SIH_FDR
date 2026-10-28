@@ -337,6 +337,8 @@ def create_user(body: schemas.UserInput, user=Depends(current_user), db=Depends(
         raise HTTPException(422, "Institution accounts need an existing institution")
     if body.role == "clearance" and not body.clearance_cell:
         raise HTTPException(422, "Clearance officers need an assigned cell")
+    if body.role == "bank" and not body.bank_name:
+        raise HTTPException(422, "Bank accounts need an assigned bank organization name")
     item = User(**body.model_dump(exclude={"password"}), password_hash=passwords.hash(body.password))
     item.email = item.email.lower()
     db.add(item)

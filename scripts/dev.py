@@ -21,7 +21,7 @@ def main():
     subprocess.run([str(PYTHON), "-m", "app.seed"], cwd=ROOT / "backend", check=True)
     processes = []
     try:
-        processes.append(subprocess.Popen([str(PYTHON), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--no-access-log"], cwd=ROOT / "backend"))
+        processes.append(subprocess.Popen([str(PYTHON), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--reload", "--no-access-log"], cwd=ROOT / "backend"))
         processes.append(subprocess.Popen(["npm", "run", "dev", "--", "--host", "127.0.0.1"], cwd=ROOT / "frontend", start_new_session=True))
         print("\nDepositFlow: http://localhost:5173\nAPI documentation: http://127.0.0.1:8000/docs\nPress Ctrl+C to stop. Docker is not used.\n", flush=True)
         while all(p.poll() is None for p in processes):

@@ -72,7 +72,8 @@ def seed(db, save_files=False):
         return
     for name, actions in {"institution": ["own_records", "submit", "request_release"], "verification": ["review", "verify", "resolve"],
                           "clearance": ["assigned_cell_decision"], "authority": ["authorise_release"],
-                          "admin": ["users", "rules", "configuration"], "auditor": ["read", "export_audit"]}.items():
+                          "admin": ["users", "rules", "configuration"], "auditor": ["read", "export_audit"],
+                          "bank": ["bank_verify", "own_requests"]}.items():
         db.add(Role(name=name, permissions=actions))
     db.flush()
     institutions = []
@@ -84,20 +85,22 @@ def seed(db, save_files=False):
         institutions.append(inst)
     db.flush()
     password_hash = passwords.hash(settings.demo_password or DEMO_PASSWORD)
-    accounts = [("institution", "Ananya Rao", "institution", institutions[0].id, None),
-                ("institution2", "Rohan Desai", "institution", institutions[1].id, None),
-                ("institution3", "Meera Iyer", "institution", institutions[2].id, None),
-                ("officer", "Arjun Mehta", "verification", None, None),
-                ("officer2", "Sana Qureshi", "verification", None, None),
-                ("clearance", "Priya Sharma", "clearance", None, "PGRC"),
-                ("vigilance", "Vikram Sen", "clearance", None, "Vigilance"),
-                ("authority", "Dr. Kavita Nair", "authority", None, None),
-                ("admin", "Aditi Verma", "admin", None, None),
-                ("admin2", "Neel Kapoor", "admin", None, None),
-                ("auditor", "Dev Patel", "auditor", None, None)]
+    accounts = [("institution", "Ananya Rao", "institution", institutions[0].id, None, None),
+                ("institution2", "Rohan Desai", "institution", institutions[1].id, None, None),
+                ("institution3", "Meera Iyer", "institution", institutions[2].id, None, None),
+                ("officer", "Arjun Mehta", "verification", None, None, None),
+                ("officer2", "Sana Qureshi", "verification", None, None, None),
+                ("clearance", "Priya Sharma", "clearance", None, "PGRC", None),
+                ("vigilance", "Vikram Sen", "clearance", None, "Vigilance", None),
+                ("authority", "Dr. Kavita Nair", "authority", None, None, None),
+                ("admin", "Aditi Verma", "admin", None, None, None),
+                ("admin2", "Neel Kapoor", "admin", None, None, None),
+                ("auditor", "Dev Patel", "auditor", None, None, None),
+                ("bank", "Vikram Malhotra", "bank", None, None, "DEMO NATIONAL BANK"),
+                ("bank2", "Sunita Rao", "bank", None, None, "STATE BANK OF INDIA")]
     users = {}
-    for prefix, name, role, institution_id, cell in accounts:
-        user = User(email=f"{prefix}@demo.local", name=name, role=role, institution_id=institution_id, clearance_cell=cell, password_hash=password_hash)
+    for prefix, name, role, institution_id, cell, bank_name in accounts:
+        user = User(email=f"{prefix}@demo.local", name=name, role=role, institution_id=institution_id, clearance_cell=cell, bank_name=bank_name, password_hash=password_hash)
         db.add(user)
         users[prefix] = user
     db.flush()
@@ -156,6 +159,16 @@ def seed(db, save_files=False):
             audit(db, owner, "instrument_replaced", deposit.id, institution.id, before={"instrument_id": previous.id}, after={"instrument_id": inst.id})
         db.flush()
         detect(db, deposit)
+        if idx == 0:
+            # Seed a sample forwarded verification request to DEMO NATIONAL BANK for MATCH-001
+            bank_req = VerificationRequest(
+                deposit_id=deposit.id, instrument_id=inst.id, channel="bank_portal",
+                requested_by=users["officer"].id, status="sent", bank_name="DEMO NATIONAL BANK",
+                officer_notes="Please confirm FDR authenticity, depositor name, deposit amount and maturity date against bank branch records."
+            )
+            db.add(bank_req)
+            audit(db, users["officer"], "verification_forwarded_to_bank", deposit.id, institution.id,
+                  after={"bank_name": "DEMO NATIONAL BANK", "instrument_number": inst.number})
         if idx == 5:
             result = MockBankAdapter(db).verify(inst)
             req = VerificationRequest(deposit_id=deposit.id, instrument_id=inst.id, channel="SIMULATED / MOCK BANK DATA", requested_by=users["officer"].id, status="confirmed")

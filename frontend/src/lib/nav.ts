@@ -2,7 +2,7 @@ import { Activity, Building, CalendarClock, ChartNoAxesCombined, CircleCheckBig,
 import type { User } from './api'
 import { portalOf, type Portal } from './portal'
 
-export interface NavLinkDef { path: string; name: string; icon: LucideIcon; end?: boolean; match?: string[]; exact?: boolean }
+export interface NavLinkDef { path: string; name: string; icon: LucideIcon; end?: boolean; match?: string[]; exact?: boolean; exclude?: string[] }
 export interface NavGroup { title: string; links: NavLinkDef[] }
 export interface Tab { path: string; name: string; roles?: User['role'][] }
 
@@ -21,11 +21,20 @@ const TAB_FAMILIES: Record<Portal, Tab[][]> = {
 }
 
 export function navigationFor(user: User): NavGroup[] {
+  if (user.role === 'bank') {
+    return [{
+      title: 'Bank Gateway',
+      links: [
+        { path: '/app', name: 'Bank Overview', icon: LayoutDashboard, end: true },
+        { path: '/app/bank/queue', name: 'Verification Queue', icon: ClipboardCheck },
+      ]
+    }]
+  }
   if (portalOf(user.role) === 'institute') {
     return [{ title: 'Workspace', links: [
       { path: '/app', name: 'Dashboard', icon: LayoutDashboard, end: true },
       { path: '/app/deposits/new', name: 'New Deposit & Calculator', icon: FilePlus2, match: ['/app/deposits/new', '/app/requirement'] },
-      { path: '/app/deposits', name: 'My Deposits & FDRs', icon: Files },
+      { path: '/app/deposits', name: 'My Deposits & FDRs', icon: Files, exclude: ['/app/deposits/new'] },
       { path: '/app/maturity', name: 'Renewals & Releases', icon: CalendarClock, match: ['/app/maturity', '/app/releases'] },
     ] }]
   }
@@ -49,6 +58,7 @@ export function navigationFor(user: User): NavGroup[] {
 }
 
 export function linkActive(link: NavLinkDef, pathname: string) {
+  if (link.exclude?.some(ex => pathname === ex || pathname.startsWith(ex + '/'))) return false
   const paths = link.match ?? [link.path]
   if (link.end || link.exact) return paths.includes(pathname)
   return paths.some(path => pathname === path || pathname.startsWith(path + '/'))

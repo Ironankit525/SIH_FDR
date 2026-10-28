@@ -51,6 +51,7 @@ class User(Identity, Base):
     role: Mapped[str] = mapped_column(ForeignKey("roles.name"))
     institution_id: Mapped[str | None] = mapped_column(ForeignKey("institutions.id"), nullable=True, index=True)
     clearance_cell: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    bank_name: Mapped[str | None] = mapped_column(String(150), nullable=True, index=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
@@ -209,6 +210,12 @@ class VerificationRequest(Identity, Base):
     channel: Mapped[str] = mapped_column(String(100))
     requested_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     status: Mapped[str] = mapped_column(String(30), default="pending")
+    bank_name: Mapped[str | None] = mapped_column(String(150), nullable=True, index=True)
+    officer_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bank_decision: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    bank_remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bank_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    bank_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class VerificationEvidence(Identity, Base):
