@@ -6,7 +6,7 @@ The project includes a **React/TypeScript frontend**, a **FastAPI backend**, a r
 
 This is a Smart India Hackathon prototype, not an official AICTE service or a certified production deployment. Demo institutions and bank records are fictional; regulatory rules are illustrative. The portal records release decisions and completion references; it never transfers money.
 
-**Deploy the web prototype without VLM:** follow [Vercel frontend + Render backend](docs/VERCEL_RENDER.md). The Render Blueprint uses external PostgreSQL and private S3-compatible storage; the Vercel configuration takes the API origin from `BACKEND_ORIGIN`.
+**Deploy the web prototype without VLM:** follow [Vercel frontend + Render backend](docs/VERCEL_RENDER.md). The Render Blueprint uses external PostgreSQL and private S3-compatible storage; the API address for Vercel is set in `frontend/vercel.json`.
 
 ## Current implementation
 

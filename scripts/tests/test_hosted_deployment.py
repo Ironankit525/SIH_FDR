@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import types
+from urllib.parse import urlsplit
 
 from cryptography.fernet import Fernet
 import pytest
@@ -62,21 +63,18 @@ def test_failed_migration_does_not_start_server_or_seed(hosted, monkeypatch):
     with pytest.raises(subprocess.CalledProcessError): startup.main()
 
 
-def vercel_config(origin):
-    env = {**os.environ, 'BACKEND_ORIGIN': origin}
-    return subprocess.run(['node', '--input-type=module', '-e',
-        "import {config} from './vercel.mjs'; console.log(JSON.stringify(config))"],
-        cwd=ROOT / 'frontend', env=env, text=True, capture_output=True)
+VERCEL = json.loads((ROOT / 'frontend' / 'vercel.json').read_text())
 
 
 def test_vercel_keeps_api_prefix_and_only_falls_back_for_frontend_routes():
-    result = vercel_config('https://backend.example/')
-    assert result.returncode == 0, result.stderr
-    routes = json.loads(result.stdout)['rewrites']
-    assert routes[0] == {'source': '/api/:path*', 'destination': 'https://backend.example/api/:path*'}
-    assert routes[1]['source'] == '/((?!api(?:/|$)).*)'
+    routes = VERCEL['rewrites']
+    assert routes[0]['source'] == '/api/:path*'
+    assert routes[0]['destination'].endswith('/api/:path*')
+    assert routes[1] == {'source': '/((?!api(?:/|$)).*)', 'destination': '/index.html'}
 
 
-@pytest.mark.parametrize('origin', ['', 'http://localhost:8000', 'https://backend.example/api', 'https://user:secret@backend.example'])
-def test_vercel_requires_public_https_origin_without_credentials(origin):
-    assert vercel_config(origin).returncode != 0
+def test_vercel_backend_is_a_public_https_origin_without_credentials():
+    # The address is written into vercel.json: Vercel drops rewrite destinations built from environment variables.
+    origin = urlsplit(VERCEL['rewrites'][0]['destination'])
+    assert origin.scheme == 'https' and origin.hostname not in (None, 'localhost', '127.0.0.1')
+    assert not origin.username and not origin.password and not origin.query and not origin.fragment
