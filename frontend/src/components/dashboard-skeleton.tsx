@@ -164,14 +164,6 @@ export function DashboardSkeleton({ portal = 'institute' }: { portal?: 'institut
           </div>
         </div>
 
-        <div className="workspace-card">
-          <div className="skeleton-shimmer" style={{ width: 31, height: 31, borderRadius: 6 }} />
-          <div style={{ flex: 1 }}>
-            <div className="skeleton-shimmer" style={{ width: '80%', height: 11, marginBottom: 5 }} />
-            <div className="skeleton-shimmer" style={{ width: '55%', height: 9 }} />
-          </div>
-        </div>
-
         <nav>
           <div className="nav-group">
             <div className="skeleton-shimmer" style={{ width: 60, height: 9, margin: '0 0.8125rem 0.75rem' }} />
@@ -194,12 +186,6 @@ export function DashboardSkeleton({ portal = 'institute' }: { portal?: 'institut
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="help-card" style={{ opacity: 0.8 }}>
-            <div className="skeleton-shimmer" style={{ width: 22, height: 22, borderRadius: 4, marginBottom: 8 }} />
-            <div className="skeleton-shimmer" style={{ width: '70%', height: 11, marginBottom: 6 }} />
-            <div className="skeleton-shimmer" style={{ width: '90%', height: 9, marginBottom: 4 }} />
-            <div className="skeleton-shimmer" style={{ width: '60%', height: 9 }} />
-          </div>
           <div className="nav-link" style={{ pointerEvents: 'none' }}>
             <div className="skeleton-shimmer" style={{ width: 16, height: 16, borderRadius: 4 }} />
             <div className="skeleton-shimmer" style={{ width: 65, height: 11 }} />
@@ -210,7 +196,7 @@ export function DashboardSkeleton({ portal = 'institute' }: { portal?: 'institut
       <div className="main-shell">
         <header className="topbar">
           <div className="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="skeleton-shimmer" style={{ width: 70, height: 20, borderRadius: 4 }} />
+            <div className="skeleton-shimmer" style={{ width: 105, height: 14 }} />
             <span style={{ color: 'var(--text-neutral-71)' }}>/</span>
             <div className="skeleton-shimmer" style={{ width: 110, height: 14 }} />
           </div>

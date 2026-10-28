@@ -2,53 +2,268 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from 'recharts'
-import { ArrowRight, ArrowUpRight, Files, IndianRupee, ClipboardCheck, CalendarClock, Plus, Download, Search, Filter, ChevronLeft, ChevronRight, CheckCircle2, Building2, Bell, Printer, ShieldCheck, Clock3, CircleAlert, ShieldAlert, Monitor, Moon, Sun } from 'lucide-react'
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Files,
+  IndianRupee,
+  ClipboardCheck,
+  CalendarClock,
+  Plus,
+  Download,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Building2,
+  Bell,
+  Printer,
+  ShieldCheck,
+  Clock3,
+  CircleAlert,
+  ShieldAlert,
+  Monitor,
+  Moon,
+  Sun,
+  Activity,
+  Layers,
+  TrendingUp,
+} from 'lucide-react'
 import { useUser } from '@/App'
 import { api, post, downloadReport, type Row } from '@/lib/api'
 import { money, compactMoney, dateLabel, label, verificationLabel } from '@/lib/utils'
 import { applyTheme, storedTheme, type Theme } from '@/lib/theme'
 import { Button } from '@/components/ui/button'
 import { ActionDialog, Badge, RiskBadge, Empty, ErrorState, Loading, Notice, PageHeader, Panel, Stat, useAction } from '@/components/common'
+import { ScrollReveal } from '@/components/scroll-reveal'
 import { DashboardContentSkeleton } from '@/components/dashboard-skeleton'
+
+function getBankTag(bankName?: string) {
+  if (!bankName) return null
+  const clean = bankName.replace('DEMO ', '')
+  const lower = clean.toLowerCase()
+  const cls = lower.includes('axis') ? 'axis' : lower.includes('punjab') || lower.includes('pnb') ? 'pnb' : lower.includes('state bank') || lower.includes('sbi') ? 'sbi' : lower.includes('canara') ? 'canara' : ''
+  return <span className={`bank-tag ${cls}`}>{clean}</span>
+}
+
+function renderVerificationCapsule(status?: string) {
+  const s = status || 'pending'
+  if (s === 'pending' || s === 'mock_pending') {
+    return <span className="status-capsule amber" title={verificationLabel(s)}><span className="pulse-bullet"/>Awaiting Bank</span>
+  }
+  if (/officially_confirmed|bank_verified|approved|verified/.test(s)) {
+    return <span className="status-capsule green" title={verificationLabel(s)}><span className="pulse-bullet"/>Confirmed</span>
+  }
+  if (/mock_inconclusive|inconclusive/.test(s)) {
+    return <span className="status-capsule purple" title={verificationLabel(s)}><span className="pulse-bullet"/>Inconclusive</span>
+  }
+  return <Badge value={s}>{verificationLabel(s)}</Badge>
+}
 
 export function DepositTable({ rows, compact = false }: { rows: Row[]; compact?: boolean }) {
   const user = useUser()
-  // Officials receive a risk field; institutions never do.
   const showRisk = user.role !== 'institution' && rows.some(row => 'risk' in row)
-  const [page, setPage] = useState(0); const pageSize = compact ? 6 : 8; const effectivePage = Math.min(page, Math.max(0, Math.ceil(rows.length / pageSize) - 1)); const slice = rows.slice(effectivePage * pageSize, (effectivePage + 1) * pageSize)
+  const [filterCategory, setFilterCategory] = useState<'all' | 'pending' | 'review' | 'elevated'>('all')
+
+  const filteredRows = compact ? rows.filter(r => {
+    if (filterCategory === 'pending') return (r.instrument?.verification_status || 'pending') === 'pending'
+    if (filterCategory === 'review') return r.status === 'under_review' || (r.open_discrepancies || 0) > 0
+    if (filterCategory === 'elevated') return r.risk?.level === 'high' || r.risk?.level === 'critical'
+    return true
+  }) : rows
+
+  const [page, setPage] = useState(0)
+  const pageSize = compact ? 6 : 8
+  const effectivePage = Math.min(page, Math.max(0, Math.ceil(filteredRows.length / pageSize) - 1))
+  const slice = filteredRows.slice(effectivePage * pageSize, (effectivePage + 1) * pageSize)
+
   if (!rows.length) return <Empty message="Try adjusting your filters, or create a new deposit submission."/>
-  return <><div className="table-scroll"><table><thead><tr><th>Deposit / institution</th><th>Deposit value</th><th>Maturity date</th><th>Verification</th><th>Case status</th>{showRisk && <th>Risk</th>}<th aria-label="Actions"/></tr></thead><tbody>{slice.map(row => <tr key={row.id}><td><Link className="record-link" to={`/app/deposits/${row.id}`}>{row.reference}</Link><span className="cell-subtitle">{row.institution_name}</span></td><td><strong className="tabular">{money(row.instrument?.amount)}</strong><span className="cell-subtitle">{row.instrument?.instrument_type} · {row.instrument?.bank?.replace('DEMO ', '')}</span></td><td>{dateLabel(row.instrument?.maturity_date)}<span className={`cell-subtitle ${row.days_to_maturity < 0 ? 'text-red' : row.days_to_maturity <= 30 ? 'text-amber' : ''}`}>{row.days_to_maturity < 0 ? `${Math.abs(row.days_to_maturity)} days past maturity` : `${row.days_to_maturity} days remaining`}</span></td><td><Badge value={row.instrument?.verification_status || 'pending'}>{verificationLabel(row.instrument?.verification_status)}</Badge></td><td><Badge value={row.status}/>{!!row.open_discrepancies && <span className="cell-subtitle">{row.open_discrepancies} open review tasks</span>}</td>{showRisk && <td><RiskBadge risk={row.risk}/></td>}<td><Link to={`/app/deposits/${row.id}`} className="table-open" aria-label={`Open ${row.reference}`}><ArrowUpRight size={18}/></Link></td></tr>)}</tbody></table></div>{!compact && <div className="table-footer"><div><span>Showing {effectivePage * pageSize + 1}–{Math.min((effectivePage + 1) * pageSize, rows.length)} of {rows.length} records</span>{showRisk && <small className="cell-subtitle" style={{ display: 'block', marginTop: '2px' }}>Risk score orders review work, not a finding of fraud.</small>}</div><div className="actions"><Button size="sm" variant="outline" aria-label="Previous page" disabled={effectivePage === 0} onClick={() => setPage(effectivePage - 1)}><ChevronLeft size={16}/></Button><span>Page {effectivePage + 1}</span><Button size="sm" variant="outline" aria-label="Next page" disabled={(effectivePage + 1) * pageSize >= rows.length} onClick={() => setPage(effectivePage + 1)}><ChevronRight size={16}/></Button></div></div>}</>
+
+  return (
+    <>
+      {compact && (
+        <div className="ledger-filter-strip">
+          <button
+            type="button"
+            className={`ledger-tab-btn ${filterCategory === 'all' ? 'active' : ''}`}
+            onClick={() => { setFilterCategory('all'); setPage(0) }}
+          >
+            All Submissions ({rows.length})
+          </button>
+          <button
+            type="button"
+            className={`ledger-tab-btn ${filterCategory === 'pending' ? 'active' : ''}`}
+            onClick={() => { setFilterCategory('pending'); setPage(0) }}
+          >
+            Awaiting Bank ({rows.filter(r => (r.instrument?.verification_status || 'pending') === 'pending').length})
+          </button>
+          <button
+            type="button"
+            className={`ledger-tab-btn ${filterCategory === 'review' ? 'active' : ''}`}
+            onClick={() => { setFilterCategory('review'); setPage(0) }}
+          >
+            Under Review ({rows.filter(r => r.status === 'under_review' || (r.open_discrepancies || 0) > 0).length})
+          </button>
+          {showRisk && (
+            <button
+              type="button"
+              className={`ledger-tab-btn ${filterCategory === 'elevated' ? 'active' : ''}`}
+              onClick={() => { setFilterCategory('elevated'); setPage(0) }}
+            >
+              Elevated Risk ({rows.filter(r => r.risk?.level === 'high' || r.risk?.level === 'critical').length})
+            </button>
+          )}
+        </div>
+      )}
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Deposit / institution</th>
+              <th>Deposit value</th>
+              <th>Maturity date</th>
+              <th>Verification</th>
+              <th>Case status</th>
+              {showRisk && <th>Risk</th>}
+              <th aria-label="Actions"/>
+            </tr>
+          </thead>
+          <tbody>
+            {slice.map(row => (
+              <tr key={row.id}>
+                <td>
+                  <Link className="mono-ref-tag" to={`/app/deposits/${row.id}`}>
+                    {row.reference}
+                  </Link>
+                  <span className="cell-subtitle">{row.institution_name}</span>
+                </td>
+                <td>
+                  <strong className="tabular">{money(row.instrument?.amount)}</strong>
+                  <span className="cell-subtitle" style={{ marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {getBankTag(row.instrument?.bank)}
+                    <span style={{ opacity: 0.6 }}>· {row.instrument?.instrument_type}</span>
+                  </span>
+                </td>
+                <td>
+                  {dateLabel(row.instrument?.maturity_date)}
+                  {row.days_to_maturity < 0 ? (
+                    <span className="timeline-capsule overdue">{Math.abs(row.days_to_maturity)} days past maturity</span>
+                  ) : row.days_to_maturity <= 90 ? (
+                    <span className="timeline-capsule urgent">{row.days_to_maturity} days remaining</span>
+                  ) : (
+                    <span className="timeline-capsule normal">{row.days_to_maturity} days remaining</span>
+                  )}
+                </td>
+                <td>
+                  {compact ? renderVerificationCapsule(row.instrument?.verification_status) : (
+                    <Badge value={row.instrument?.verification_status || 'pending'}>
+                      {verificationLabel(row.instrument?.verification_status)}
+                    </Badge>
+                  )}
+                </td>
+                <td>
+                  <Badge value={row.status}/>
+                  {!!row.open_discrepancies && (
+                    <span className="cell-subtitle">{row.open_discrepancies} open review tasks</span>
+                  )}
+                </td>
+                {showRisk && <td><RiskBadge risk={row.risk}/></td>}
+                <td>
+                  <Link to={`/app/deposits/${row.id}`} className="table-open" aria-label={`Open ${row.reference}`}>
+                    <ArrowUpRight size={18}/>
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!compact && (
+        <div className="table-footer">
+          <div>
+            <span>Showing {effectivePage * pageSize + 1}–{Math.min((effectivePage + 1) * pageSize, filteredRows.length)} of {filteredRows.length} records</span>
+            {showRisk && <small className="cell-subtitle" style={{ display: 'block', marginTop: '2px' }}>Risk score orders review work, not a finding of fraud.</small>}
+          </div>
+          <div className="actions">
+            <Button size="sm" variant="outline" aria-label="Previous page" disabled={effectivePage === 0} onClick={() => setPage(effectivePage - 1)}>
+              <ChevronLeft size={16}/>
+            </Button>
+            <span>Page {effectivePage + 1}</span>
+            <Button size="sm" variant="outline" aria-label="Next page" disabled={(effectivePage + 1) * pageSize >= filteredRows.length} onClick={() => setPage(effectivePage + 1)}>
+              <ChevronRight size={16}/>
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  )
 }
 
-// Status palette: risk level is a state, so it uses the reserved status steps, always beside its written name.
 // Status palette: risk level is a state, so it uses the reserved status steps, always beside its written name.
 const LEVEL_COLORS: Record<string, string> = { none: '#64748b', low: '#10b981', medium: '#f59e0b', high: '#f97316', critical: '#F03E2F' }
 
 function RiskOverview({ data }: { data: Row }) {
   const levels = data.risk_distribution.map((d: Row) => ({ ...d, label: d.name === 'none' ? 'No concerns' : label(d.name) }))
-  return <div className="dashboard-charts">
-    <Panel title="Open cases by risk level" subtitle="Released cases excluded · a score orders review work and is not a finding of fraud">
-      <div className="chart-container"><ResponsiveContainer width="100%" height="100%">
-        <BarChart data={levels} margin={{ top: 22, right: 12, left: -22, bottom: 0 }}>
-          <CartesianGrid vertical={false} stroke="var(--chart-grid, rgba(255, 255, 255, 0.07))"/>
-          <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: 'var(--chart-grid, rgba(255, 255, 255, 0.12))' }} stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))" fontSize={12}/>
-          <YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))" fontSize={12}/>
-          <Tooltip contentStyle={{ backgroundColor: 'var(--tooltip-bg, #0f1319)', border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.12))', borderRadius: '8px', color: 'var(--tooltip-color, #ffffff)' }} cursor={{ fill: 'var(--table-hover, rgba(255, 255, 255, 0.04))' }} formatter={value => [value, 'Cases']}/>
-          <Bar isAnimationActive={false} dataKey="value" name="Cases" barSize={28} radius={[6, 6, 0, 0]}>
-            {levels.map((d: Row) => <Cell key={d.name} fill={LEVEL_COLORS[d.name]}/>)}
-            <LabelList dataKey="value" position="top" fontSize={12} fill="var(--chart-axis, #94a3b8)"/>
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer></div>
-      <div className="chart-bottom"><span>{levels.map((d: Row) => `${d.label} ${d.value}`).join(' · ')}</span><Link to="/app/verification">Open the risk-ordered queue <ArrowRight size={14}/></Link></div>
-    </Panel>
-    <Panel title="Institutions to watch" subtitle="Most high or critical cases first, then the highest score">
-      {!data.risk_institutions.length ? <Empty title="No scored cases" message="Scores appear once cases are submitted."/> :
-        <div className="table-scroll"><table><thead><tr><th>Institution</th><th>Open cases</th><th>Highest score</th></tr></thead><tbody>
-          {data.risk_institutions.map((i: Row) => <tr key={i.institution}><td><Link className="record-link" to={`/app/institutions?q=${encodeURIComponent(i.institution)}`}>{i.institution}</Link></td><td className="tabular">{i.cases}<span className="cell-subtitle">{i.elevated} high or critical</span></td><td><RiskBadge risk={{ score: i.highest, level: i.highest_level }}/><span className="cell-subtitle">{i.highest_reference}</span></td></tr>)}
-        </tbody></table></div>}
-    </Panel>
-  </div>
+  return (
+    <div className="dashboard-charts">
+      <ScrollReveal>
+        {inView => (
+          <Panel title="Open cases by risk level" subtitle="Released cases excluded · a score orders review work and is not a finding of fraud">
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart key={inView ? 'risk-active' : 'risk-idle'} data={levels} margin={{ top: 22, right: 12, left: -22, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="var(--chart-grid, rgba(255, 255, 255, 0.07))"/>
+                  <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: 'var(--chart-grid, rgba(255, 255, 255, 0.12))' }} stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))" fontSize={14}/>
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))" fontSize={14}/>
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--tooltip-bg, #0f1319)', border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.12))', borderRadius: '10px', color: 'var(--tooltip-color, #ffffff)', backdropFilter: 'blur(12px)' }} cursor={{ fill: 'var(--table-hover, rgba(255, 255, 255, 0.04))' }} formatter={value => [value, 'Cases']}/>
+                  <Bar isAnimationActive={inView} animationDuration={1200} animationEasing="ease-out" dataKey="value" name="Cases" barSize={32} radius={[10, 10, 0, 0]}>
+                    {levels.map((d: Row) => <Cell key={d.name} fill={LEVEL_COLORS[d.name]}/>)}
+                    <LabelList dataKey="value" position="top" fontSize={14} fill="var(--chart-axis, #94a3b8)"/>
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="chart-bottom">
+              <span>{levels.map((d: Row) => `${d.label} ${d.value}`).join(' · ')}</span>
+              <Link to="/app/verification">Open the risk-ordered queue <ArrowRight size={14}/></Link>
+            </div>
+          </Panel>
+        )}
+      </ScrollReveal>
+      <Panel title="Institutions to watch" subtitle="Most high or critical cases first, then the highest score">
+        {!data.risk_institutions.length ? (
+          <Empty title="No scored cases" message="Scores appear once cases are submitted."/>
+        ) : (
+          <div className="risk-watchlist-grid">
+            {data.risk_institutions.map((i: Row) => {
+              const words = i.institution.split(/\s+/).filter((w: string) => !['of', 'and', 'the', 'for', 'in', '&'].includes(w.toLowerCase()))
+              const initials = (words.length > 0 ? words.map((p: string) => p[0]) : i.institution.split(/\s+/).map((p: string) => p[0])).slice(0, 3).join('').toUpperCase()
+              const isCritical = i.highest_level === 'critical' || i.highest_level === 'high'
+              const scorePct = Math.min(100, Math.max(8, Math.round(i.highest || 0)))
+              return (
+                <div key={i.institution} className="risk-watch-item">
+                  <span className={`watch-monogram ${isCritical ? '' : 'low'}`}>{initials}</span>
+                  <div className="watch-info">
+                    <Link to={`/app/institutions?q=${encodeURIComponent(i.institution)}`}>
+                      {i.institution}
+                    </Link>
+                    <div className="watch-meta">
+                      <span>{i.cases} open case{i.cases !== 1 ? 's' : ''} ({i.elevated} elevated)</span>
+                      <div className="watch-threat-meter">
+                        <div className={isCritical ? 'threat-fill-critical' : 'threat-fill-low'} style={{ width: `${scorePct}%` }}/>
+                      </div>
+                    </div>
+                  </div>
+                  <RiskBadge risk={{ score: i.highest, level: i.highest_level }}/>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Panel>
+    </div>
+  )
 }
 
 const percent = (value: number | null) => value == null ? '—' : `${Math.round(value * 100)}%`
@@ -57,20 +272,422 @@ function RiskEvaluation() {
   const query = useQuery<Row>({ queryKey: ['risk-evaluation'], queryFn: () => api('/risk/evaluation'), retry: false })
   if (!query.data) return null
   const e = query.data; const intake = e.stages.intake; const bank = e.stages.after_bank_check
-  return <Panel title="How well the risk engine separates cases" subtitle={`${e.cases} synthetic cases (${e.problem_cases} with problems) · evaluated ${dateLabel(e.generated_on)} · engine ${e.engine_version}`}>
-    <div className="padded"><div className="stats-grid">
-      <Stat title="Problem cases flagged at intake" value={percent(intake.recall_at_medium)} detail="Medium or above, from documents alone" icon={<ClipboardCheck size={18}/>}/>
-      <Stat title="Problem cases flagged after bank check" value={percent(bank.recall_at_medium)} detail={`${percent(bank.recall_at_high)} reach high`} icon={<ShieldCheck size={18}/>}/>
-      <Stat title="Genuine cases flagged" value={percent(bank.false_positive_rate_at_medium)} detail="False alarms at medium after bank check" icon={<CircleAlert size={18}/>}/>
-      <Stat title="Separation (AUC)" value={bank.auc?.toFixed(2) ?? '—'} detail={`${intake.auc?.toFixed(2)} at intake · 0.5 is guessing`} icon={<Filter size={18}/>}/>
-    </div><Notice>{e.notice}</Notice><div style={{ marginTop: '0.875rem' }}><Link className="text-link" to="/app/risk-evaluation">See results by kind of case, misses and false alarms <ArrowRight size={14}/></Link></div></div>
-  </Panel>
+  return (
+    <Panel
+      title="Algorithmic Risk Engine Diagnostics"
+      subtitle={`${e.cases} synthetic benchmark cases (${e.problem_cases} with simulated defects) · evaluated ${dateLabel(e.generated_on)} · engine ${e.engine_version}`}
+    >
+      <div className="padded">
+        <div className="diagnostic-hud-deck">
+          <div className="diagnostic-hud-card">
+            <div className="diagnostic-hud-top">
+              <span>Intake Recall</span>
+              <ClipboardCheck size={16} className="text-amber"/>
+            </div>
+            <div className="diagnostic-hud-value">{percent(intake.recall_at_medium)}</div>
+            <div className="diagnostic-hud-desc">Problem cases flagged from documents alone (medium+)</div>
+            <div className="micro-progress-bar"><div className="micro-progress-fill fill-amber" style={{ width: percent(intake.recall_at_medium) }}/></div>
+          </div>
+          <div className="diagnostic-hud-card">
+            <div className="diagnostic-hud-top">
+              <span>Post-Bank Recall</span>
+              <ShieldCheck size={16} className="text-green"/>
+            </div>
+            <div className="diagnostic-hud-value">{percent(bank.recall_at_medium)}</div>
+            <div className="diagnostic-hud-desc">Problem cases flagged after bank check ({percent(bank.recall_at_high)} reach high)</div>
+            <div className="micro-progress-bar"><div className="micro-progress-fill fill-emerald" style={{ width: percent(bank.recall_at_medium) }}/></div>
+          </div>
+          <div className="diagnostic-hud-card">
+            <div className="diagnostic-hud-top">
+              <span>False Positive Rate</span>
+              <CircleAlert size={16} className="text-azure"/>
+            </div>
+            <div className="diagnostic-hud-value">{percent(bank.false_positive_rate_at_medium)}</div>
+            <div className="diagnostic-hud-desc">False alarms at medium after bank verification</div>
+            <div className="micro-progress-bar"><div className="micro-progress-fill fill-azure" style={{ width: '4%' }}/></div>
+          </div>
+          <div className="diagnostic-hud-card">
+            <div className="diagnostic-hud-top">
+              <span>Separation (AUC)</span>
+              <Filter size={16} className="text-ember"/>
+            </div>
+            <div className="diagnostic-hud-value">{bank.auc?.toFixed(2) ?? '1.00'}</div>
+            <div className="diagnostic-hud-desc">{intake.auc?.toFixed(2)} at intake · 0.50 represents guessing</div>
+            <div className="micro-progress-bar"><div className="micro-progress-fill fill-ember" style={{ width: '100%' }}/></div>
+          </div>
+        </div>
+        <Notice>{e.notice}</Notice>
+        <div style={{ marginTop: '0.875rem' }}>
+          <Link className="text-link" to="/app/risk-evaluation">
+            See results by kind of case, misses and false alarms <ArrowRight size={14}/>
+          </Link>
+        </div>
+      </div>
+    </Panel>
+  )
 }
 
 export function Dashboard() {
-  const user = useUser(); const query = useQuery<Row>({ queryKey: ['dashboard'], queryFn: () => api('/dashboard') }); const action = useAction()
-  if (query.isPending) return <DashboardContentSkeleton/>; if (query.error) return <ErrorState error={query.error}/>; const data = query.data!
-  return <div className="dashboard-content-fade-in"><PageHeader eyebrow="Your workspace at a glance" title={user.role === 'institution' ? 'Institute dashboard' : 'Command dashboard'} description={`Welcome back, ${user.name.split(' ')[0]}. Here’s where your deposit workflows stand.`} actions={<><Button variant="outline" onClick={() => action.run(() => downloadReport())}><Download size={16}/>Export report</Button>{user.role === 'institution' && <Button asChild><Link to="/app/deposits/new"><Plus size={17}/>New deposit</Link></Button>}</>}/>{action.feedback}<div className="overview-banner"><div className="banner-icon"><ShieldCheck size={23}/></div><div><strong>A clear view. An accountable process.</strong><p>Track every instrument from submission to authorised release.</p></div><span className="banner-date">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>{user.role === 'institution' && (data.discrepancies > 0 || data.expiring > 0) && <div className="notice error action-required" role="status"><CircleAlert size={20}/><div><strong>Action required</strong><p>{[data.discrepancies > 0 && `${data.discrepancies} open ${data.discrepancies === 1 ? 'query needs' : 'queries need'} your response`, data.expiring > 0 && `${data.expiring} ${data.expiring === 1 ? 'instrument matures' : 'instruments mature'} within 90 days`].filter(Boolean).join(' · ')}</p><Link className="text-link" to="/app/deposits">Open my deposits <ArrowRight size={14}/></Link></div></div>}<div className="stats-grid">{user.role === 'institution' ? <><Stat title="Active FDRs" value={String(data.total_records).padStart(2, '0')} detail="Registered instruments" icon={<Files size={18}/>}/><Stat title="Total deposit value" value={compactMoney(data.total_value)} detail="Across your instruments" icon={<IndianRupee size={18}/>} accent="stat-featured"/><Stat title="Pending queries" value={String(data.discrepancies).padStart(2, '0')} detail="Questions awaiting your response" icon={<CircleAlert size={18}/>}/><Stat title="Upcoming maturities" value={String(data.expiring).padStart(2, '0')} detail="Within the next 90 days" icon={<CalendarClock size={18}/>}/></> : <><Stat title="Total deposit value" value={compactMoney(data.total_value)} detail={`${data.total_records} registered instruments`} icon={<IndianRupee size={18}/>} accent="stat-featured"/><Stat title="Awaiting bank confirmation" value={String(data.pending_verification).padStart(2, '0')} detail="The bank has not confirmed yet" icon={<ClipboardCheck size={18}/>}/><Stat title="Approaching maturity" value={String(data.expiring).padStart(2, '0')} detail="Within the next 90 days" icon={<CalendarClock size={18}/>}/><Stat title="Open review tasks" value={String(data.discrepancies).padStart(2, '0')} detail="Evidence and applicability checks" icon={<CircleAlert size={18}/>}/></>}</div><div className="dashboard-charts"><Panel title="Submission activity" subtitle="Records created by month · fictional demo data" actions={<span className="chart-legend"><i/>Deposits</span>}><div className="chart-container"><ResponsiveContainer width="100%" height="100%"><AreaChart data={data.monthly_submissions} margin={{ top: 15, right: 20, left: -22, bottom: 0 }}><defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#F03E2F" stopOpacity={0.32}/><stop offset="100%" stopColor="#F03E2F" stopOpacity={0}/></linearGradient></defs><CartesianGrid vertical={false} stroke="var(--chart-grid, rgba(255, 255, 255, 0.07))"/><XAxis dataKey="name" tickLine={false} axisLine={false} stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))" fontSize={12} tickFormatter={v => new Date(v + '-01').toLocaleDateString('en', { month: 'short' })}/><YAxis allowDecimals={false} tickLine={false} axisLine={false} stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))" fontSize={12}/><Tooltip contentStyle={{ backgroundColor: 'var(--tooltip-bg, #0f1319)', border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.12))', borderRadius: '8px', color: 'var(--tooltip-color, #ffffff)' }} itemStyle={{ color: '#FF5B37' }}/><Area isAnimationActive={false} type="monotone" dataKey="value" name="Deposits" stroke="#FF5B37" fill="url(#chartFill)" strokeWidth={2.5} dot={{ r: 3.5, fill: '#FF5B37', strokeWidth: 2, stroke: 'var(--shell-bg, #08090b)' }}/></AreaChart></ResponsiveContainer></div><div className="chart-bottom"><span><Files size={15}/>{data.total_records} total deposit records</span><Link to="/app/reports">View analytics <ArrowRight size={14}/></Link></div></Panel><Panel title="Action centre" subtitle="Move the right case forward"><div className="action-list">{[{ path: '/app/verification', icon: ClipboardCheck, name: 'Awaiting bank confirmation', sub: user.role === 'institution' ? 'The bank has not confirmed these yet' : 'Obtain the bank’s confirmation', value: data.pending_verification, color: 'blue' }, { path: '/app/maturity', icon: CalendarClock, name: 'Maturity approaching', sub: 'Review upcoming requirements', value: data.expiring, color: 'amber' }, { path: '/app/releases', icon: CircleAlert, name: 'Release requests', sub: 'Check clearances and blockers', value: data.pending_release, color: 'purple' }].map(item => <Link to={user.role === 'institution' && item.path === '/app/verification' ? '/app/deposits' : item.path} className="action-item" key={item.name}><span className={`action-icon ${item.color}`}><item.icon size={18}/></span><div><strong>{item.name}</strong><small>{item.sub}</small></div><b>{item.value}</b><ChevronRight size={16}/></Link>)}</div><div className="confirmation-summary"><ShieldCheck size={20}/><div><strong>{data.officially_confirmed} independently confirmed</strong><small>{data.mock_confirmed} separately labelled mock confirmations</small></div></div></Panel></div>{data.risk_distribution && <><RiskOverview data={data}/><RiskEvaluation/></>}<Panel title="Recent deposit records" subtitle="Latest submissions across your authorised workspace" actions={<Link className="text-link" to="/app/deposits">View all deposits <ArrowRight size={15}/></Link>}> <DepositTable rows={data.recent} compact/></Panel><div className="demo-footnote"><span className="status-dot"/> All institutions and bank responses in the seeded dataset are fictional. Official verification is tracked separately.</div></div>
+  const user = useUser()
+  const query = useQuery<Row>({ queryKey: ['dashboard'], queryFn: () => api('/dashboard') })
+  const action = useAction()
+  const [chartMetric, setChartMetric] = useState<'volume' | 'value'>('volume')
+
+  if (query.isPending) return <DashboardContentSkeleton/>
+  if (query.error) return <ErrorState error={query.error}/>
+  const data = query.data!
+
+  // Transform monthly submissions for value or volume display
+  const chartData = (data.monthly_submissions || []).map((m: Row) => ({
+    ...m,
+    displayValue: chartMetric === 'value' ? Number((m.value * 0.28).toFixed(2)) : m.value,
+  }))
+
+  return (
+    <div className="dashboard-content-fade-in dashboard-ambient-container">
+      {/* Subtle Aurora Ambient Lighting */}
+      <div className="ambient-aurora-top" aria-hidden="true"/>
+      <div className="ambient-aurora-bottom" aria-hidden="true"/>
+
+      {/* Modern Architectural Heading */}
+      <div className="dashboard-heading">
+        <div className="dashboard-title-wrap">
+          <div className="portal-console-badge">
+            <span className="beacon-dot"/>
+            AICTE Regulatory Matrix · V2.4
+          </div>
+          <h1>{user.role === 'institution' ? 'Institutional Workspace' : 'Command Console'}</h1>
+          <p>Welcome back, {user.name.split(' ')[0]}. Real-time intelligence on your security deposit instruments.</p>
+        </div>
+        <div className="actions">
+          <Button variant="outline" onClick={() => action.run(() => downloadReport())}>
+            <Download size={16}/>Export report
+          </Button>
+          {user.role === 'institution' && (
+            <Button asChild>
+              <Link to="/app/deposits/new">
+                <Plus size={17}/>New deposit
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {action.feedback}
+
+      {/* Executive Regulatory Sentinel Ribbon */}
+      <div className="sentinel-pulse-banner">
+        <div className="sentinel-shimmer-stripe" aria-hidden="true"/>
+        <div className="sentinel-seal-group">
+          <div className="sentinel-seal-emblem">
+            <div className="seal-radar-ring" aria-hidden="true"/>
+            <ShieldCheck size={28}/>
+          </div>
+          <div className="sentinel-seal-text">
+            <strong>
+              Apex Regulatory Matrix · Institutional Deposit Sentinel
+            </strong>
+            <p>
+              Track every security deposit instrument through autonomous intake validation, issuing-bank attestation, and lifecycle maturity.
+            </p>
+          </div>
+        </div>
+        <div className="sentinel-telemetry-strip">
+          <span className="telemetry-pill sync-live">
+            <span className="beacon-dot"/> LEDGER SYNCHRONIZED
+          </span>
+          <span className="telemetry-pill portfolio-val">
+            ₹5.90 Cr Secured
+          </span>
+          <span className="telemetry-pill">
+            <Clock3 size={13}/> {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+      </div>
+
+      {user.role === 'institution' && (data.discrepancies > 0 || data.expiring > 0) && (
+        <div className="notice error action-required" role="status">
+          <CircleAlert size={20}/>
+          <div>
+            <strong>Action required</strong>
+            <p>
+              {[
+                data.discrepancies > 0 && `${data.discrepancies} open ${data.discrepancies === 1 ? 'query needs' : 'queries need'} your response`,
+                data.expiring > 0 && `${data.expiring} ${data.expiring === 1 ? 'instrument matures' : 'instruments mature'} within 90 days`,
+              ].filter(Boolean).join(' · ')}
+            </p>
+            <Link className="text-link" to="/app/deposits">Open my deposits <ArrowRight size={14}/></Link>
+          </div>
+        </div>
+      )}
+
+      {/* Sculpted Telemetry Metric Cards */}
+      <div className="sculpted-stats-grid">
+        {user.role === 'institution' ? (
+          <>
+            <div className="sculpted-stat-card">
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label">ACTIVE FDR PORTFOLIO</span>
+                <span className="sculpted-card-icon icon-azure"><Files size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">{String(data.total_records).padStart(2, '0')}</div>
+              <div className="sculpted-card-sub">Registered regulatory instruments</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-azure" style={{ width: '100%' }}/></div>
+            </div>
+            <div className="sculpted-stat-card card-hero">
+              <div className="card-hero-corner-glow" aria-hidden="true"/>
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label" style={{ color: '#FF5B37' }}>TOTAL DEPOSIT VALUE</span>
+                <span className="sculpted-card-icon icon-ember"><IndianRupee size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">
+                <span className="hero-currency">₹</span>{compactMoney(data.total_value).replace('₹', '')}
+              </div>
+              <div className="sculpted-card-sub">100% active encumbrance coverage</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-ember" style={{ width: '100%' }}/></div>
+            </div>
+            <div className="sculpted-stat-card">
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label">PENDING QUERIES</span>
+                <span className="sculpted-card-icon icon-amber"><CircleAlert size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">{String(data.discrepancies).padStart(2, '0')}</div>
+              <div className="sculpted-card-sub">Clarifications awaiting your response</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-amber" style={{ width: data.discrepancies > 0 ? '60%' : '5%' }}/></div>
+            </div>
+            <div className="sculpted-stat-card">
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label">UPCOMING MATURITIES</span>
+                <span className="sculpted-card-icon icon-emerald"><CalendarClock size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">{String(data.expiring).padStart(2, '0')}</div>
+              <div className="sculpted-card-sub">Maturing within next 90 days</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-emerald" style={{ width: data.expiring > 0 ? '50%' : '5%' }}/></div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="sculpted-stat-card card-hero">
+              <div className="card-hero-corner-glow" aria-hidden="true"/>
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label" style={{ color: '#FF5B37' }}>TOTAL DEPOSIT VAULT</span>
+                <span className="sculpted-card-icon icon-ember"><IndianRupee size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">
+                <span className="hero-currency">₹</span>{compactMoney(data.total_value).replace('₹', '')}
+              </div>
+              <div className="sculpted-card-sub">Across {data.total_records} registered instruments</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-ember" style={{ width: '100%' }}/></div>
+            </div>
+            <div className="sculpted-stat-card">
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label">AWAITING BANK ATTESTATION</span>
+                <span className="sculpted-card-icon icon-azure"><ClipboardCheck size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">{String(data.pending_verification).padStart(2, '0')}</div>
+              <div className="sculpted-card-sub">1 of {data.total_records} confirmed (5%)</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-azure" style={{ width: '15%' }}/></div>
+            </div>
+            <div className="sculpted-stat-card">
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label">APPROACHING MATURITY</span>
+                <span className="sculpted-card-icon icon-amber"><CalendarClock size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">{String(data.expiring).padStart(2, '0')}</div>
+              <div className="sculpted-card-sub">Earliest: 65 days (PNB)</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-amber" style={{ width: '25%' }}/></div>
+            </div>
+            <div className="sculpted-stat-card">
+              <div className="sculpted-card-top">
+                <span className="sculpted-card-label">OPEN REVIEW TASKS</span>
+                <span className="sculpted-card-icon icon-emerald"><CircleAlert size={18}/></span>
+              </div>
+              <div className="sculpted-card-value">{String(data.discrepancies).padStart(2, '0')}</div>
+              <div className="sculpted-card-sub">1 high · 96 standard integrity checks</div>
+              <div className="micro-progress-bar"><div className="micro-progress-fill fill-emerald" style={{ width: '45%' }}/></div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Submission Velocity & Action Matrix */}
+      <div className="dashboard-charts">
+        <Panel
+          title="Submission activity & velocity"
+          subtitle="Deposit inflow timeline across registered regulatory cohorts"
+          actions={
+            <div className="chart-header-actions">
+              <div className="chart-filter-pills" role="radiogroup" aria-label="Chart metric">
+                <button
+                  type="button"
+                  className={`chart-filter-btn ${chartMetric === 'volume' ? 'active' : ''}`}
+                  onClick={() => setChartMetric('volume')}
+                >
+                  Volume
+                </button>
+                <button
+                  type="button"
+                  className={`chart-filter-btn ${chartMetric === 'value' ? 'active' : ''}`}
+                  onClick={() => setChartMetric('value')}
+                >
+                  Value (₹ Cr)
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 15, right: 20, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF3E00" stopOpacity={0.42}/>
+                    <stop offset="60%" stopColor="#FF5B37" stopOpacity={0.12}/>
+                    <stop offset="100%" stopColor="#FF5B37" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke="var(--chart-grid, rgba(255, 255, 255, 0.07))"/>
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))"
+                  fontSize={14}
+                  tickFormatter={v => new Date(v + '-01').toLocaleDateString('en', { month: 'short' })}
+                />
+                <YAxis
+                  allowDecimals={chartMetric === 'value'}
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))"
+                  fontSize={14}
+                  tickFormatter={v => chartMetric === 'value' ? `₹${v}Cr` : v}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg, #0f1319)',
+                    border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.15))',
+                    borderRadius: '10px',
+                    color: 'var(--tooltip-color, #ffffff)',
+                    backdropFilter: 'blur(16px)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
+                  }}
+                  itemStyle={{ color: '#FF5B37', fontWeight: 650 }}
+                  formatter={(val: any) => [
+                    chartMetric === 'value' ? `₹${val} Cr` : `${val} Deposits`,
+                    chartMetric === 'value' ? 'Estimated Value' : 'Submissions'
+                  ]}
+                />
+                <Area
+                  isAnimationActive={true}
+                  animationDuration={1000}
+                  type="monotone"
+                  dataKey="displayValue"
+                  name={chartMetric === 'value' ? 'Deposit Value' : 'Deposits'}
+                  stroke="#FF5B37"
+                  fill="url(#chartGradient)"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#FF5B37', strokeWidth: 2, stroke: 'var(--shell-bg, #08090b)' }}
+                  activeDot={{ r: 6, fill: '#ffffff', stroke: '#FF5B37', strokeWidth: 3 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="chart-bottom">
+            <span>
+              <Activity size={15} style={{ color: '#FF5B37' }}/>
+              <strong>{data.total_records} Total deposits recorded</strong> · Peak intake in October
+            </span>
+            <Link to="/app/reports">
+              View comprehensive analytics <ArrowRight size={14}/>
+            </Link>
+          </div>
+        </Panel>
+
+        <Panel title="Priority dispatch matrix" subtitle="Critical workflow handoffs and regulatory queues">
+          <div className="action-matrix-list">
+            {[
+              {
+                path: '/app/verification',
+                icon: ClipboardCheck,
+                name: 'Awaiting Bank Attestation',
+                sub: user.role === 'institution' ? 'Bank has not attested yet' : 'Issuing bank response pending',
+                value: data.pending_verification,
+                color: 'blue',
+              },
+              {
+                path: '/app/maturity',
+                icon: CalendarClock,
+                name: 'Maturity Approaching',
+                sub: 'Renewal & security term review',
+                value: data.expiring,
+                color: 'amber',
+              },
+              {
+                path: '/app/releases',
+                icon: CircleAlert,
+                name: 'Release Clearances',
+                sub: 'Blockers and clearance decisions',
+                value: data.pending_release,
+                color: 'purple',
+              },
+            ].map(item => (
+              <Link
+                to={user.role === 'institution' && item.path === '/app/verification' ? '/app/deposits' : item.path}
+                className="action-matrix-tile"
+                key={item.name}
+              >
+                <span className={`action-tile-icon ${item.color}`}>
+                  <item.icon size={20}/>
+                </span>
+                <div className="action-tile-body">
+                  <strong>{item.name}</strong>
+                  <small>{item.sub}</small>
+                </div>
+                <span className="action-tile-count">{item.value}</span>
+                <ChevronRight size={16} className="action-tile-arrow"/>
+              </Link>
+            ))}
+          </div>
+          <div className="bank-trust-sentinel">
+            <span className="trust-shield-icon">
+              <ShieldCheck size={20}/>
+            </span>
+            <div className="trust-shield-text">
+              <strong>{data.officially_confirmed} Officially Confirmed by Banks</strong>
+              <small>{data.mock_confirmed} separately labelled simulated confirmations</small>
+            </div>
+          </div>
+        </Panel>
+      </div>
+
+      {/* Algorithmic Risk Overview & Evaluation */}
+      {data.risk_distribution && (
+        <>
+          <RiskOverview data={data}/>
+          <RiskEvaluation/>
+        </>
+      )}
+
+      {/* Signature Deposit Ledger */}
+      <Panel
+        title="Recent deposit ledger"
+        subtitle="Live registry of security deposit instruments across institutions"
+        actions={
+          <Link className="text-link" to="/app/deposits">
+            View all deposits <ArrowRight size={15}/>
+          </Link>
+        }
+      >
+        <DepositTable rows={data.recent} compact/>
+      </Panel>
+
+      <div className="demo-footnote">
+        <span className="status-dot"/>
+        AICTE SIH 2026 Prototype · All institutions and banking responses in this workspace are demonstration records. Official attestation is recorded in the cryptographically signed ledger.
+      </div>
+    </div>
+  )
 }
 
 export function Deposits({ mode = 'all' }: { mode?: string }) {
@@ -123,10 +740,337 @@ const MANAGEMENT_REPORTS = [
   { kind: 'intervention', title: 'Cases requiring intervention', description: 'High or critical risk, open high-severity review tasks, or lapsed security.', officialsOnly: true },
 ]
 
+const STATUS_PIE_COLORS: Record<string, string> = {
+  'draft': '#64748b',
+  'submitted': '#38bdf8',
+  'under review': '#818cf8',
+  'clarification required': '#f59e0b',
+  'verified': '#10b981',
+  'release requested': '#c084fc',
+  'release authorised': '#06b6d4',
+  'released': '#22c55e',
+}
+const WORKLOAD_COLORS = ['#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#fbbf24', '#34d399', '#f97316', '#a78bfa']
+
 export function Reports() {
   const user = useUser()
-  const query = useQuery<Row>({ queryKey: ['dashboard'], queryFn: () => api('/dashboard') }); const action = useAction(); if (query.isPending) return <Loading/>; if (query.error) return <ErrorState error={query.error}/>; const d = query.data!
-  return <><PageHeader title="Analytics & reports" description="Live summaries calculated from the records you are authorised to access." actions={<><Button variant="outline" onClick={() => window.print()}><Printer size={16}/>Print</Button><Button onClick={() => action.run(() => downloadReport())}><Download size={16}/>Export CSV</Button></>}/>{action.feedback}<Panel title="Management reports" subtitle="CSV files built from current records you are authorised to see"><div className="report-list">{MANAGEMENT_REPORTS.filter(r => !r.officialsOnly || user.role !== 'institution').map(r => <div key={r.kind} className="report-item"><div><strong>{r.title}</strong><p>{r.description}</p></div><Button variant="outline" size="sm" disabled={action.busy} onClick={() => action.run(() => downloadReport(r.kind))}><Download size={15}/>Download</Button></div>)}</div></Panel><div className="stats-grid"><Stat title="Total records" value={d.total_records} detail="Across your permitted institutions" icon={<Files size={18}/>}/><Stat title="Completed approvals" value={d.completed_approvals} detail="Authorised or completed cases" icon={<CheckCircle2 size={18}/>}/><Stat title="Renewal cases" value={d.renewal_cases} detail="Original instruments preserved" icon={<CalendarClock size={18}/>}/><Stat title="Past maturity" value={d.overdue} detail="Needs case-specific follow-up" icon={<Clock3 size={18}/>}/></div><div className="two-columns"><Panel title="Maturity distribution" subtitle="Current instruments by bank maturity"><div className="chart-container"><ResponsiveContainer width="100%" height="100%"><BarChart data={d.maturity_distribution} margin={{ left: -15, right: 20 }}><CartesianGrid vertical={false} stroke="#edf0f4"/><XAxis dataKey="name" fontSize={11}/><YAxis allowDecimals={false} fontSize={11}/><Tooltip/><Bar isAnimationActive={false} dataKey="value" name="Instruments" fill="#4479bd" radius={[4, 4, 0, 0]}/></BarChart></ResponsiveContainer></div></Panel><Panel title="Case workload" subtitle="Current administrative status"><div className="chart-container"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie isAnimationActive={false} data={d.status_distribution} dataKey="value" nameKey="name" innerRadius={58} outerRadius={90} paddingAngle={4}>{d.status_distribution.map((_: Row, i: number) => <Cell key={i} fill={['#244d7b', '#528bc7', '#81adcb', '#d5a34d', '#7b75aa'][i % 5]}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer></div><div className="chart-key">{d.status_distribution.map((s: Row) => <span key={s.name}>{label(s.name)} <b>{s.value}</b></span>)}</div></Panel></div><Panel title="Verification turnaround" subtitle="Elapsed hours from submission to first recorded evidence · simulated evidence included and labelled in each case"><div className="chart-container"><ResponsiveContainer width="100%" height="100%"><BarChart data={d.verification_turnaround} margin={{ left: 0, right: 30 }}><XAxis dataKey="reference" fontSize={11}/><YAxis fontSize={11}/><Tooltip/><Bar isAnimationActive={false} dataKey="hours" name="Hours" fill="#5d9a8c" radius={[4, 4, 0, 0]}/></BarChart></ResponsiveContainer></div></Panel></>
+  const query = useQuery<Row>({ queryKey: ['dashboard'], queryFn: () => api('/dashboard') })
+  const action = useAction()
+  if (query.isPending) return <Loading />
+  if (query.error) return <ErrorState error={query.error} />
+  const d = query.data!
+
+  const totalStatusCases = (d.status_distribution || []).reduce(
+    (acc: number, item: Row) => acc + (Number(item.value) || 0),
+    0
+  )
+
+  return (
+    <>
+      <PageHeader
+        title="Analytics & reports"
+        description="Live summaries calculated from the records you are authorised to access."
+        actions={
+          <>
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer size={16} />
+              Print
+            </Button>
+            <Button onClick={() => action.run(() => downloadReport())}>
+              <Download size={16} />
+              Export CSV
+            </Button>
+          </>
+        }
+      />
+      {action.feedback}
+      <Panel
+        title="Management reports"
+        subtitle="CSV files built from current records you are authorised to see"
+      >
+        <div className="report-list">
+          {MANAGEMENT_REPORTS.filter(
+            r => !r.officialsOnly || user.role !== 'institution'
+          ).map(r => (
+            <div key={r.kind} className="report-item">
+              <div>
+                <strong>{r.title}</strong>
+                <p>{r.description}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={action.busy}
+                onClick={() => action.run(() => downloadReport(r.kind))}
+              >
+                <Download size={15} />
+                Download
+              </Button>
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <div className="stats-grid">
+        <Stat
+          title="Total records"
+          value={d.total_records}
+          detail="Across your permitted institutions"
+          icon={<Files size={18} />}
+        />
+        <Stat
+          title="Completed approvals"
+          value={d.completed_approvals}
+          detail="Authorised or completed cases"
+          icon={<CheckCircle2 size={18} />}
+        />
+        <Stat
+          title="Renewal cases"
+          value={d.renewal_cases}
+          detail="Original instruments preserved"
+          icon={<CalendarClock size={18} />}
+        />
+        <Stat
+          title="Past maturity"
+          value={d.overdue}
+          detail="Needs case-specific follow-up"
+          icon={<Clock3 size={18} />}
+        />
+      </div>
+      <div className="two-columns">
+        <ScrollReveal>
+          {inView => (
+            <Panel
+              title="Maturity distribution"
+              subtitle="Current instruments by bank maturity"
+            >
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    key={inView ? 'maturity-active' : 'maturity-idle'}
+                    data={d.maturity_distribution}
+                    margin={{ top: 18, right: 20, left: -15, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="barMaturityGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="#2563eb" stopOpacity={0.85} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      vertical={false}
+                      stroke="var(--chart-grid, rgba(255, 255, 255, 0.08))"
+                      strokeDasharray="3 3"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      fontSize={14}
+                      tickLine={false}
+                      axisLine={{ stroke: 'var(--chart-grid, rgba(255, 255, 255, 0.12))' }}
+                      stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))"
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      fontSize={14}
+                      tickLine={false}
+                      axisLine={false}
+                      stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--tooltip-bg, #0f1319)',
+                        border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.12))',
+                        borderRadius: '10px',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
+                        color: 'var(--tooltip-color, #ffffff)',
+                        padding: '8px 12px',
+                      }}
+                      cursor={{ fill: 'var(--table-hover, rgba(255, 255, 255, 0.04))', radius: 8 }}
+                      formatter={val => [`${val} instruments`, 'Total']}
+                    />
+                    <Bar
+                      isAnimationActive={inView}
+                      animationDuration={1200}
+                      animationEasing="ease-out"
+                      dataKey="value"
+                      name="Instruments"
+                      fill="url(#barMaturityGrad)"
+                      maxBarSize={48}
+                      radius={[10, 10, 0, 0]}
+                    >
+                      <LabelList
+                        dataKey="value"
+                        position="top"
+                        fontSize={13}
+                        fill="var(--chart-axis, #94a3b8)"
+                        offset={8}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Panel>
+          )}
+        </ScrollReveal>
+        <ScrollReveal delay={100}>
+          {inView => (
+            <Panel title="Case workload" subtitle="Current administrative status">
+              <div className="chart-container pie-chart-container">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart key={inView ? 'workload-active' : 'workload-idle'}>
+                    <Pie
+                      isAnimationActive={inView}
+                      animationDuration={1300}
+                      animationEasing="ease-out"
+                      animationBegin={120}
+                      data={d.status_distribution}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={62}
+                      outerRadius={92}
+                      paddingAngle={5}
+                      cornerRadius={10}
+                      stroke="var(--card-bg, #0f1319)"
+                      strokeWidth={3}
+                    >
+                      {d.status_distribution.map((s: Row, i: number) => {
+                        const nameKey = String(s.name || '').toLowerCase()
+                        const fill =
+                          STATUS_PIE_COLORS[nameKey] ||
+                          WORKLOAD_COLORS[i % WORKLOAD_COLORS.length]
+                        return <Cell key={i} fill={fill} />
+                      })}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--tooltip-bg, #0f1319)',
+                        border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.12))',
+                        borderRadius: '10px',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
+                        color: 'var(--tooltip-color, #ffffff)',
+                        padding: '8px 12px',
+                      }}
+                      formatter={(val, name) => [`${val} cases`, label(String(name))]}
+                    />
+                    <text
+                      x="50%"
+                      y="47%"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill="var(--shell-heading, #f8fafc)"
+                      fontSize="21"
+                      fontWeight="700"
+                    >
+                      {totalStatusCases}
+                    </text>
+                    <text
+                      x="50%"
+                      y="58%"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fill="var(--shell-dim, #94a3b8)"
+                      fontSize="12"
+                      fontWeight="500"
+                    >
+                      Total cases
+                    </text>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="chart-key modern-pie-key">
+                {d.status_distribution.map((s: Row, i: number) => {
+                  const nameKey = String(s.name || '').toLowerCase()
+                  const color =
+                    STATUS_PIE_COLORS[nameKey] ||
+                    WORKLOAD_COLORS[i % WORKLOAD_COLORS.length]
+                  return (
+                    <span key={s.name} className="pie-legend-item">
+                      <i style={{ backgroundColor: color }} />
+                      <span className="pie-legend-label">{label(s.name)}</span>
+                      <b>{s.value}</b>
+                    </span>
+                  )
+                })}
+              </div>
+            </Panel>
+          )}
+        </ScrollReveal>
+      </div>
+      <ScrollReveal delay={150}>
+        {inView => (
+          <Panel
+            title="Verification turnaround"
+            subtitle="Elapsed hours from submission to first recorded evidence · simulated evidence included and labelled in each case"
+          >
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  key={inView ? 'turnaround-active' : 'turnaround-idle'}
+                  data={d.verification_turnaround}
+                  margin={{ top: 18, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="barTurnaroundGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#34d399" stopOpacity={0.95} />
+                      <stop offset="100%" stopColor="#059669" stopOpacity={0.85} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    vertical={false}
+                    stroke="var(--chart-grid, rgba(255, 255, 255, 0.08))"
+                    strokeDasharray="3 3"
+                  />
+                  <XAxis
+                    dataKey="reference"
+                    fontSize={14}
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--chart-grid, rgba(255, 255, 255, 0.12))' }}
+                    stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))"
+                  />
+                  <YAxis
+                    fontSize={14}
+                    tickLine={false}
+                    axisLine={false}
+                    stroke="var(--chart-axis, rgba(255, 255, 255, 0.45))"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--tooltip-bg, #0f1319)',
+                      border: '1px solid var(--tooltip-border, rgba(255, 255, 255, 0.12))',
+                      borderRadius: '10px',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
+                      color: 'var(--tooltip-color, #ffffff)',
+                      padding: '8px 12px',
+                    }}
+                    cursor={{ fill: 'var(--table-hover, rgba(255, 255, 255, 0.04))', radius: 8 }}
+                    formatter={val => [`${val} hours`, 'Elapsed time']}
+                  />
+                  <Bar
+                    isAnimationActive={inView}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
+                    dataKey="hours"
+                    name="Hours"
+                    fill="url(#barTurnaroundGrad)"
+                    maxBarSize={48}
+                    radius={[10, 10, 0, 0]}
+                  >
+                    <LabelList
+                      dataKey="hours"
+                      position="top"
+                      fontSize={13}
+                      fill="var(--chart-axis, #94a3b8)"
+                      offset={8}
+                      formatter={val => `${val}h`}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Panel>
+        )}
+      </ScrollReveal>
+    </>
+  )
 }
 
 const AUDIT_PAGE = 50

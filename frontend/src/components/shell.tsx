@@ -87,8 +87,8 @@ export function UserMenu({ user }: { user: User; onError?: (message: string) => 
   )
 }
 
-export function MenuButton({ onOpen }: { onOpen: () => void }) {
-  return <button className="icon-button mobile-only" aria-label="Open navigation" onClick={onOpen}><Menu/></button>
+export function MenuButton() {
+  return null
 }
 
 export function SectionTabs({ user }: { user: User }) {

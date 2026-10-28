@@ -245,8 +245,16 @@ export function SignIn() {
   const [isSigningIn, setIsSigningIn] = useState(false)
   const form = useForm<Login>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: {
+      email: PORTALS[portal].demoEmail,
+      password: DEMO_PASSWORD || 'DemoFlow2026!',
+    },
   })
+
+  useEffect(() => {
+    form.setValue('email', PORTALS[portal].demoEmail)
+    form.setValue('password', DEMO_PASSWORD || 'DemoFlow2026!')
+  }, [portal, form])
 
   const mutation = useMutation({
     mutationFn: async (data: Login) => {
@@ -269,6 +277,8 @@ export function SignIn() {
   })
   const choose = (next: Portal) => {
     setParams({ portal: next }, { replace: true })
+    form.setValue('email', PORTALS[next].demoEmail)
+    form.setValue('password', DEMO_PASSWORD || 'DemoFlow2026!')
     mutation.reset()
   }
   const Copy = PORTAL_COPY[portal]
@@ -402,49 +412,6 @@ export function SignIn() {
               </button>
             </form>
 
-            <div className="demo-shortcuts" style={{ marginTop: '1.25rem' }}>
-              <Button
-                type="button"
-                variant="outline"
-                style={{ width: '100%', marginBottom: '0.75rem' }}
-                onClick={() => {
-                  form.setValue('email', PORTALS[portal].demoEmail)
-                  form.setValue('password', DEMO_PASSWORD || 'DemoFlow2026!')
-                }}
-              >
-                Use the demo {PORTALS[portal].short.toLowerCase()} account
-              </Button>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '0.5rem' }}>
-                All demo roles
-              </div>
-              <div className="demo-roles" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
-                {[
-                  ['institution', 'Institution'],
-                  ['officer', 'Verification'],
-                  ['clearance', 'Clearance: PGRC'],
-                  ['vigilance', 'Clearance: Vigilance'],
-                  ['authority', 'Authority'],
-                  ['admin', 'Admin'],
-                  ['auditor', 'Auditor'],
-                  ['bank', 'Bank Officer']
-                ].map(([emailKey, title]) => (
-                  <button
-                    key={emailKey}
-                    type="button"
-                    className="demo-role-btn"
-                    onClick={() => {
-                      const targetPortal: Portal = emailKey === 'institution' ? 'institute' : 'admin'
-                      setParams({ portal: targetPortal }, { replace: true })
-                      form.setValue('email', `${emailKey}@demo.local`)
-                      form.setValue('password', DEMO_PASSWORD || 'DemoFlow2026!')
-                      mutation.reset()
-                    }}
-                  >
-                    {title}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {portal === 'institute' && (
               <p className="auth-register-note">

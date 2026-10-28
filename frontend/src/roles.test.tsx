@@ -58,29 +58,17 @@ beforeEach(() => {
 })
 
 describe('Role-based workflows and access control', () => {
-  describe('Sign In Demo Roles', () => {
-    it('provides one-click demo buttons for all specified roles', async () => {
+  describe('Sign In Portals', () => {
+    it('auto-fills credentials for Institute and Admin portals', async () => {
       mount(<SignIn/>)
       const user = userEvent.setup()
 
-      const roles = [
-        ['Institution', 'institution@demo.local'],
-        ['Verification', 'officer@demo.local'],
-        ['Clearance: PGRC', 'clearance@demo.local'],
-        ['Clearance: Vigilance', 'vigilance@demo.local'],
-        ['Authority', 'authority@demo.local'],
-        ['Admin', 'admin@demo.local'],
-        ['Auditor', 'auditor@demo.local'],
-        ['Bank Officer', 'bank@demo.local'],
-      ]
+      expect(screen.getByLabelText('Email address')).toHaveValue('institution@demo.local')
+      expect(screen.getByLabelText('Password')).toHaveValue('DemoFlow2026!')
 
-      for (const [title, email] of roles) {
-        const btn = screen.getByRole('button', { name: title })
-        expect(btn).toBeInTheDocument()
-        await user.click(btn)
-        expect(screen.getByLabelText('Email address')).toHaveValue(email)
-        expect(screen.getByLabelText('Password')).toHaveValue('DemoFlow2026!')
-      }
+      await user.click(screen.getByRole('button', { name: /Admin/i }))
+      expect(screen.getByLabelText('Email address')).toHaveValue('admin@demo.local')
+      expect(screen.getByLabelText('Password')).toHaveValue('DemoFlow2026!')
     })
   })
 

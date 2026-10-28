@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Building2, ArrowRight, ShieldCheck, LogOut, X } from 'lucide-react'
+import { Building2, ShieldCheck, LogOut } from 'lucide-react'
 import { api, post, type User } from './lib/api'
 import { navigationFor, linkActive } from './lib/nav'
 import { PORTALS, portalOf } from './lib/portal'
@@ -9,7 +9,7 @@ import { label } from './lib/utils'
 import { Loading } from './components/common'
 import { DashboardSkeleton } from './components/dashboard-skeleton'
 import { useDrawerGesture } from './components/motion'
-import { GlobalSearch, MenuButton, NotificationDrawer, PortalBadge, RoleSwitcher, SectionTabs, UserMenu } from './components/shell'
+import { GlobalSearch, NotificationDrawer, PortalBadge, RoleSwitcher, SectionTabs, ThemeSwitcher, UserMenu } from './components/shell'
 import { Landing, SignIn, Register, Information } from './pages/public'
 import { Dashboard, Deposits, Institutions, Requirement, Notifications, SettingsPage, Reports, AuditPage } from './pages/overview'
 import { DepositForm, CaseDetail } from './pages/case'
@@ -21,7 +21,16 @@ import { BankDashboard, BankQueue, BankVerificationDetail } from './pages/bank'
 
 const UserContext = createContext<User | null>(null)
 export const useUser = () => useContext(UserContext)!
-export function Brand({ light = false }: { light?: boolean }) { return <Link to="/" className={`brand ${light ? 'brand-light' : ''}`}><span className="brand-mark"><Building2 size={23}/></span><span>Deposit<span className="brand-flow">Flow</span><small>AICTE · Regulation Bureau</small></span></Link> }
+export function Brand({ light = false, to }: { light?: boolean; to?: string }) {
+  const user = useContext(UserContext)
+  const destination = to ?? (user ? '/app' : '/')
+  return (
+    <Link to={destination} className={`brand ${light ? 'brand-light' : ''}`}>
+      <span className="brand-mark"><Building2 size={23}/></span>
+      <span>Deposit<span className="brand-flow">Flow</span><small>AICTE · Regulation Bureau</small></span>
+    </Link>
+  )
+}
 
 // Breadcrumb names for pages that are not in the navigation menu.
 const PAGE_TITLES: Record<string, string> = {
@@ -79,21 +88,20 @@ function Shell() {
         <aside ref={drawerRef} className={`sidebar ${mobile ? 'is-open' : ''}`}>
           <div className="sidebar-brand">
             <Brand/>
-            <button className="icon-button mobile-only" aria-label="Close navigation" onClick={() => setMobile(false)}><X/></button>
-          </div>
-          <div className="workspace-card">
-            <span className="workspace-icon"><Building2 size={19}/></span>
-            <div>
-              <strong>{user.role === 'bank' ? `${user.bank_name || 'Bank'} Gateway` : PORTALS[portal].name}</strong>
-              <small>{portal === 'admin' ? `${label(user.role)}${user.clearance_cell ? ` · ${user.clearance_cell}` : ''}` : user.name}</small>
-            </div>
           </div>
           <nav>
             {navigation.map(group => (
               <div className="nav-group" key={group.title}>
                 <div className="nav-label">{group.title}</div>
                 {group.links.map(link => (
-                  <NavLink to={link.path} end={link.end ?? false} key={link.path} onClick={() => setMobile(false)} className={`nav-link ${link === active ? 'active' : ''}`}>
+                  <NavLink
+                    to={link.path}
+                    end={link.end ?? false}
+                    key={link.path}
+                    onClick={() => setMobile(false)}
+                    className={() => `nav-link ${link === active ? 'active' : ''}`}
+                    aria-current={link === active ? 'page' : undefined}
+                  >
                     <link.icon size={18}/>{link.name}
                   </NavLink>
                 ))}
@@ -101,12 +109,6 @@ function Shell() {
             ))}
           </nav>
           <div className="sidebar-bottom">
-            <div className="help-card">
-              <ShieldCheck size={22}/>
-              <strong>Every action, accounted for.</strong>
-              <p>Secure records. Clear responsibilities. Complete histories.</p>
-              <Link to="/information">Portal guide <ArrowRight size={14}/></Link>
-            </div>
             <button
               type="button"
               className="nav-link sidebar-logout-btn"
@@ -122,7 +124,6 @@ function Shell() {
         <div className="main-shell">
           <header className={`topbar${scrolled ? ' is-scrolled' : ''}`}>
             <div className="breadcrumb">
-              <MenuButton onOpen={() => setMobile(true)}/>
               <PortalBadge user={user}/>
               <span>/</span>
               <strong>{current}</strong>
@@ -131,6 +132,7 @@ function Shell() {
             <div className="topbar-actions">
               <RoleSwitcher user={user}/>
               <NotificationDrawer/>
+              <ThemeSwitcher/>
               <div className="topbar-divider"/>
               <UserMenu user={user} onError={setLogoutError}/>
             </div>

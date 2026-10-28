@@ -33,4 +33,22 @@ describe('portal navigation', () => {
     expect(tabsFor(as('institution'), '/app/releases').map(tab => tab.name)).toEqual(['Renewals & maturity', 'Release requests'])
     expect(tabsFor(as('institution'), '/app')).toEqual([])
   })
+
+  it('distinguishes New Deposit & Calculator from My Deposits & FDRs without mutual highlight', () => {
+    const institute = navigationFor(as('institution')).flatMap(group => group.links)
+    const newDeposit = institute.find(link => link.name === 'New Deposit & Calculator')!
+    const myDeposits = institute.find(link => link.name === 'My Deposits & FDRs')!
+
+    expect(linkActive(newDeposit, '/app/deposits/new')).toBe(true)
+    expect(linkActive(myDeposits, '/app/deposits/new')).toBe(false)
+
+    expect(linkActive(newDeposit, '/app/deposits')).toBe(false)
+    expect(linkActive(myDeposits, '/app/deposits')).toBe(true)
+
+    expect(linkActive(newDeposit, '/app/requirement')).toBe(true)
+    expect(linkActive(myDeposits, '/app/requirement')).toBe(false)
+
+    expect(linkActive(newDeposit, '/app/deposits/DEP-001')).toBe(false)
+    expect(linkActive(myDeposits, '/app/deposits/DEP-001')).toBe(true)
+  })
 })
